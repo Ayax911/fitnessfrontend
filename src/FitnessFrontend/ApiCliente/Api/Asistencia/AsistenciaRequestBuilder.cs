@@ -3,6 +3,7 @@
 using FitnessFrontend.ApiCliente.Api.Asistencia.Checkin;
 using FitnessFrontend.ApiCliente.Api.Asistencia.Ingreso;
 using FitnessFrontend.ApiCliente.Api.Asistencia.MiHistorial;
+using FitnessFrontend.ApiCliente.Api.Asistencia.PuntosAcceso;
 using FitnessFrontend.ApiCliente.Api.Asistencia.Sesiones;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
@@ -32,6 +33,11 @@ namespace FitnessFrontend.ApiCliente.Api.Asistencia
         public global::FitnessFrontend.ApiCliente.Api.Asistencia.MiHistorial.MiHistorialRequestBuilder MiHistorial
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Asistencia.MiHistorial.MiHistorialRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The puntosAcceso property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Asistencia.PuntosAcceso.PuntosAccesoRequestBuilder PuntosAcceso
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Asistencia.PuntosAcceso.PuntosAccesoRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The sesiones property</summary>
         public global::FitnessFrontend.ApiCliente.Api.Asistencia.Sesiones.SesionesRequestBuilder Sesiones

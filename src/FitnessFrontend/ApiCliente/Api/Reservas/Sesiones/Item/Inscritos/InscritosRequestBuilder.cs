@@ -36,6 +36,8 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.Inscritos
         /// <returns>A List&lt;global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto&gt;</returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
+        /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 403 status code</exception>
+        /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 404 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public async Task<List<global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto>?> GetAsync(Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
@@ -46,7 +48,12 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.Inscritos
         {
 #endif
             var requestInfo = ToGetRequestInformation(requestConfiguration);
-            var collectionResult = await RequestAdapter.SendCollectionAsync<global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto>(requestInfo, global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto.CreateFromDiscriminatorValue, default, cancellationToken).ConfigureAwait(false);
+            var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
+            {
+                { "403", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
+                { "404", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
+            };
+            var collectionResult = await RequestAdapter.SendCollectionAsync<global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto>(requestInfo, global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
             return collectionResult?.AsList();
         }
         /// <returns>A <see cref="RequestInformation"/></returns>

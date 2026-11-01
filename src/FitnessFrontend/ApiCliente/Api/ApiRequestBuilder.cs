@@ -5,6 +5,7 @@ using FitnessFrontend.ApiCliente.Api.Auth;
 using FitnessFrontend.ApiCliente.Api.Eventos;
 using FitnessFrontend.ApiCliente.Api.Priorizacion;
 using FitnessFrontend.ApiCliente.Api.Reservas;
+using FitnessFrontend.ApiCliente.Api.Usuarios;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
 using System.Collections.Generic;
@@ -43,6 +44,11 @@ namespace FitnessFrontend.ApiCliente.Api
         public global::FitnessFrontend.ApiCliente.Api.Reservas.ReservasRequestBuilder Reservas
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Reservas.ReservasRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The usuarios property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Usuarios.UsuariosRequestBuilder Usuarios
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Usuarios.UsuariosRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::FitnessFrontend.ApiCliente.Api.ApiRequestBuilder"/> and sets the default values.

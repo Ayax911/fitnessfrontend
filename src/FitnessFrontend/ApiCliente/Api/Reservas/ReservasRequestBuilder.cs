@@ -76,6 +76,7 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
         /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 400 status code</exception>
+        /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 404 status code</exception>
         /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 409 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -91,6 +92,7 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas
             var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
             {
                 { "400", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
+                { "404", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
                 { "409", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
             };
             return await RequestAdapter.SendAsync<global::FitnessFrontend.ApiCliente.Models.ReservaResumenDto>(requestInfo, global::FitnessFrontend.ApiCliente.Models.ReservaResumenDto.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);

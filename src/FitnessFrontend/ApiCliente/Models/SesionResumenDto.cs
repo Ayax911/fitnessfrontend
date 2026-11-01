@@ -30,14 +30,6 @@ namespace FitnessFrontend.ApiCliente.Models
         public DateTimeOffset? FechaHoraInicio { get; set; }
         /// <summary>The id property</summary>
         public Guid? Id { get; set; }
-        /// <summary>The tokenQR property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? TokenQR { get; set; }
-#nullable restore
-#else
-        public string TokenQR { get; set; }
-#endif
         /// <summary>The ventanaAsistenciaFin property</summary>
         public DateTimeOffset? VentanaAsistenciaFin { get; set; }
         /// <summary>The ventanaAsistenciaInicio property</summary>
@@ -75,7 +67,6 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "fechaHoraFin", n => { FechaHoraFin = n.GetDateTimeOffsetValue(); } },
                 { "fechaHoraInicio", n => { FechaHoraInicio = n.GetDateTimeOffsetValue(); } },
                 { "id", n => { Id = n.GetGuidValue(); } },
-                { "tokenQR", n => { TokenQR = n.GetStringValue(); } },
                 { "ventanaAsistenciaFin", n => { VentanaAsistenciaFin = n.GetDateTimeOffsetValue(); } },
                 { "ventanaAsistenciaInicio", n => { VentanaAsistenciaInicio = n.GetDateTimeOffsetValue(); } },
             };
@@ -95,7 +86,6 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteDateTimeOffsetValue("fechaHoraFin", FechaHoraFin);
             writer.WriteDateTimeOffsetValue("fechaHoraInicio", FechaHoraInicio);
             writer.WriteGuidValue("id", Id);
-            writer.WriteStringValue("tokenQR", TokenQR);
             writer.WriteDateTimeOffsetValue("ventanaAsistenciaFin", VentanaAsistenciaFin);
             writer.WriteDateTimeOffsetValue("ventanaAsistenciaInicio", VentanaAsistenciaInicio);
             writer.WriteAdditionalData(AdditionalData);
