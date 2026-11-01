@@ -192,7 +192,7 @@ La arquitectura general es sólida: separación modular clara, DTOs de confidenc
 - **Secciones**: 4
 - **Descripción**: Múltiples endpoints no declaran sus códigos de error en `.Produces<ErrorDetalleDto>(...)`. Kiota solo deserializa `ErrorDetalleDto` para códigos declarados en OpenAPI → `catch (ErrorDetalleDto)` en el frontend es **código muerto** → usuario ve "Error al cancelar la reserva (404)" en vez del mensaje explicativo.
 - **Recomendación**: Declarar todos los códigos de error posibles con `.Produces<ErrorDetalleDto>(Status4xxXxx)`.
-- **Estado:** ⏳ Pendiente de regeneración Kiota tras Ronda 3 del backend
+- **Estado:** ✅ Corregido (2026-10-31): cliente Kiota regenerado contra el backend con las Rondas 1-5 y los endpoints nuevos (`/api/usuarios`, `/api/asistencia/puntos-acceso`, `/api/usuarios/yo`); ya no contiene `TokenQR` en `SesionResumenDto` (B-01).
 
 ---
 
