@@ -12,14 +12,14 @@
 @inject IReservasClienteService ReservasService
 @inject IZonaHorariaService ZonaHoraria
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
         <div>
-            <h1 class="h2 fw-bold text-primary mb-1">Actividades y Eventos</h1>
-            <p class="text-muted mb-0">Consulta la programación del gimnasio universitario del ITM y reserva tu cupo.</p>
+            <h1>Actividades</h1>
+            <p>Elige un día y reserva tu cupo.</p>
         </div>
-        <button class="btn btn-outline-secondary btn-sm" @onclick="CargarEventos" disabled="@(_estado?.EsCargando == true)">
-            <span class="bi bi-arrow-clockwise me-1"></span> Actualizar
+        <button class="btn btn-itm-secundario btn-sm" @onclick="CargarEventos" disabled="@(_estado?.EsCargando == true)">
+            Actualizar
         </button>
     </div>
 
@@ -32,113 +32,123 @@
     }
 
     <EstadoDeCarga Estado="@_estado" AlReintentar="CargarEventos" MensajeCargando="Cargando actividades disponibles...">
+        <CargandoTemplate>
+            @* Esqueleto: conserva la jerarquía (selector de día, hora, título, cupo, botón) mientras llegan los datos *@
+            <div class="itm-chips" aria-hidden="true"><span class="itm-esq itm-esq--chip"></span><span class="itm-esq itm-esq--chip"></span><span class="itm-esq itm-esq--chip"></span></div>
+            <EsqueletoTarjetas Cantidad="6" Mensaje="Cargando actividades disponibles..." />
+        </CargandoTemplate>
         <ExitoTemplate Context="eventos">
+            @{
+                var sesiones = ObtenerSesiones(eventos);
+                var dias = sesiones.Select(x => ZonaHoraria.AHoraLocal(x.Sesion.FechaHoraInicio!.Value).Date).Distinct().OrderBy(d => d).Take(7).ToList();
+                var visibles = _diaSeleccionado == null ? sesiones : sesiones.Where(x => ZonaHoraria.AHoraLocal(x.Sesion.FechaHoraInicio!.Value).Date == _diaSeleccionado).ToList();
+            }
             @if (eventos.Count == 0)
             {
-                <div class="text-center py-5">
-                    <div class="card card-itm p-5 d-inline-block">
-                        <h4 class="fw-bold text-muted mb-2">No hay actividades programadas</h4>
-                        <p class="text-secondary mb-0">En este momento no hay eventos disponibles para reserva. Por favor consulta más tarde.</p>
-                    </div>
+                <div class="itm-vacio">
+                    <h2>No hay actividades programadas</h2>
+                    <p>En este momento no hay eventos disponibles para reserva. Por favor consulta más tarde.</p>
                 </div>
             }
             else
             {
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    @foreach (var evento in eventos)
-                    {
-                        <div class="col" @key="evento.Id">
-                            <div class="card card-itm h-100">
-                                <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
-                                    <h2 class="h5 mb-0 fw-bold text-truncate" title="@evento.Nombre">@evento.Nombre</h2>
-                                    @if (evento.EsRecurrente == true)
+                @if (dias.Count > 1)
+                {
+                    <div class="itm-chips" role="group" aria-label="Día">
+                        <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == null ? "true" : "false")" @onclick="() => _diaSeleccionado = null">Todos</button>
+                        @foreach (var dia in dias)
+                        {
+                            var d = dia;
+                            <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == d ? "true" : "false")" @onclick="() => _diaSeleccionado = d">@EtiquetaDia(d)</button>
+                        }
+                    </div>
+                }
+
+                @if (visibles.Count == 0)
+                {
+                    <div class="itm-vacio">
+                        <h2>No hay sesiones programadas</h2>
+                        <p>Este día no tiene sesiones activas. Elige otro día.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="itm-rejilla">
+                        @foreach (var item in visibles)
+                        {
+                            var evento = item.Evento;
+                            var sesion = item.Sesion;
+                            var sesionId = sesion.Id ?? Guid.Empty;
+                            var estaBloqueadaPorVentana = _sesionesVentanaCerrada.Contains(sesionId);
+                            var estaProcesandoEsta = _sesionEnProcesoId == sesionId;
+                            var hayCupo = sesion.CuposDisponibles.HasValue && sesion.CuposDisponibles.Value > 0;
+
+                            <article class="itm-tarjeta" @key="sesionId">
+                                <div>
+                                    <p class="itm-tarjeta__hora">
+                                        @if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
+                                        {
+                                            <span class="itm-nobr">@ZonaHoraria.FormatearHora(sesion.FechaHoraInicio.Value)</span> <span class="itm-nobr">– @ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)</span>
+                                        }
+                                        else if (sesion.FechaHoraInicio.HasValue)
+                                        {
+                                            @ZonaHoraria.FormatearHora(sesion.FechaHoraInicio.Value)
+                                        }
+                                    </p>
+                                    @if (sesion.FechaHoraInicio.HasValue)
                                     {
-                                        <span class="badge bg-light text-primary border border-primary small">Recurrente</span>
+                                        <p class="itm-tarjeta__fecha">@ZonaHoraria.FormatearFecha(sesion.FechaHoraInicio.Value)@(evento.EsRecurrente == true ? " · Recurrente" : "")</p>
                                     }
                                 </div>
-                                <div class="card-body d-flex flex-column">
+                                <div>
+                                    <h2 class="itm-tarjeta__titulo" title="@evento.Nombre">@evento.Nombre</h2>
+                                    <p class="itm-meta">Entrenador: @(evento.EntrenadorNombre ?? "Por asignar")</p>
                                     @if (!string.IsNullOrWhiteSpace(evento.Descripcion))
                                     {
-                                        <p class="card-text text-secondary small texto-extenso mb-3">@evento.Descripcion</p>
+                                        <p class="itm-meta texto-extenso">@evento.Descripcion</p>
                                     }
+                                    @* I-08 / RN-020 / AMB-014: No se muestra la fecha base de apertura de reservas públicamente
+                                       para evitar que usuarios con ventana desplazada deduzcan su condición personal. *@
+                                </div>
 
-                                    <div class="mb-3">
-                                        <div class="small text-muted mb-1">
-                                            <strong>Entrenador:</strong> @(evento.EntrenadorNombre ?? "Por asignar")
-                                        </div>
-                                        @* I-08 / RN-020 / AMB-014: No se muestra la fecha base de apertura de reservas públicamente
-                                           para evitar que usuarios con ventana desplazada deduzcan su condición personal. *@
-                                    </div>
-
-                                    <h3 class="h6 fw-bold border-top pt-3 mb-2">Próximas Sesiones:</h3>
-                                    @if (evento.Sesiones == null || evento.Sesiones.Count == 0)
+                                <div class="itm-tarjeta__pie">
+                                    @* Cupo: el número va siempre en texto; la barra solo refuerza. Sin puntos por cupo (los eventos suelen superar 30 personas). *@
+                                    @if (hayCupo)
                                     {
-                                        <p class="text-muted small fst-italic mb-3">No hay sesiones activas próximas.</p>
-                                    }
-                                    else
-                                    {
-                                        <div class="list-group list-group-flush mb-3 flex-grow-1">
-                                            @foreach (var sesion in evento.Sesiones)
+                                        <div class="itm-cupo">
+                                            <span class="itm-cupo__texto">@sesion.CuposDisponibles cupos</span>
+                                            @if (sesion.CupoMaximo is > 0)
                                             {
-                                                var sesionId = sesion.Id ?? Guid.Empty;
-                                                var estaBloqueadaPorVentana = _sesionesVentanaCerrada.Contains(sesionId);
-                                                var estaProcesandoEsta = _sesionEnProcesoId == sesionId;
-
-                                                <div class="list-group-item px-0 py-2 border-0 border-bottom">
-                                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                                        <span class="fw-semibold small">
-                                                            @if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
-                                                            {
-                                                                @ZonaHoraria.FormatearRango(sesion.FechaHoraInicio.Value, sesion.FechaHoraFin.Value)
-                                                            }
-                                                            else if (sesion.FechaHoraInicio.HasValue)
-                                                            {
-                                                                @ZonaHoraria.FormatearFechaHora(sesion.FechaHoraInicio.Value)
-                                                            }
-                                                        </span>
-                                                        @if (sesion.CuposDisponibles.HasValue && sesion.CuposDisponibles.Value > 0)
-                                                        {
-                                                            <span class="badge badge-itm-disponible">
-                                                                @sesion.CuposDisponibles cupos
-                                                            </span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="badge badge-itm-agotado">
-                                                                Agotado (Espera)
-                                                            </span>
-                                                        }
-                                                    </div>
-
-                                                    @* PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
-                                                       si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
-                                                       No añadir motivo, nivel ni fecha estimada — violaría RN-020. *@
-                                                    @if (estaBloqueadaPorVentana)
-                                                    {
-                                                        <div class="small text-muted fst-italic mt-1" role="note">
-                                                            Reservas aún no disponibles para esta sesión
-                                                        </div>
-                                                    }
-
-                                                    <div class="d-flex justify-content-end mt-2">
-                                                        <BotonAccion Tipo="button"
-                                                                     Clase="btn-itm-primario btn-sm"
-                                                                     Deshabilitado="@(estaBloqueadaPorVentana || _sesionEnProcesoId.HasValue)"
-                                                                     EstaProcesando="@estaProcesandoEsta"
-                                                                     TextoProcesando="Reservando..."
-                                                                     OnClick="@(() => RealizarReserva(sesionId))">
-                                                            Reservar cupo
-                                                        </BotonAccion>
-                                                    </div>
-                                                </div>
+                                                <div class="itm-cupo__barra" aria-hidden="true"><span style="width: @PorcentajeOcupado(sesion)%"></span></div>
                                             }
                                         </div>
                                     }
+                                    else
+                                    {
+                                        <div><InsigniaEstado Tipo="espera">Agotado (Espera)</InsigniaEstado></div>
+                                    }
+
+                                    @* PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
+                                       si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
+                                       No añadir motivo, nivel ni fecha estimada — violaría RN-020. *@
+                                    @if (estaBloqueadaPorVentana)
+                                    {
+                                        <p class="itm-nota" role="note">Reservas aún no disponibles para esta sesión</p>
+                                    }
+
+                                    <BotonAccion Tipo="button"
+                                                 Clase="btn-itm-primario itm-btn-bloque"
+                                                 Deshabilitado="@(estaBloqueadaPorVentana || _sesionEnProcesoId.HasValue)"
+                                                 EstaProcesando="@estaProcesandoEsta"
+                                                 TextoProcesando="Reservando..."
+                                                 OnClick="@(() => RealizarReserva(sesionId))">
+                                        Reservar cupo
+                                    </BotonAccion>
                                 </div>
-                            </div>
-                        </div>
-                    }
-                </div>
+                            </article>
+                        }
+                    </div>
+                }
             }
         </ExitoTemplate>
     </EstadoDeCarga>
@@ -148,8 +158,25 @@
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<EventoResumenDto>>? _estado;
     private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
     private Guid? _sesionEnProcesoId;
+    private DateTime? _diaSeleccionado;
     private string? _mensajeGlobal;
     private bool _mensajeEsExito;
+
+    private static List<(EventoResumenDto Evento, SesionResumenDto Sesion)> ObtenerSesiones(IReadOnlyList<EventoResumenDto> eventos) =>
+        eventos.SelectMany(e => (e.Sesiones ?? new()).Where(s => s.FechaHoraInicio.HasValue).Select(s => (Evento: e, Sesion: s)))
+               .OrderBy(x => x.Sesion.FechaHoraInicio).ToList();
+
+    private string EtiquetaDia(DateTime dia)
+    {
+        var hoy = ZonaHoraria.ObtenerFechaHoyLocal().Date;
+        if (dia == hoy) return "Hoy";
+        if (dia == hoy.AddDays(1)) return "Mañana";
+        return dia.ToString("dd/MM/yyyy"); // ya es fecha local (AHoraLocal); no se vuelve a convertir
+    }
+
+    // Solo presentación: ancho de la barra según lo que informa el backend (no se reimplementa ninguna regla de cupo)
+    private static int PorcentajeOcupado(SesionResumenDto s) =>
+        s.CupoMaximo is > 0 ? Math.Clamp((int)Math.Round((s.CuposOcupados ?? 0) * 100.0 / s.CupoMaximo.Value), 0, 100) : 0;
 
     protected override async Task OnInitializedAsync()
     {

@@ -1,0 +1,22 @@
+@* Esqueleto de carga: copia la forma de una tarjeta de sesión (hora, título, cupo, botón) para que la jerarquía no salte al llegar los datos. *@
+<div class="@Clase" role="status" aria-busy="true">
+    <span class="itm-solo-lectores">@Mensaje</span>
+    @for (var i = 0; i < Cantidad; i++)
+    {
+        var ancho = 40 + ((i * 17) % 25);
+        <article class="itm-tarjeta" aria-hidden="true">
+            <div class="itm-col" style="gap: 6px;"><span class="itm-esq itm-esq--hora"></span><span class="itm-esq itm-esq--linea" style="width: 72px;"></span></div>
+            <div class="itm-col" style="gap: 10px;"><span class="itm-esq itm-esq--titulo" style="width: @(ancho + 20)%;"></span><span class="itm-esq itm-esq--linea" style="width: @(ancho)%;"></span></div>
+            <div class="itm-tarjeta__pie">
+                <div class="itm-col" style="gap: 10px;"><span class="itm-esq itm-esq--barra"></span><span class="itm-esq itm-esq--linea" style="width: 54%;"></span></div>
+                <span class="itm-esq itm-esq--boton"></span>
+            </div>
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter] public int Cantidad { get; set; } = 3;
+    [Parameter] public string Mensaje { get; set; } = "Cargando…";
+    [Parameter] public string Clase { get; set; } = "itm-rejilla";
+}

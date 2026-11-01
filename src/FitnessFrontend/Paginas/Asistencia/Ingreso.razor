@@ -9,59 +9,53 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card card-itm shadow border-0 overflow-hidden">
-                <div class="card-header card-itm-header text-center py-3">
-                    <h2 class="h4 mb-0 fw-bold">Ingreso a Instalaciones</h2>
-                    <small class="text-white-50">Gimnasio Universitario ITM</small>
-                </div>
-                <div class="card-body p-4 text-center">
-                    @if (_evaluando)
-                    {
-                        <div class="py-5">
-                            <div class="spinner-border text-primary mb-3" role="status">
-                                <span class="visually-hidden">Verificando sesión...</span>
-                            </div>
-                            <p class="text-muted mb-0">Comprobando credenciales de acceso...</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <EstadoDeCarga Estado="@_estado" AlReintentar="RegistrarIngreso" MensajeCargando="Validando acceso en torniquete...">
-                        <ExitoTemplate Context="resultado">
-                            <div class="py-4">
-                                <div class="text-success mb-3">
-                                    <span class="bi bi-door-open-fill display-3"></span>
-                                </div>
-                                <h3 class="h4 fw-bold text-success mb-2">¡Ingreso Autorizado!</h3>
-                                <p class="lead mb-4">@(resultado.Mensaje ?? "Acceso concedido exitosamente.")</p>
-
-                                <div class="bg-light p-3 rounded mb-4 text-start">
-                                    <div class="row g-2 small">
-                                        @* Se muestra el NOMBRE del punto que devuelve el backend; el identificador de la URL es el token del QR y no se enseña *@
-                                        @if (!string.IsNullOrWhiteSpace(resultado.Detalle))
-                                        {
-                                            <div class="col-5 text-muted">Punto de acceso:</div>
-                                            <div class="col-7 fw-semibold">@resultado.Detalle</div>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="d-grid gap-2">
-                                    <a href="/eventos" class="btn btn-itm-primario">
-                                        Ver actividades del día
-                                    </a>
-                                </div>
-                            </div>
-                        </ExitoTemplate>
-                    </EstadoDeCarga>
-                    }
-                </div>
+<div class="itm-contenedor itm-pagina">
+    @if (_evaluando)
+    {
+        <div class="itm-resultado" role="status" aria-busy="true">
+                <span class="itm-solo-lectores">Comprobando credenciales de acceso...</span>
+                <span class="itm-esq" aria-hidden="true" style="width: 88px; height: 88px; border-radius: 999px;"></span>
+                <span class="itm-esq itm-esq--titulo" aria-hidden="true" style="width: 60%;"></span>
+                <span class="itm-esq itm-esq--linea" aria-hidden="true" style="width: 80%;"></span>
             </div>
-        </div>
-    </div>
+    }
+    else
+    {
+        <EstadoDeCarga Estado="@_estado" AlReintentar="RegistrarIngreso" MensajeCargando="Validando acceso en torniquete...">
+            <CargandoTemplate>
+                <div class="itm-resultado" role="status" aria-busy="true">
+                <span class="itm-solo-lectores">Validando acceso en torniquete...</span>
+                <span class="itm-esq" aria-hidden="true" style="width: 88px; height: 88px; border-radius: 999px;"></span>
+                <span class="itm-esq itm-esq--titulo" aria-hidden="true" style="width: 60%;"></span>
+                <span class="itm-esq itm-esq--linea" aria-hidden="true" style="width: 80%;"></span>
+            </div>
+            </CargandoTemplate>
+            <ErrorTemplate Context="error">
+                <div class="itm-resultado">
+                    <span class="itm-resultado__sello itm-resultado__sello--error"><svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
+                    <h1>No se pudo registrar el ingreso</h1>
+                    @* RN-030: el rechazo del backend se muestra tal cual; sin cuenta regresiva ni explicación propia *@
+                    <div class="alert alert-danger w-100 text-start" role="alert">@error.Mensaje</div>
+                    <button type="button" class="btn btn-itm-secundario itm-btn-bloque" @onclick="RegistrarIngreso">Reintentar</button>
+                </div>
+            </ErrorTemplate>
+            <ExitoTemplate Context="resultado">
+                <div class="itm-resultado">
+                    <span class="itm-resultado__sello itm-resultado__sello--ok"><svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <h1>¡Ingreso Autorizado!</h1>
+                    <p>@(resultado.Mensaje ?? "Acceso concedido exitosamente.")</p>
+
+                    @* Se muestra el NOMBRE del punto que devuelve el backend; el identificador de la URL es el token del QR y no se enseña *@
+                    @if (!string.IsNullOrWhiteSpace(resultado.Detalle))
+                    {
+                        <dl class="itm-datos"><dt>Punto de acceso</dt><dd>@resultado.Detalle</dd></dl>
+                    }
+
+                    <a href="/eventos" class="btn btn-itm-primario itm-btn-bloque">Ver actividades del día</a>
+                </div>
+            </ExitoTemplate>
+        </EstadoDeCarga>
+    }
 </div>
 
 @code {

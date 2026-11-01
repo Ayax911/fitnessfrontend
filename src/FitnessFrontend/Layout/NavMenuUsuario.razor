@@ -1,18 +1,6 @@
-@* Menú de navegación para rol Usuario *@
-<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-    <li class="nav-item">
-        <NavLink class="nav-link" href="eventos" Match="NavLinkMatch.All">
-            <span class="bi bi-calendar-event me-1"></span> Eventos
-        </NavLink>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="reservas">
-            <span class="bi bi-bookmark-check me-1"></span> Mis Reservas
-        </NavLink>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="historial">
-            <span class="bi bi-clock-history me-1"></span> Mi Asistencia
-        </NavLink>
-    </li>
+@* Menú de navegación para rol Usuario (barra superior, desde 720 px; en celular se usa NavTabsUsuario) *@
+<ul class="itm-barra__enlaces">
+    <li><NavLink href="eventos" Match="NavLinkMatch.All">Eventos</NavLink></li>
+    <li><NavLink href="reservas">Mis reservas</NavLink></li>
+    <li><NavLink href="historial">Mi asistencia</NavLink></li>
 </ul>

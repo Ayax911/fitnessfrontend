@@ -1,85 +1,116 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using FitnessFrontend.Servicios.Identidad
 @inject IAutenticacionService AutenticacionService
 @inject NavigationManager NavigationManager
 
 <div class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark navbar-itm py-3">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="/eventos">
-                    <span class="fs-4 fw-bold">ITM</span>
-                    <span class="ms-2 ps-2 border-start border-light fs-6 opacity-75">Bienestar Universitario</span>
-                </a>
-                
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido" 
-                        aria-controls="navbarContenido" aria-expanded="false" aria-label="Alternar navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+        <div class="itm-barra">
+            @* Logo oficial sin modificar y sin texto al lado (manual de imagen, "usos incorrectos") *@
+            <a class="itm-marca-img" href="/eventos" aria-label="Ir al inicio">
+                <img class="itm-logo" src="img/itm-horizontal-blanco.png" alt="ITM, Institución Universitaria" />
+            </a>
 
-                <div class="collapse navbar-collapse" id="navbarContenido">
-                    <AuthorizeView>
+            <AuthorizeView>
+                <Authorized>
+                    <AuthorizeView Roles="Administrador" Context="adminContext">
                         <Authorized>
-                            <AuthorizeView Roles="Administrador" Context="adminContext">
-                                <Authorized>
-                                    <NavMenuAdministrador />
-                                </Authorized>
-                                <NotAuthorized>
-                                    <AuthorizeView Roles="Entrenador" Context="entrenadorContext">
-                                        <Authorized>
-                                            <NavMenuEntrenador />
-                                        </Authorized>
-                                        <NotAuthorized>
-                                            <NavMenuUsuario />
-                                        </NotAuthorized>
-                                    </AuthorizeView>
-                                </NotAuthorized>
-                            </AuthorizeView>
-
-                            <div class="d-flex align-items-center ms-auto gap-3 text-light">
-                                <span class="small opacity-75 text-truncate usuario-email-truncate">
-                                    @context.User.Identity?.Name
-                                </span>
-                                <button type="button" class="btn btn-sm btn-outline-light" @onclick="CerrarSesion">
-                                    Cerrar Sesión
-                                </button>
-                            </div>
+                            <NavMenuAdministrador />
                         </Authorized>
                         <NotAuthorized>
-                            <div class="d-flex align-items-center ms-auto gap-2">
-                                <a href="login" class="btn btn-sm btn-outline-light">Iniciar Sesión</a>
-                                <a href="registro" class="btn btn-sm btn-light text-primary fw-semibold">Registrarse</a>
-                            </div>
+                            <AuthorizeView Roles="Entrenador" Context="entrenadorContext">
+                                <Authorized>
+                                    <NavMenuEntrenador />
+                                </Authorized>
+                                <NotAuthorized>
+                                    <NavMenuUsuario />
+                                </NotAuthorized>
+                            </AuthorizeView>
                         </NotAuthorized>
                     </AuthorizeView>
-                </div>
-            </div>
-        </nav>
+
+                    <div class="itm-barra__derecha">
+                        <span class="itm-barra__usuario">@context.User.Identity?.Name</span>
+                        <AuthorizeView Roles="Administrador,Entrenador" Context="menuContext">
+                            <Authorized>
+                                <button type="button" class="btn-barra itm-menu-boton" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
+                                    Menú
+                                </button>
+                            </Authorized>
+                        </AuthorizeView>
+                        <button type="button" class="btn-barra" @onclick="CerrarSesion">Cerrar sesión</button>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="itm-barra__derecha">
+                        <a href="login" class="btn-barra">Iniciar sesión</a>
+                        <a href="registro" class="btn-barra btn-barra--solido">Registrarse</a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        @* Celular, Administrador y Entrenador: tienen más de 3 destinos, así que el menú se despliega bajo la barra *@
+        <AuthorizeView Roles="Administrador,Entrenador" Context="desplegableContext">
+            <Authorized>
+                @if (_menuAbierto)
+                {
+                    <div class="itm-menu-movil" id="menu-movil">
+                        <AuthorizeView Roles="Administrador" Context="adminMovil">
+                            <Authorized><NavMenuAdministrador /></Authorized>
+                            <NotAuthorized><NavMenuEntrenador /></NotAuthorized>
+                        </AuthorizeView>
+                    </div>
+                }
+            </Authorized>
+        </AuthorizeView>
     </header>
 
-    <main id="main-content" class="flex-grow-1">
+    <main id="main-content" class="flex-grow-1 d-flex flex-column">
         @Body
     </main>
 
-    <footer class="bg-dark text-white py-4 mt-auto border-top">
-        <div class="container text-center text-md-start">
-            <div class="row align-items-center">
-                <div class="col-md-6 mb-2 mb-md-0">
-                    <p class="mb-0 fw-semibold">Instituto Tecnológico Metropolitano — ITM</p>
-                    <small class="text-white-50">Área de Bienestar Universitario · Plataforma de Gimnasio</small>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <small class="text-white-50">Medellín, Colombia · Horario institucional</small>
-                </div>
-            </div>
+    <footer class="itm-pie">
+        <div class="itm-contenedor">
+            <strong>Bienestar Universitario · Gimnasio</strong>
+            Institución Universitaria ITM · Medellín, Colombia
         </div>
     </footer>
+
+    @* Usuario (ni Administrador ni Entrenador) en celular: barra inferior *@
+    <AuthorizeView Roles="Administrador,Entrenador" Context="sinTabs">
+        <Authorized />
+        <NotAuthorized>
+            <AuthorizeView Context="conSesion">
+                <Authorized><NavTabsUsuario /></Authorized>
+            </AuthorizeView>
+        </NotAuthorized>
+    </AuthorizeView>
 </div>
 
 @code {
+    private bool _menuAbierto;
+
+    protected override void OnInitialized() => NavigationManager.LocationChanged += AlCambiarRuta;
+
+    private void AlternarMenu() => _menuAbierto = !_menuAbierto;
+
+    private void AlCambiarRuta(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (_menuAbierto)
+        {
+            _menuAbierto = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
     private async Task CerrarSesion()
     {
+        _menuAbierto = false;
         await AutenticacionService.CerrarSesionAsync();
         NavigationManager.NavigateTo("/login");
     }
+
+    public void Dispose() => NavigationManager.LocationChanged -= AlCambiarRuta;
 }

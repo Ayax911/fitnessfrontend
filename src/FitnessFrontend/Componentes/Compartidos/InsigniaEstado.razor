@@ -1,0 +1,29 @@
+@* Insignia de estado (diseño A · tinta suave): fondo claro, texto oscuro del mismo color e icono. Nunca solo color. *@
+<span class="itm-estado itm-estado--@Tipo">
+    <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        @switch (Tipo)
+        {
+            case "espera":
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" /><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                break;
+            case "no":
+                <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+                break;
+            case "cancelada":
+                <path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+                break;
+            case "ingreso":
+                <path d="M4 12h10M10 7.5l4.5 4.5-4.5 4.5M19 4.5v15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                break;
+            default: @* ok y asistida *@
+                <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                break;
+        }
+    </svg>@ChildContent
+</span>
+
+@code {
+    /// <summary>ok · espera · asistida · no · cancelada · ingreso</summary>
+    [Parameter, EditorRequired] public string Tipo { get; set; } = "cancelada";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

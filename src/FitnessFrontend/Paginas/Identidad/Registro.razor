@@ -6,16 +6,15 @@
 @inject IAutenticacionService AutenticacionService
 @inject NavigationManager NavigationManager
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-5">
-            <div class="card card-itm border-0 shadow">
-                <div class="card-header card-itm-header text-center py-4">
-                    <h2 class="h4 mb-0 fw-bold">Gimnasio ITM</h2>
-                    <span class="text-secondary small">Bienestar Universitario</span>
-                </div>
-                <div class="card-body p-4 p-md-5">
-                    <h3 class="h5 fw-bold mb-4 text-center">Registro de Usuario</h3>
+<div class="itm-acceso">
+    <section class="itm-panel-azul" aria-label="Bienvenida">
+        <p style="font: 700 22px/28px var(--font-sans); margin-bottom: var(--space-3);">Gimnasio universitario</p>
+        <p>Reserva tu cupo, registra tu asistencia con el código QR y consulta tu historial, todo en un solo lugar.</p>
+    </section>
+    <div class="itm-acceso__formulario">
+        <div>
+
+                    <h1 class="mb-4">Crear cuenta</h1>
 
                     @if (!string.IsNullOrWhiteSpace(_mensajeError))
                     {
@@ -37,7 +36,7 @@
                         <div class="mb-3">
                             <label for="regNombreInput" class="form-label fw-semibold">Nombre completo</label>
                             <InputText id="regNombreInput" class="form-control" @bind-Value="_modelo.NombreCompleto" placeholder="Nombre y apellidos" autocomplete="name" />
-                            <ValidationMessage For="@(() => _modelo.NombreCompleto)" class="text-danger small" />
+                            <ValidationMessage For="@(() => _modelo.NombreCompleto)" class="validation-message" />
                         </div>
 
                         <div class="mb-3">
@@ -49,26 +48,26 @@
                                 <option value="@TipoUsuario.Externo">Externo</option>
                                 <option value="@TipoUsuario.Contratista">Contratista</option>
                             </InputSelect>
-                            <ValidationMessage For="@(() => _modelo.TipoUsuario)" class="text-danger small" />
+                            <ValidationMessage For="@(() => _modelo.TipoUsuario)" class="validation-message" />
                         </div>
 
                         <div class="mb-3">
                             <label for="regEmailInput" class="form-label fw-semibold">Correo Institucional</label>
                             <InputText id="regEmailInput" class="form-control" @bind-Value="_modelo.Email" placeholder="usuario@correo.itm.edu.co" />
-                            <ValidationMessage For="@(() => _modelo.Email)" class="text-danger small" />
+                            <ValidationMessage For="@(() => _modelo.Email)" class="validation-message" />
                         </div>
 
                         <div class="mb-3">
                             <label for="regPasswordInput" class="form-label fw-semibold">Contraseña</label>
                             <InputText id="regPasswordInput" type="password" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" />
                             <div class="form-text small">Mínimo 6 caracteres, con mayúscula, minúscula, número y un símbolo.</div>
-                            <ValidationMessage For="@(() => _modelo.Password)" class="text-danger small" />
+                            <ValidationMessage For="@(() => _modelo.Password)" class="validation-message" />
                         </div>
 
                         <div class="mb-4">
                             <label for="regConfirmPasswordInput" class="form-label fw-semibold">Confirmar Contraseña</label>
                             <InputText id="regConfirmPasswordInput" type="password" class="form-control" @bind-Value="_modelo.ConfirmPassword" placeholder="••••••••" />
-                            <ValidationMessage For="@(() => _modelo.ConfirmPassword)" class="text-danger small" />
+                            <ValidationMessage For="@(() => _modelo.ConfirmPassword)" class="validation-message" />
                         </div>
 
                         @* PENDIENTE (RNF-011, validación jurídica): el texto y el enlace oficial del aviso de privacidad
@@ -81,7 +80,7 @@
                             <ValidationMessage For="@(() => _modelo.AceptaTratamientoDatos)" class="text-danger small d-block" />
                         </div>
 
-                        <div class="d-grid gap-2 mb-3">
+                        <div class="d-grid gap-2 mb-3 mt-4">
                             <BotonAccion Tipo="submit" 
                                         Clase="btn-itm-primario" 
                                         EstaProcesando="@_procesando" 
@@ -95,8 +94,6 @@
                         <span class="text-muted small">¿Ya tienes cuenta registrada?</span>
                         <a href="@ObtenerUrlLogin()" class="fw-semibold ms-1">Iniciar Sesión</a>
                     </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

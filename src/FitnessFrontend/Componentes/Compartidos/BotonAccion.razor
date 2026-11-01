@@ -5,7 +5,7 @@
         @attributes="AtributosAdicionales">
     @if (EstaProcesando)
     {
-        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
         @if (!string.IsNullOrWhiteSpace(TextoProcesando))
         {
             <span>@TextoProcesando</span>
@@ -31,7 +31,7 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AtributosAdicionales { get; set; }
 
-    private string ObtenerClaseBoton() => $"btn {Clase}";
+    private string ObtenerClaseBoton() => EstaProcesando ? $"btn {Clase} btn-cargando" : $"btn {Clase}";
 
     private async Task ManejarClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
     {

@@ -1,0 +1,16 @@
+@* Esqueleto de carga para listas de filas (reservas, historial). *@
+<div class="itm-lista" role="status" aria-busy="true">
+    <span class="itm-solo-lectores">@Mensaje</span>
+    @for (var i = 0; i < Cantidad; i++)
+    {
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid var(--gris-itm);" aria-hidden="true">
+            <div class="itm-col" style="gap: 8px; flex: 1;"><span class="itm-esq itm-esq--linea" style="width: 84px; height: 18px;"></span><span class="itm-esq itm-esq--linea" style="width: @(45 + (i * 13) % 25)%;"></span></div>
+            <span class="itm-esq itm-esq--insignia"></span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Cantidad { get; set; } = 4;
+    [Parameter] public string Mensaje { get; set; } = "Cargando…";
+}
