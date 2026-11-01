@@ -142,6 +142,44 @@ public class AutenticacionService : IAutenticacionService
         return await _localStorage.ObtenerItemAsync(ClaveToken);
     }
 
+    public async Task<ResultadoOperacion> RenovarSesionAsync()
+    {
+        try
+        {
+            var refreshToken = await _localStorage.ObtenerItemAsync(ClaveRefreshToken);
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await LimpiarSesionAsync();
+                return ResultadoOperacion.Fallo("No hay token de renovación.", "SinRefreshToken");
+            }
+
+            var respuesta = await _apiClient.Api.Auth.Refresh.PostAsync(new RefreshRequest
+            {
+                RefreshToken = refreshToken
+            });
+
+            if (respuesta == null || string.IsNullOrWhiteSpace(respuesta.AccessToken))
+            {
+                await LimpiarSesionAsync();
+                return ResultadoOperacion.Fallo("No se recibieron credenciales renovadas.", "RenovacionInvalida");
+            }
+
+            await _localStorage.GuardarItemAsync(ClaveToken, respuesta.AccessToken);
+            if (!string.IsNullOrWhiteSpace(respuesta.RefreshToken))
+            {
+                await _localStorage.GuardarItemAsync(ClaveRefreshToken, respuesta.RefreshToken);
+            }
+
+            await _authStateProvider.NotificarTokenRenovadoAsync(respuesta.AccessToken);
+            return ResultadoOperacion.Exito();
+        }
+        catch (Exception ex)
+        {
+            await LimpiarSesionAsync();
+            return ResultadoOperacion.Fallo($"Error al renovar sesión: {ex.Message}", "FalloRenovacion");
+        }
+    }
+
     public async Task<UsuarioSesion?> ObtenerUsuarioActualAsync()
     {
         var authState = await _authStateProvider.GetAuthenticationStateAsync();

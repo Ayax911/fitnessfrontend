@@ -28,6 +28,7 @@ public class RegistroTests : BunitContext
         public Task<string?> ObtenerTokenAsync() => Task.FromResult<string?>(null);
         public Task<UsuarioSesion?> ObtenerUsuarioActualAsync() => Task.FromResult<UsuarioSesion?>(null);
         public Task LimpiarSesionAsync() => Task.CompletedTask;
+        public Task<ResultadoOperacion> RenovarSesionAsync() => Task.FromResult(ResultadoOperacion.Exito());
     }
 
     private IRenderedComponent<Registro> Llenar(AutenticacionFalsa auth, bool autoriza)

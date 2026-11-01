@@ -13,4 +13,6 @@ public interface IAutenticacionService
     Task<string?> ObtenerTokenAsync();
     Task<UsuarioSesion?> ObtenerUsuarioActualAsync();
     Task LimpiarSesionAsync();
+    Task<ResultadoOperacion> RenovarSesionAsync();
 }
+

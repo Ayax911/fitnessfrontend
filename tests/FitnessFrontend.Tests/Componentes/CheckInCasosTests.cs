@@ -92,6 +92,7 @@ public class CheckInCasosTests : BunitContext
         public Task<string?> ObtenerTokenAsync() => Task.FromResult<string?>("token-jwt-test");
         public Task<UsuarioSesion?> ObtenerUsuarioActualAsync() => Task.FromResult<UsuarioSesion?>(new UsuarioSesion(Guid.NewGuid(), "estudiante@itm.edu.co", new[] { "Usuario" }));
         public Task LimpiarSesionAsync() => Task.CompletedTask;
+        public Task<ResultadoOperacion> RenovarSesionAsync() => Task.FromResult(ResultadoOperacion.Exito());
     }
 
     [Fact]

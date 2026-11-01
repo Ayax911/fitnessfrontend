@@ -56,12 +56,21 @@ public class ProveedorEstadoAutenticacion : AuthenticationStateProvider
         NotifyAuthenticationStateChanged(Task.FromResult(_estadoAnonimo));
     }
 
+    public async Task NotificarTokenRenovadoAsync(string nuevoToken)
+    {
+        var perfilJson = await _localStorage.ObtenerItemAsync(ClavePerfil);
+        var perfil = DeserializarPerfil(perfilJson);
+        NotificarAutenticado(nuevoToken, perfil);
+    }
+
     public static string SerializarPerfil(PerfilSesion perfil) => JsonSerializer.Serialize(perfil);
+
+    private static readonly JsonSerializerOptions OpcionesJson = new() { PropertyNameCaseInsensitive = true };
 
     private static PerfilSesion? DeserializarPerfil(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return null;
-        try { return JsonSerializer.Deserialize<PerfilSesion>(json); }
+        try { return JsonSerializer.Deserialize<PerfilSesion>(json, OpcionesJson); }
         catch (JsonException) { return null; }
     }
 

@@ -2,6 +2,16 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F1 · Renovación de sesión de un solo vuelo (RF-026)
+- Implementado Patrón 8 en `ManejadorDeAutenticacionHttp.cs` con sincronización mediante `SemaphoreSlim`.
+- Peticiones concurrentes con token vencido comparten un único refresh contra `POST /api/auth/refresh`.
+- Reintento único de la petición original clonando cabeceras y contenido; sin bucle de reintento ante 401 persistente.
+- Si el refresh token es inválido o expira, se limpian tokens/perfil y se redirige a `/login?returnUrl=<ruta actual>`.
+- Exclusión estricta de rutas `/api/auth/*` para prevenir recursión o interceptar login.
+- Implementado método `RenovarSesionAsync()` en `IAutenticacionService` y `AutenticacionService`.
+- Soportada deserialización insensible a mayúsculas/minúsculas en `ProveedorEstadoAutenticacion.cs`.
+- Cobertura de las 5 pruebas obligatorias de F1 en `RenovacionSesionF1Tests.cs` (94 pruebas en verde).
+
 ## F0 · Documentación previa y cobertura (Plan de despliegue)
 - Tabla de cobertura en `docs/arquitectura/08-guia-de-implementacion.md` actualizada con RF-026 a RF-039 y requisitos diferidos RF-041/RF-042.
 - Ambigüedades AMB-D04, AMB-D07 y nota de compatibilidad de AMB-014 con sesión cancelada incorporadas en `docs/requisitos/01-ambiguedades-ui.md`.

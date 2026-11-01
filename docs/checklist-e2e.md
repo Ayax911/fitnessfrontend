@@ -48,8 +48,8 @@
 
 | Fase / RF | Flujo de verificación | Estado |
 |---|---|---|
-| F1 / RF-026 | Sesión vencida durante un check-in (`/checkin/{token}`): renueva en silencio y completa sin redirigir a login | ⬜ pendiente F1 |
-| F1 / RF-026 | 5 peticiones simultáneas con token vencido generan exactamente 1 llamada a refresh | ⬜ pendiente F1 |
+| F1 / RF-026 | Sesión vencida durante un check-in (`/checkin/{token}`): renueva en silencio y completa sin redirigir a login | ✅ probado (RenovacionSesionF1Tests.Prueba5) |
+| F1 / RF-026 | 5 peticiones simultáneas con token vencido generan exactamente 1 llamada a refresh | ✅ probado (RenovacionSesionF1Tests.Prueba1) |
 | F2 / RF-035 | Vista semanal `/programacion` convierte a `America/Bogota` y muestra franjas de bloqueo | ⬜ pendiente F2 |
 | F2 / RF-036 | Descarga de archivo `.ics` desde Mis reservas confirmadas | ⬜ pendiente F2 |
 | F2 / RF-037 | Contador de lista de espera visible sin revelar posición personal (RN-020) | ⬜ pendiente F2 |
