@@ -1,0 +1,32 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Rider / VS Code
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+## EF Core
+*.db
+*.db-shm
+*.db-wal
+
+## Secrets — appsettings.Development.json IS committed (no real secrets belong in it; use
+## `dotnet user-secrets` for anything sensitive, see UserSecretsId in the .csproj).
+appsettings.*.local.json
+.env
+.env.*
+
+## Docker
+docker-compose.override.yml
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Blazor WASM
+wwwroot/_framework/

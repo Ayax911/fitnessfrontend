@@ -1,0 +1,194 @@
+@* RF-016: Consultar indicador y trazabilidad de priorización de un usuario (Administrador) *@
+@page "/admin/priorizacion/usuarios"
+@page "/admin/priorizacion/usuarios/{IdUsuario:guid}"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Priorizacion
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IPriorizacionClienteService PriorizacionService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="mb-4 pb-2 border-bottom">
+        <span class="badge badge-itm-priorizacion mb-2">Módulo Restringido — Administrador</span>
+        <h1 class="h2 fw-bold text-itm-priorizacion mb-1">
+            <span class="bi bi-shield-lock me-2"></span>Indicador de Priorización
+        </h1>
+        <p class="text-muted mb-0">Auditoría del nivel de prioridad y métricas de confiabilidad de un usuario (RN-020).</p>
+    </div>
+
+    @* Buscador de usuario por GUID *@
+    <div class="card card-itm card-itm-priorizacion shadow-sm mb-4">
+        <div class="card-body p-4">
+            <label for="inputUsuarioId" class="form-label fw-bold small text-uppercase text-muted">
+                Identificador de Usuario (GUID)
+            </label>
+            <div class="input-group">
+                <input id="inputUsuarioId" type="text" class="form-control" placeholder="Ej. 3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                       @bind="_guidBusqueda" @bind:event="oninput" />
+                <button class="btn btn-itm-priorizacion" type="button" @onclick="BuscarUsuario" disabled="@_buscando">
+                    @if (_buscando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <span>Consultando...</span>
+                    }
+                    else
+                    {
+                        <span class="bi bi-search me-1"></span>
+                        <span>Consultar</span>
+                    }
+                </button>
+            </div>
+            <div class="form-text small">
+                Consulte el historial y nivel actual asignado automáticamente por el motor de priorización.
+            </div>
+        </div>
+    </div>
+
+    @if (_estado != null)
+    {
+        <EstadoDeCarga Estado="@_estado" AlReintentar="BuscarUsuario" MensajeCargando="Consultando métricas del usuario...">
+            <ExitoTemplate Context="indicador">
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card card-itm h-100 shadow-sm border-start border-4 border-primary">
+                            <div class="card-body p-4">
+                                <h6 class="text-muted small text-uppercase fw-bold mb-2">Nivel de Priorización Actual</h6>
+                                <div class="d-flex align-items-center mb-3">
+                                    @switch (indicador.Nivel)
+                                    {
+                                        case 0:
+                                            <span class="badge bg-info text-dark fs-5 p-2 me-2">
+                                                <span class="bi bi-sparkles me-1"></span> Nuevo
+                                            </span>
+                                            break;
+                                        case 1:
+                                            <span class="badge bg-success fs-5 p-2 me-2">
+                                                <span class="bi bi-star-fill me-1"></span> Prioritario
+                                            </span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-primary fs-5 p-2 me-2">
+                                                <span class="bi bi-person-check-fill me-1"></span> Normal
+                                            </span>
+                                            break;
+                                        case 3:
+                                            <span class="badge bg-danger fs-5 p-2 me-2">
+                                                <span class="bi bi-exclamation-octagon-fill me-1"></span> Penalizado
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary fs-5 p-2 me-2">
+                                                Nivel @(indicador.Nivel)
+                                            </span>
+                                            break;
+                                    }
+                                </div>
+                                <p class="small text-secondary mb-0">
+                                    Nivel confidencial no visible para Usuario ni Entrenador (RN-020).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card card-itm h-100 shadow-sm border-start border-4 border-info">
+                            <div class="card-body p-4">
+                                <h6 class="text-muted small text-uppercase fw-bold mb-2">Racha de Asistencia</h6>
+                                <h3 class="display-6 fw-bold text-primary mb-1">
+                                    @(indicador.RachaAsistenciasActual ?? 0)
+                                </h3>
+                                <p class="small text-secondary mb-0">Asistencias consecutivas registradas sin faltas.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card card-itm h-100 shadow-sm border-start border-4 border-warning">
+                            <div class="card-body p-4">
+                                <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Inasistencias</h6>
+                                <h3 class="display-6 fw-bold text-danger mb-1">
+                                    @(indicador.TotalInasistencias ?? 0)
+                                </h3>
+                                <p class="small text-secondary mb-0">Faltas acumuladas en sesiones confirmadas.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card card-itm shadow-sm">
+                            <div class="card-header card-itm-header">
+                                <h5 class="card-title mb-0 fw-bold">Información de Auditoría</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <div class="small text-muted">ID de Usuario:</div>
+                                        <div class="fw-semibold text-break">@indicador.UsuarioId</div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="small text-muted">Correo Electrónico:</div>
+                                        <div class="fw-semibold">@(indicador.Email ?? "—")</div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="small text-muted">Nombre Registrado:</div>
+                                        <div class="fw-semibold">@(indicador.NombreUsuario ?? "—")</div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="small text-muted">Total Sesiones Asistidas:</div>
+                                        <div class="fw-semibold">@(indicador.TotalAsistidas ?? 0)</div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="small text-muted">Último Recálculo de Nivel:</div>
+                                        <div class="fw-semibold">
+                                            @(indicador.UltimoRecalculo.HasValue ? ZonaHoraria.FormatearFechaHora(indicador.UltimoRecalculo.Value) : "No registrado")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ExitoTemplate>
+        </EstadoDeCarga>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid? IdUsuario { get; set; }
+
+    private string? _guidBusqueda;
+    private bool _buscando;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>? _estado;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IdUsuario.HasValue && IdUsuario != Guid.Empty)
+        {
+            _guidBusqueda = IdUsuario.Value.ToString();
+            await Consultar(IdUsuario.Value);
+        }
+    }
+
+    private async Task BuscarUsuario()
+    {
+        if (string.IsNullOrWhiteSpace(_guidBusqueda) || !Guid.TryParse(_guidBusqueda, out var id))
+        {
+            _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>.Fallo(
+                "Por favor ingrese un GUID de usuario válido.");
+            return;
+        }
+
+        await Consultar(id);
+    }
+
+    private async Task Consultar(Guid usuarioId)
+    {
+        _buscando = true;
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>.Cargando();
+        _estado = await PriorizacionService.ConsultarIndicadorUsuarioAsync(usuarioId);
+        _buscando = false;
+    }
+}

@@ -1,0 +1,187 @@
+@* RF-018: Consultar y modificar parámetros configurables del sistema (Administrador) *@
+@page "/admin/configuracion"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Priorizacion
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IPriorizacionClienteService PriorizacionService
+
+<div class="container py-4">
+    <div class="mb-4 pb-2 border-bottom">
+        <span class="badge badge-itm-priorizacion mb-2">Módulo Restringido — Administrador</span>
+        <h1 class="h2 fw-bold text-itm-priorizacion mb-1">
+            <span class="bi bi-sliders me-2"></span>Configuración de Reglas del Sistema
+        </h1>
+        <p class="text-muted mb-0">Parámetros del motor de priorización escalonada y ventanas temporales de check-in.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            <span class="bi @(_alertaEsExito ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></span>
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @* PENDIENTE (AMB-013):
+       La pantalla muestra estrictamente los valores que devuelve el backend,
+       sin precargar valores por defecto "razonables" propios en el formulario. *@
+    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarConfiguracion" MensajeCargando="Cargando parámetros del sistema...">
+        <ExitoTemplate Context="config">
+            <div class="card card-itm card-itm-priorizacion shadow-sm">
+                <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Parámetros Activos de Priorización y Ventanas</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="CargarConfiguracion">
+                        <span class="bi bi-arrow-clockwise me-1"></span> Recargar
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    <EditForm Model="@_request" OnValidSubmit="GuardarConfiguracion">
+                        <DataAnnotationsValidator />
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <h6 class="fw-bold text-itm-priorizacion border-bottom pb-2 mb-3">
+                                    <span class="bi bi-award me-1"></span> Umbrales de Nivel y Confiabilidad (RN-020, RF-015)
+                                </h6>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="umbralPrioritario" class="form-label fw-semibold small">
+                                    Umbral Asistencias Nivel Prioritario
+                                </label>
+                                <InputNumber id="umbralPrioritario" class="form-control" @bind-Value="_request.UmbralAsistenciasPrioritario" min="1" required />
+                                <div class="form-text small">Mínimo de asistencias para alcanzar nivel Prioritario.</div>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="umbralPenalizacion" class="form-label fw-semibold small">
+                                    Umbral Inasistencias Penalización
+                                </label>
+                                <InputNumber id="umbralPenalizacion" class="form-control" @bind-Value="_request.UmbralInasistenciasPenalizacion" min="1" required />
+                                <div class="form-text small">Faltas acumuladas que degradan al nivel Penalizado.</div>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="criterioRecuperacion" class="form-label fw-semibold small">
+                                    Recuperación Asistencias Consecutivas
+                                </label>
+                                <InputNumber id="criterioRecuperacion" class="form-control" @bind-Value="_request.CriterioRecuperacionAsistenciasConsecutivas" min="1" required />
+                                <div class="form-text small">Racha requerida para salir del nivel Penalizado.</div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-itm-priorizacion border-bottom pb-2 mb-3">
+                                    <span class="bi bi-calendar-range me-1"></span> Ventanas Escalonadas de Reserva (RN-028, RF-017)
+                                </h6>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="despNormal" class="form-label fw-semibold small">
+                                    Desplazamiento Nivel Normal (Minutos)
+                                </label>
+                                <InputNumber id="despNormal" class="form-control" @bind-Value="_request.DesplazamientoNivelNormalMinutos" min="0" required />
+                                <div class="form-text small">Retraso de apertura respecto al nivel Prioritario.</div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="despPenalizado" class="form-label fw-semibold small">
+                                    Desplazamiento Nivel Penalizado (Minutos)
+                                </label>
+                                <InputNumber id="despPenalizado" class="form-control" @bind-Value="_request.DesplazamientoNivelPenalizadoMinutos" min="0" required />
+                                <div class="form-text small">Retraso de apertura para usuarios penalizados.</div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <h6 class="fw-bold text-itm-priorizacion border-bottom pb-2 mb-3">
+                                    <span class="bi bi-qr-code-scan me-1"></span> Parámetros de Check-in y Torniquetes (RN-022, RN-030)
+                                </h6>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="duracionVentana" class="form-label fw-semibold small">
+                                    Duración Ventana Asistencia (Minutos)
+                                </label>
+                                <InputNumber id="duracionVentana" class="form-control" @bind-Value="_request.DuracionVentanaAsistenciaMinutos" min="1" required />
+                                <div class="form-text small">Vigencia máxima del QR tras inicio de sesión.</div>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="margenApertura" class="form-label fw-semibold small">
+                                    Margen Apertura Previa (Minutos)
+                                </label>
+                                <InputNumber id="margenApertura" class="form-control" @bind-Value="_request.MargenAperturaAsistenciaMinutos" min="0" required />
+                                <div class="form-text small">Minutos de antelación para escanear asistencia.</div>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="intervaloGeneral" class="form-label fw-semibold small">
+                                    Intervalo Mínimo Ingreso General (Minutos)
+                                </label>
+                                <InputNumber id="intervaloGeneral" class="form-control" @bind-Value="_request.IntervaloMinimoCheckInGeneralMinutos" min="1" required />
+                                <div class="form-text small">Espera mínima requerida entre ingresos (RN-030).</div>
+                            </div>
+
+                            <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end">
+                                <BotonAccion Tipo="submit" Clase="btn-itm-priorizacion" EstaProcesando="@_guardando" TextoProcesando="Guardando cambios...">
+                                    <span class="bi bi-save me-1"></span> Guardar Configuración
+                                </BotonAccion>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<ConfiguracionPriorizacionDto>? _estado;
+    private ActualizarConfiguracionRequest _request = new();
+    private bool _guardando;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarConfiguracion();
+    }
+
+    private async Task CargarConfiguracion()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<ConfiguracionPriorizacionDto>.Cargando();
+        _estado = await PriorizacionService.ObtenerConfiguracionAsync();
+
+        if (_estado.EsExito && _estado.Valor != null)
+        {
+            var dto = _estado.Valor;
+            // AMB-013: Carga fielmente los valores devueltos por el backend sin defaults inventados
+            _request = new ActualizarConfiguracionRequest
+            {
+                UmbralAsistenciasPrioritario = dto.UmbralAsistenciasPrioritario,
+                UmbralInasistenciasPenalizacion = dto.UmbralInasistenciasPenalizacion,
+                CriterioRecuperacionAsistenciasConsecutivas = dto.CriterioRecuperacionAsistenciasConsecutivas,
+                DesplazamientoNivelNormalMinutos = dto.DesplazamientoNivelNormalMinutos,
+                DesplazamientoNivelPenalizadoMinutos = dto.DesplazamientoNivelPenalizadoMinutos,
+                DuracionVentanaAsistenciaMinutos = dto.DuracionVentanaAsistenciaMinutos,
+                MargenAperturaAsistenciaMinutos = dto.MargenAperturaAsistenciaMinutos,
+                IntervaloMinimoCheckInGeneralMinutos = dto.IntervaloMinimoCheckInGeneralMinutos
+            };
+        }
+    }
+
+    private async Task GuardarConfiguracion()
+    {
+        _mensajeAlerta = null;
+        _guardando = true;
+        var res = await PriorizacionService.ActualizarConfiguracionAsync(_request);
+        _guardando = false;
+
+        _alertaEsExito = res.EsExitoso;
+        _mensajeAlerta = res.EsExitoso
+            ? "Parámetros del sistema actualizados exitosamente."
+            : (res.Mensaje ?? "No fue posible actualizar la configuración.");
+    }
+}

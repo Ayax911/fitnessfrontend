@@ -1,0 +1,218 @@
+@* RF-009: Modificar o cancelar eventos y actividades programadas (Administrador) *@
+@page "/admin/eventos/{IdEvento:guid}/editar"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IEventosClienteService EventosService
+@inject NavigationManager NavigationManager
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="/eventos" class="text-decoration-none small text-muted">
+            <span class="bi bi-arrow-left"></span> Volver al catálogo de eventos
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Editar Evento</h1>
+        <p class="text-muted mb-0">Actualice la configuración del evento o proceda a desactivarlo del sistema.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            <span class="bi @(_alertaEsExito ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></span>
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            <div class="card card-itm shadow-sm">
+                <div class="card-header card-itm-header">
+                    <h5 class="card-title mb-0 fw-bold">Detalles del Evento</h5>
+                </div>
+                <div class="card-body p-4">
+                    <EditForm Model="@_request" OnValidSubmit="GuardarCambios">
+                        <DataAnnotationsValidator />
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-8">
+                                <label for="nombreEvento" class="form-label fw-semibold">Nombre del Evento *</label>
+                                <InputText id="nombreEvento" class="form-control" @bind-Value="_request.Nombre" required />
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <label for="cupoMaximo" class="form-label fw-semibold">Cupo Máximo *</label>
+                                <InputNumber id="cupoMaximo" class="form-control" @bind-Value="_request.CupoMaximoPorDefecto" min="1" required />
+                            </div>
+
+                            <div class="col-12">
+                                <label for="descripcionEvento" class="form-label fw-semibold">Descripción</label>
+                                <InputTextArea id="descripcionEvento" class="form-control" rows="3" @bind-Value="_request.Descripcion" />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="entrenadorId" class="form-label fw-semibold">ID del Entrenador (GUID)</label>
+                                <InputText id="entrenadorId" class="form-control" @bind-Value="_entrenadorIdStr" />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label for="fechaApertura" class="form-label fw-semibold text-primary">
+                                    <span class="bi bi-clock me-1"></span> Apertura de Reservas (RN-028)
+                                </label>
+                                <input id="fechaApertura" type="datetime-local" class="form-control" @bind="_fechaAperturaLocal" />
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="activoSwitch" @bind="_activoValor">
+                                    <label class="form-check-label fw-semibold" for="activoSwitch">
+                                        Evento Activo
+                                    </label>
+                                </div>
+                            </div>
+
+                            @* PENDIENTE (RF-009, información faltante):
+                               La confirmación de edición/guardado no promete ningún comportamiento concreto
+                               sobre las reservas ya existentes (p. ej. reducir cupo por debajo de confirmadas);
+                               la UI solo refleja lo que el backend determine y ejecute. *@
+                            <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                                <a href="/eventos" class="btn btn-outline-secondary">Cancelar</a>
+                                <BotonAccion Tipo="submit" Clase="btn-itm-primario" EstaProcesando="@_procesandoGuardar" TextoProcesando="Guardando...">
+                                    <span class="bi bi-check-lg me-1"></span> Guardar Cambios
+                                </BotonAccion>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0 fw-bold">
+                        <span class="bi bi-exclamation-diamond me-1"></span> Zona de Peligro
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="small text-secondary mb-3">
+                        Desactivar o eliminar este evento suspenderá la programación de futuras sesiones asociadas.
+                    </p>
+
+                    @* PENDIENTE (RF-009, información faltante):
+                       Se muestra confirmación explícita sin prometer comportamiento concreto
+                       sobre reservas o asistencias ya registradas. *@
+                    @if (!_mostrarConfirmacionEliminar)
+                    {
+                        <button type="button" class="btn btn-outline-danger w-100" @onclick="() => _mostrarConfirmacionEliminar = true">
+                            <span class="bi bi-trash3 me-1"></span> Eliminar / Desactivar
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="p-3 bg-danger-subtle rounded border border-danger">
+                            <p class="small text-danger fw-bold mb-2">¿Confirmar eliminación del evento?</p>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" @onclick="() => _mostrarConfirmacionEliminar = false">
+                                    Cancelar
+                                </button>
+                                <BotonAccion Tipo="button" Clase="btn btn-sm btn-danger flex-grow-1"
+                                             EstaProcesando="@_procesandoEliminar"
+                                             TextoProcesando="Eliminando..."
+                                             OnClick="EliminarEvento">
+                                    Sí, eliminar
+                                </BotonAccion>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdEvento { get; set; }
+
+    private readonly ActualizarEventoRequest _request = new()
+    {
+        Nombre = string.Empty,
+        CupoMaximoPorDefecto = 20,
+        Activo = true
+    };
+
+    private string? _entrenadorIdStr;
+    private DateTime? _fechaAperturaLocal;
+    private bool _activoValor = true;
+
+    private bool _procesandoGuardar;
+    private bool _procesandoEliminar;
+    private bool _mostrarConfirmacionEliminar;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+
+    protected override void OnInitialized()
+    {
+        _request.Activo = _activoValor;
+    }
+
+    private async Task GuardarCambios()
+    {
+        _mensajeAlerta = null;
+
+        Guid? entrenadorId = null;
+        if (!string.IsNullOrWhiteSpace(_entrenadorIdStr))
+        {
+            if (Guid.TryParse(_entrenadorIdStr, out var gid))
+            {
+                entrenadorId = gid;
+            }
+            else
+            {
+                _mensajeAlerta = "El ID del entrenador no tiene formato GUID válido.";
+                _alertaEsExito = false;
+                return;
+            }
+        }
+
+        _request.EntrenadorId = entrenadorId;
+        _request.Activo = _activoValor;
+
+        if (_fechaAperturaLocal.HasValue)
+        {
+            _request.FechaAperturaReservas = ZonaHoraria.AUtc(_fechaAperturaLocal.Value);
+        }
+
+        _procesandoGuardar = true;
+        var resultado = await EventosService.ActualizarEventoAsync(IdEvento, _request);
+        _procesandoGuardar = false;
+
+        _alertaEsExito = resultado.EsExitoso;
+        _mensajeAlerta = resultado.EsExitoso
+            ? "Evento actualizado correctamente."
+            : (resultado.Mensaje ?? "No fue posible actualizar el evento.");
+    }
+
+    private async Task EliminarEvento()
+    {
+        _mensajeAlerta = null;
+        _procesandoEliminar = true;
+        var resultado = await EventosService.DesactivarOEliminarEventoAsync(IdEvento);
+        _procesandoEliminar = false;
+        _mostrarConfirmacionEliminar = false;
+
+        if (resultado.EsExitoso)
+        {
+            NavigationManager.NavigateTo("/eventos");
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = resultado.Mensaje ?? "No fue posible eliminar el evento.";
+        }
+    }
+}

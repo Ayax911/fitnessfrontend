@@ -1,0 +1,98 @@
+@* RF-006: Registrar ingreso general por torniquete o punto de acceso *@
+@page "/ingreso/{IdPuntoAcceso}"
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAsistenciaClienteService AsistenciaService
+@inject IZonaHorariaService ZonaHoraria
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card card-itm shadow border-0 overflow-hidden">
+                <div class="card-header card-itm-header text-center py-3">
+                    <h2 class="h4 mb-0 fw-bold">Ingreso a Instalaciones</h2>
+                    <small class="text-white-50">Gimnasio Universitario ITM</small>
+                </div>
+                <div class="card-body p-4 text-center">
+                    @if (_evaluando)
+                    {
+                        <div class="py-5">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Verificando sesión...</span>
+                            </div>
+                            <p class="text-muted mb-0">Comprobando credenciales de acceso...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <EstadoDeCarga Estado="@_estado" AlReintentar="RegistrarIngreso" MensajeCargando="Validando acceso en torniquete...">
+                        <ExitoTemplate Context="resultado">
+                            <div class="py-4">
+                                <div class="text-success mb-3">
+                                    <span class="bi bi-door-open-fill display-3"></span>
+                                </div>
+                                <h3 class="h4 fw-bold text-success mb-2">¡Ingreso Autorizado!</h3>
+                                <p class="lead mb-4">@(resultado.Mensaje ?? "Acceso concedido exitosamente.")</p>
+
+                                <div class="bg-light p-3 rounded mb-4 text-start">
+                                    <div class="row g-2 small">
+                                        <div class="col-5 text-muted">Punto de acceso:</div>
+                                        <div class="col-7 fw-semibold">@IdPuntoAcceso</div>
+                                        @if (!string.IsNullOrWhiteSpace(resultado.Detalle))
+                                        {
+                                            <div class="col-5 text-muted">Detalle:</div>
+                                            <div class="col-7 fw-semibold">@resultado.Detalle</div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <a href="/eventos" class="btn btn-itm-primario">
+                                        Ver actividades del día
+                                    </a>
+                                </div>
+                            </div>
+                        </ExitoTemplate>
+                    </EstadoDeCarga>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string IdPuntoAcceso { get; set; } = string.Empty;
+
+    private bool _evaluando = true;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<CheckInResultadoDto>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var estaAutenticado = authState.User.Identity?.IsAuthenticated ?? false;
+
+        if (!estaAutenticado)
+        {
+            _evaluando = false;
+            var returnUrl = $"/ingreso/{Uri.EscapeDataString(IdPuntoAcceso)}";
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+            return;
+        }
+
+        _evaluando = false;
+        await RegistrarIngreso();
+    }
+
+    private async Task RegistrarIngreso()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<CheckInResultadoDto>.Cargando();
+        // RN-030: Si el backend rechaza por intervalo mínimo, el rechazo viene en el EstadoDeCarga y se muestra tal cual
+        _estado = await AsistenciaService.RegistrarIngresoGeneralAsync(IdPuntoAcceso);
+    }
+}

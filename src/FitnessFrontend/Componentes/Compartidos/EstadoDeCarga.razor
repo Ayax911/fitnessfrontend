@@ -1,0 +1,62 @@
+@typeparam T
+@using FitnessFrontend.Servicios.Infraestructura
+
+@if (Estado == null || Estado.EsCargando)
+{
+    @if (CargandoTemplate != null)
+    {
+        @CargandoTemplate
+    }
+    else
+    {
+        <div class="d-flex justify-content-center align-items-center py-5 flex-column" role="status" aria-live="polite">
+            <div class="spinner-border text-primary spinner-dim-md">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-secondary fw-semibold">@MensajeCargando</p>
+        </div>
+    }
+}
+else if (Estado.EsError)
+{
+    @if (ErrorTemplate != null)
+    {
+        @ErrorTemplate((Estado.MensajeError ?? "Ocurrió un error inesperado.", Estado.CodigoError))
+    }
+    else
+    {
+        <div class="alert alert-danger my-4 shadow-sm" role="alert" aria-live="assertive">
+            <h5 class="alert-heading fw-bold">No fue posible cargar la información</h5>
+            <p class="mb-0">@(Estado.MensajeError ?? "Ocurrió un error al comunicarse con el servidor.")</p>
+            @if (AlReintentar.HasDelegate)
+            {
+                <hr />
+                <button type="button" class="btn btn-outline-danger btn-sm fw-semibold" @onclick="AlReintentar">
+                    Reintentar
+                </button>
+            }
+        </div>
+    }
+}
+else if (Estado.EsExito)
+{
+    @if (Estado.Valor != null)
+    {
+        @ExitoTemplate(Estado.Valor)
+    }
+    else
+    {
+        <div class="text-center py-5 text-muted">
+            <p class="mb-0">No se encontraron datos.</p>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<T>? Estado { get; set; }
+    [Parameter] public RenderFragment<T> ExitoTemplate { get; set; } = default!;
+    [Parameter] public RenderFragment? CargandoTemplate { get; set; }
+    [Parameter] public RenderFragment<(string Mensaje, string? Codigo)>? ErrorTemplate { get; set; }
+    [Parameter] public EventCallback AlReintentar { get; set; }
+    [Parameter] public string MensajeCargando { get; set; } = "Cargando datos...";
+}

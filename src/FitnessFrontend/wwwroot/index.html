@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gimnasio ITM — Bienestar Universitario</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    
+    <!-- Tipografías institucionales: Montserrat (UI principal) y Lato (texto extenso) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 self-hosted heredado de Kinetic -->
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <!-- Tema institucional ITM -->
+    <link rel="stylesheet" href="css/itm-tema.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="FitnessFrontend.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <!-- Skip link de accesibilidad WCAG -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <div id="app">
+        <div class="d-flex justify-content-center align-items-center vh-100 flex-column">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="mt-3 fw-bold text-primary">Cargando Gimnasio ITM...</div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        Ha ocurrido un error inesperado.
+        <a href="." class="reload">Recargar</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>

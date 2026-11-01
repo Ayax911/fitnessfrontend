@@ -1,0 +1,102 @@
+@* RF-021: Consultar su propio historial de asistencias (Usuario) *@
+@page "/mi-historial"
+@page "/historial"
+@attribute [Authorize]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAsistenciaClienteService AsistenciaService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-primary mb-1">Mi Historial de Asistencia</h1>
+            <p class="text-muted mb-0">Registro histórico de accesos al gimnasio y participación en sesiones deportivas.</p>
+        </div>
+    </div>
+
+    @* Patrón 5: DTO HistorialAsistenciaDto no expone nivel ni confiabilidad (RN-020) *@
+    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarHistorial" MensajeCargando="Cargando su historial de asistencias...">
+        <ExitoTemplate Context="historial">
+            @if (historial.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <div class="card card-itm p-5 d-inline-block">
+                        <span class="bi bi-calendar-x text-muted display-4 d-block mb-3"></span>
+                        <h4 class="fw-bold text-muted mb-2">No tienes asistencias registradas</h4>
+                        <p class="text-secondary mb-0">Aún no has registrado ingresos generales ni asistencias a sesiones.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card card-itm shadow-sm">
+                    <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Total registros: @historial.Count</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="py-3 ps-3">Fecha y Hora</th>
+                                    <th scope="col" class="py-3">Tipo de Acceso</th>
+                                    <th scope="col" class="py-3">Actividad / Punto</th>
+                                    <th scope="col" class="py-3 text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in historial)
+                                {
+                                    <tr @key="item.Id">
+                                        <td class="ps-3 fw-semibold text-primary">
+                                            @(item.FechaHora.HasValue ? ZonaHoraria.FormatearFechaHora(item.FechaHora.Value) : "—")
+                                        </td>
+                                        <td>
+                                            @if (string.Equals(item.Tipo, "Sesion", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                    <span class="bi bi-qr-code me-1"></span> Sesión Deportiva
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                                    <span class="bi bi-door-open me-1"></span> Ingreso General
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(item.NombreEvento) ? "Ingreso Gimnasio" : item.NombreEvento)
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-itm-disponible">
+                                                @(item.Estado ?? "Registrado")
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<HistorialAsistenciaDto>>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarHistorial();
+    }
+
+    private async Task CargarHistorial()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<HistorialAsistenciaDto>>.Cargando();
+        _estado = await AsistenciaService.ObtenerHistorialAsync();
+    }
+}

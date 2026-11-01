@@ -1,0 +1,107 @@
+@* RF-012: Visualizar código QR dinámico de asistencia (Entrenador) *@
+@page "/entrenador/sesiones/{IdSesion:guid}/qr"
+@attribute [Authorize(Roles = "Entrenador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAsistenciaClienteService AsistenciaService
+@inject IZonaHorariaService ZonaHoraria
+@inject NavigationManager NavigationManager
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="/entrenador/actividades" class="text-decoration-none small text-muted">
+            <span class="bi bi-arrow-left"></span> Volver a mis actividades
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Código QR de Asistencia</h1>
+        <p class="text-muted mb-0">Proyecte este código para que los estudiantes escaneen con la cámara de su teléfono.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card card-itm shadow text-center border-0">
+                <div class="card-header card-itm-header py-3">
+                    <h2 class="h5 mb-0 fw-bold">Escanear para Check-in</h2>
+                </div>
+                <div class="card-body p-4">
+                    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarQr" MensajeCargando="Generando código QR dinámico...">
+                        <ExitoTemplate Context="qrDto">
+                            @{
+                                var checkInUrl = ConstruirUrlCheckIn(qrDto.TokenQR);
+                            }
+
+                            @* Patrón 6: Componente puro CodigoQr recibe la URL completa y la dibuja como SVG *@
+                            <div class="my-3">
+                                <CodigoQr Valor="@checkInUrl" PixelesPorModulo="10" />
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(qrDto.NombreEvento))
+                            {
+                                <h3 class="h5 fw-bold text-primary mt-3 mb-1">@qrDto.NombreEvento</h3>
+                            }
+
+                            @* Patrón 3: La ventana de validez se muestra siempre en America/Bogota *@
+                            <div class="bg-light p-3 rounded mt-3 text-start small">
+                                <div class="fw-bold text-muted mb-2 text-center text-uppercase">
+                                    <span class="bi bi-clock-history me-1"></span> Ventana de asistencia válida
+                                </div>
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">Desde:</span>
+                                    <span class="fw-semibold">
+                                        @(qrDto.VentanaAsistenciaInicio.HasValue ? ZonaHoraria.FormatearFechaHora(qrDto.VentanaAsistenciaInicio.Value) : "—")
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between py-1">
+                                    <span class="text-muted">Hasta:</span>
+                                    <span class="fw-semibold">
+                                        @(qrDto.VentanaAsistenciaFin.HasValue ? ZonaHoraria.FormatearFechaHora(qrDto.VentanaAsistenciaFin.Value) : "—")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-2 border-top d-flex justify-content-center gap-2">
+                                <a href="@($"/entrenador/sesiones/{IdSesion}/inscritos")" class="btn btn-outline-primary btn-sm">
+                                    <span class="bi bi-people-fill me-1"></span> Ver lista de inscritos
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="CargarQr">
+                                    <span class="bi bi-arrow-clockwise me-1"></span> Actualizar QR
+                                </button>
+                            </div>
+                        </ExitoTemplate>
+                    </EstadoDeCarga>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdSesion { get; set; }
+
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<SesionQRDto>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarQr();
+    }
+
+    private async Task CargarQr()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<SesionQRDto>.Cargando();
+        _estado = await AsistenciaService.ObtenerQRDeSesionAsync(IdSesion);
+    }
+
+    private string ConstruirUrlCheckIn(string? tokenQr)
+    {
+        if (string.IsNullOrWhiteSpace(tokenQr))
+        {
+            return string.Empty;
+        }
+
+        // Construye https://<dominio-frontend>/checkin/{token}
+        var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+        return $"{baseUri}/checkin/{Uri.EscapeDataString(tokenQr)}";
+    }
+}

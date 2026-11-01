@@ -1,0 +1,94 @@
+@* RF-011: Consultar lista de inscritos en una sesión (Entrenador) *@
+@page "/entrenador/sesiones/{IdSesion:guid}/inscritos"
+@attribute [Authorize(Roles = "Entrenador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Reservas
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IReservasClienteService ReservasService
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="/entrenador/actividades" class="text-decoration-none small text-muted">
+            <span class="bi bi-arrow-left"></span> Volver a mis actividades
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Inscritos de la Sesión</h1>
+        <p class="text-muted mb-0">Listado de usuarios registrados para esta sesión deportiva.</p>
+    </div>
+
+    @* PENDIENTE (Bloque 2, pregunta 25): Se renderiza únicamente lo que el endpoint devuelve
+       (por defecto Confirmadas). No se añade una pestaña de lista de espera por iniciativa propia
+       hasta que el stakeholder confirme si el entrenador debe verla. *@
+    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarInscritos" MensajeCargando="Cargando lista de inscritos...">
+        <ExitoTemplate Context="inscritos">
+            @if (inscritos.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <div class="card card-itm p-5 d-inline-block">
+                        <h4 class="fw-bold text-muted mb-2">No hay inscritos confirmados</h4>
+                        <p class="text-secondary mb-0">Ningún usuario ha reservado cupo para esta sesión todavía.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card card-itm shadow-sm">
+                    <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Total inscritos: @inscritos.Count</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="py-3 ps-4">#</th>
+                                    <th scope="col" class="py-3">Nombre del Usuario</th>
+                                    <th scope="col" class="py-3 text-center">Estado de Reserva</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var index = 1; }
+                                @foreach (var inscrito in inscritos)
+                                {
+                                    <tr @key="inscrito.UsuarioId">
+                                        <td class="ps-4 text-muted fw-bold">@(index++)</td>
+                                        <td class="fw-semibold text-primary">
+                                            @(inscrito.NombreCompleto ?? "Usuario ITM")
+                                        </td>
+                                        <td class="text-center">
+                                            @if (inscrito.Estado == 0)
+                                            {
+                                                <span class="badge badge-itm-disponible">Confirmada</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark">En espera</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdSesion { get; set; }
+
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaInscritoDto>>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarInscritos();
+    }
+
+    private async Task CargarInscritos()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaInscritoDto>>.Cargando();
+        _estado = await ReservasService.ConsultarInscritosSesionAsync(IdSesion);
+    }
+}

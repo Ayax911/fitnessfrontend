@@ -1,0 +1,346 @@
+@* RF-007: Crear evento en el gimnasio *@
+@* RF-008: Configurar recurrencia de un evento *@
+@page "/admin/eventos/crear"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@using Microsoft.Kiota.Abstractions
+@inject IEventosClienteService EventosService
+@inject NavigationManager NavigationManager
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="/eventos" class="text-decoration-none small text-muted">
+            <span class="bi bi-arrow-left"></span> Volver al catálogo de eventos
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Crear Nuevo Evento o Actividad</h1>
+        <p class="text-muted mb-0">Defina la información básica del evento y su modalidad única o recurrente.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeError))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span class="bi bi-exclamation-triangle-fill me-2"></span>
+            @_mensajeError
+            <button type="button" class="btn-close" @onclick="() => _mensajeError = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @if (_creadoExitosamente)
+    {
+        <div class="card card-itm border-success p-5 text-center shadow-sm">
+            <div class="text-success mb-3">
+                <span class="bi bi-check-circle-fill display-3"></span>
+            </div>
+            <h3 class="h4 fw-bold text-success mb-2">¡Evento Creado Exitosamente!</h3>
+            <p class="text-secondary mb-4">El evento y sus sesiones asociadas se han registrado en el sistema.</p>
+            <div>
+                <a href="/eventos" class="btn btn-itm-primario me-2">
+                    <span class="bi bi-calendar-event me-1"></span> Ver en el Catálogo
+                </a>
+                <button type="button" class="btn btn-outline-secondary" @onclick="ReiniciarFormulario">
+                    Crear otro evento
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card card-itm shadow-sm">
+            <div class="card-body p-4">
+                <EditForm Model="@_modelo" OnValidSubmit="GuardarEvento">
+                    <DataAnnotationsValidator />
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-8">
+                            <label for="nombreEvento" class="form-label fw-semibold">Nombre del Evento *</label>
+                            <InputText id="nombreEvento" class="form-control" @bind-Value="_modelo.Nombre" placeholder="Ej. Acondicionamiento Físico" />
+                            <ValidationMessage For="@(() => _modelo.Nombre)" class="text-danger small" />
+                        </div>
+
+                        <div class="col-12 col-md-4">
+                            <label for="cupoMaximo" class="form-label fw-semibold">Cupo Máximo *</label>
+                            <InputNumber id="cupoMaximo" class="form-control" @bind-Value="_modelo.CupoMaximoPorDefecto" min="1" />
+                            <ValidationMessage For="@(() => _modelo.CupoMaximoPorDefecto)" class="text-danger small" />
+                        </div>
+
+                        <div class="col-12">
+                            <label for="descripcionEvento" class="form-label fw-semibold">Descripción</label>
+                            <InputTextArea id="descripcionEvento" class="form-control" rows="3" @bind-Value="_modelo.Descripcion" placeholder="Detalles de la disciplina, intensidad o requerimientos..." />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="entrenadorId" class="form-label fw-semibold">ID del Entrenador Asignado (Opcional)</label>
+                            <InputText id="entrenadorId" class="form-control" @bind-Value="_entrenadorIdStr" placeholder="GUID del entrenador responsable" />
+                        </div>
+
+                        @* RN-028 (BLK-05): La UI exige explícitamente la fecha de apertura de reservas.
+                           No la calcula ni la precarga con un valor propio inventado. *@
+                        <div class="col-12 col-md-6">
+                            <label for="fechaApertura" class="form-label fw-semibold text-primary">
+                                <span class="bi bi-clock me-1"></span> Fecha de Apertura de Reservas (RN-028) *
+                            </label>
+                            <input id="fechaApertura" type="datetime-local" class="form-control border-primary" 
+                                   @bind="_fechaAperturaReservasLocal" required />
+                            <div class="form-text small">
+                                Fecha y hora exacta a partir de la cual los usuarios podrán reservar cupo.
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-3" />
+                            <div class="form-check form-switch fs-5 mb-3">
+                                <input class="form-check-input" type="checkbox" id="esRecurrenteSwitch" @bind="_modelo.EsRecurrente">
+                                <label class="form-check-label fw-bold fs-6" for="esRecurrenteSwitch">
+                                    Evento Recurrente (RF-008)
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (!_modelo.EsRecurrente)
+                        {
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border">
+                                    <h5 class="h6 fw-bold mb-3">Horario de Sesión Única</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <label for="inicioUnica" class="form-label fw-semibold small">Inicio *</label>
+                                            <input id="inicioUnica" type="datetime-local" class="form-control" @bind="_inicioUnicaLocal" required />
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label for="finUnica" class="form-label fw-semibold small">Fin *</label>
+                                            <input id="finUnica" type="datetime-local" class="form-control" @bind="_finUnicaLocal" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border">
+                                    <h5 class="h6 fw-bold mb-3">Configuración de Recurrencia</h5>
+
+                                    @* PENDIENTE (Bloque 2):
+                                       La lista de opciones de periodicidad se trata como dato extensible 
+                                       que el backend provee, NO como una lista fija quemada en el HTML *@
+                                    <div class="mb-3">
+                                        <label for="selectPatron" class="form-label fw-semibold small">Tipo de Periodicidad (RF-008) *</label>
+                                        <select id="selectPatron" class="form-select" @bind="_tipoPeriodicidadSeleccionada">
+                                            @if (_patronesSoportados != null)
+                                            {
+                                                @foreach (var patron in _patronesSoportados)
+                                                {
+                                                    <option value="@patron.Id">@patron.Nombre — @patron.Descripcion</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small d-block">Días de la Semana *</label>
+                                        <div class="d-flex flex-wrap gap-3">
+                                            @foreach (var dia in _diasSemanaDisponibles)
+                                            {
+                                                <div class="form-check" @key="dia.Valor">
+                                                    <input class="form-check-input" type="checkbox" id="@($"dia_{dia.Valor}")"
+                                                           checked="@_diasSeleccionados.Contains(dia.Valor)"
+                                                           @onchange="(e) => AlternarDia(dia.Valor, e.Value)">
+                                                    <label class="form-check-label small" for="@($"dia_{dia.Valor}")">@dia.Nombre</label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-4">
+                                            <label for="horaInicio" class="form-label fw-semibold small">Hora de Inicio *</label>
+                                            <input id="horaInicio" type="time" class="form-control" @bind="_horaInicioLocal" required />
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label for="horaFin" class="form-label fw-semibold small">Hora de Fin *</label>
+                                            <input id="horaFin" type="time" class="form-control" @bind="_horaFinLocal" required />
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <label for="fechaFinRecurrencia" class="form-label fw-semibold small">Fecha Fin de Recurrencia *</label>
+                                            <input id="fechaFinRecurrencia" type="date" class="form-control" @bind="_fechaFinRecurrenciaLocal" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                            <a href="/eventos" class="btn btn-outline-secondary">Cancelar</a>
+                            <BotonAccion Tipo="submit" Clase="btn-itm-primario" EstaProcesando="@_procesando" TextoProcesando="Guardando...">
+                                <span class="bi bi-save me-1"></span> Crear Evento
+                            </BotonAccion>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly ModeloCreacion _modelo = new();
+    private string? _entrenadorIdStr;
+    private DateTime? _fechaAperturaReservasLocal;
+    private DateTime? _inicioUnicaLocal;
+    private DateTime? _finUnicaLocal;
+
+    // Recurrencia
+    private int _tipoPeriodicidadSeleccionada = 0;
+    private IReadOnlyList<OpcionPatronRecurrencia>? _patronesSoportados;
+    private readonly HashSet<int> _diasSeleccionados = new();
+    private TimeOnly _horaInicioLocal = new(8, 0);
+    private TimeOnly _horaFinLocal = new(9, 0);
+    private DateOnly _fechaFinRecurrenciaLocal;
+
+    private bool _procesando;
+    private bool _creadoExitosamente;
+    private string? _mensajeError;
+
+    private readonly (int Valor, string Nombre)[] _diasSemanaDisponibles =
+    {
+        (1, "Lunes"), (2, "Martes"), (3, "Miércoles"), (4, "Jueves"), (5, "Viernes"), (6, "Sábado"), (0, "Domingo")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _fechaFinRecurrenciaLocal = DateOnly.FromDateTime(ZonaHoraria.ObtenerFechaHoyLocal().AddMonths(1));
+
+        // Trata la lista de patrones de periodicidad como dato dinámico provisto por el servicio
+        _patronesSoportados = await EventosService.ObtenerPatronesRecurrenciaSoportadosAsync();
+        if (_patronesSoportados.Count > 0)
+        {
+            _tipoPeriodicidadSeleccionada = _patronesSoportados[0].Id;
+        }
+        _diasSeleccionados.Add(1); // Lunes por defecto
+    }
+
+    private void AlternarDia(int dia, object? valor)
+    {
+        var seleccionado = valor is bool b && b;
+        if (seleccionado)
+        {
+            _diasSeleccionados.Add(dia);
+        }
+        else
+        {
+            _diasSeleccionados.Remove(dia);
+        }
+    }
+
+    private async Task GuardarEvento()
+    {
+        _mensajeError = null;
+
+        // Validar fecha de apertura de reservas exigida por RN-028
+        if (!_fechaAperturaReservasLocal.HasValue)
+        {
+            _mensajeError = "La fecha de apertura de reservas es obligatoria (RN-028).";
+            return;
+        }
+
+        Guid? entrenadorId = null;
+        if (!string.IsNullOrWhiteSpace(_entrenadorIdStr))
+        {
+            if (Guid.TryParse(_entrenadorIdStr, out var gid))
+            {
+                entrenadorId = gid;
+            }
+            else
+            {
+                _mensajeError = "El ID del entrenador no tiene un formato GUID válido.";
+                return;
+            }
+        }
+
+        // Conversión a UTC mediante el servicio centralizado (Patrón 3 / I-03)
+        var fechaAperturaUtc = ZonaHoraria.AUtc(_fechaAperturaReservasLocal.Value);
+
+        var request = new CrearEventoRequest
+        {
+            Nombre = _modelo.Nombre,
+            Descripcion = _modelo.Descripcion,
+            CupoMaximoPorDefecto = _modelo.CupoMaximoPorDefecto,
+            EntrenadorId = entrenadorId,
+            FechaAperturaReservas = fechaAperturaUtc,
+            EsRecurrente = _modelo.EsRecurrente
+        };
+
+        if (!_modelo.EsRecurrente)
+        {
+            if (!_inicioUnicaLocal.HasValue || !_finUnicaLocal.HasValue)
+            {
+                _mensajeError = "Debe especificar la fecha y hora de inicio y fin para la sesión única.";
+                return;
+            }
+            if (_finUnicaLocal <= _inicioUnicaLocal)
+            {
+                _mensajeError = "La hora de fin debe ser posterior a la hora de inicio.";
+                return;
+            }
+
+            request.FechaHoraInicioUnica = ZonaHoraria.AUtc(_inicioUnicaLocal.Value);
+            request.FechaHoraFinUnica = ZonaHoraria.AUtc(_finUnicaLocal.Value);
+        }
+        else
+        {
+            if (_diasSeleccionados.Count == 0)
+            {
+                _mensajeError = "Debe seleccionar al menos un día de la semana para el evento recurrente.";
+                return;
+            }
+
+            var diasLista = _diasSeleccionados.Select(d => (int?)d).ToList();
+            request.PatronRecurrencia = new PatronRecurrencia
+            {
+                Tipo = _tipoPeriodicidadSeleccionada,
+                DiasSemana = diasLista,
+                HoraInicio = new Time(_horaInicioLocal.Hour, _horaInicioLocal.Minute, 0),
+                HoraFin = new Time(_horaFinLocal.Hour, _horaFinLocal.Minute, 0),
+                FechaFinRecurrencia = new Date(_fechaFinRecurrenciaLocal.Year, _fechaFinRecurrenciaLocal.Month, _fechaFinRecurrenciaLocal.Day)
+            };
+        }
+
+        _procesando = true;
+        var res = await EventosService.CrearEventoAsync(request);
+        _procesando = false;
+
+        if (res.EsExito)
+        {
+            _creadoExitosamente = true;
+        }
+        else
+        {
+            _mensajeError = res.MensajeError ?? "No fue posible crear el evento.";
+        }
+    }
+
+    private void ReiniciarFormulario()
+    {
+        _modelo.Nombre = string.Empty;
+        _modelo.Descripcion = string.Empty;
+        _creadoExitosamente = false;
+        _mensajeError = null;
+    }
+
+    private class ModeloCreacion
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio")]
+        public string Nombre { get; set; } = string.Empty;
+
+        public string? Descripcion { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Range(1, 500, ErrorMessage = "El cupo debe ser al menos 1")]
+        public int CupoMaximoPorDefecto { get; set; } = 20;
+
+        public bool EsRecurrente { get; set; } = false;
+    }
+}

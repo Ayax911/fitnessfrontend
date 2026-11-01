@@ -1,0 +1,117 @@
+@* RF-010: Consultar actividades asignadas al entrenador autenticado *@
+@page "/entrenador/actividades"
+@attribute [Authorize(Roles = "Entrenador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IEventosClienteService EventosService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-primary mb-1">Mis Actividades Asignadas</h1>
+            <p class="text-muted mb-0">Gestión de sesiones a tu cargo y consulta de inscritos.</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="CargarActividades" disabled="@(_estado?.EsCargando == true)">
+            <span class="bi bi-arrow-clockwise me-1"></span> Actualizar
+        </button>
+    </div>
+
+    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarActividades" MensajeCargando="Cargando tus actividades asignadas...">
+        <ExitoTemplate Context="actividades">
+            @if (actividades.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <div class="card card-itm p-5 d-inline-block">
+                        <h4 class="fw-bold text-muted mb-2">No tienes actividades asignadas</h4>
+                        <p class="text-secondary mb-0">Actualmente no tienes sesiones o eventos programados bajo tu responsabilidad.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    @foreach (var act in actividades)
+                    {
+                        <div class="col" @key="act.EventoId">
+                            <div class="card card-itm h-100">
+                                <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
+                                    <h2 class="h5 mb-0 fw-bold text-truncate">@act.Nombre</h2>
+                                    @if (act.EsRecurrente == true)
+                                    {
+                                        <span class="badge bg-light text-primary border border-primary small">Recurrente</span>
+                                    }
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrWhiteSpace(act.Descripcion))
+                                    {
+                                        <p class="card-text text-secondary small texto-extenso mb-3">@act.Descripcion</p>
+                                    }
+
+                                    <h3 class="h6 fw-bold border-top pt-3 mb-2">Sesiones Programadas:</h3>
+                                    @if (act.Sesiones == null || act.Sesiones.Count == 0)
+                                    {
+                                        <p class="text-muted small fst-italic mb-0">Sin sesiones asignadas.</p>
+                                    }
+                                    else
+                                    {
+                                        <div class="list-group list-group-flush">
+                                            @foreach (var sesion in act.Sesiones)
+                                            {
+                                                <div class="list-group-item px-0 py-3 border-0 border-bottom">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="fw-semibold">
+                                                            @if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
+                                                            {
+                                                                @ZonaHoraria.FormatearRango(sesion.FechaHoraInicio.Value, sesion.FechaHoraFin.Value)
+                                                            }
+                                                            else if (sesion.FechaHoraInicio.HasValue)
+                                                            {
+                                                                @ZonaHoraria.FormatearFechaHora(sesion.FechaHoraInicio.Value)
+                                                            }
+                                                        </span>
+                                                        <span class="badge bg-light text-dark border">
+                                                            @(sesion.CuposOcupados ?? 0) / @(sesion.CupoMaximo ?? 0) inscritos
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="d-flex gap-2 justify-content-end mt-2">
+                                                        @* RF-011: Ver inscritos de la sesión (Fase 2) *@
+                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/inscritos")" class="btn btn-sm btn-outline-primary">
+                                                            Ver inscritos
+                                                        </a>
+                                                        @* RF-012: Generar QR de asistencia (Fase 3) *@
+                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/qr")" class="btn btn-sm btn-itm-primario">
+                                                            Código QR
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarActividades();
+    }
+
+    private async Task CargarActividades()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Cargando();
+        _estado = await EventosService.ObtenerMisActividadesAsync();
+    }
+}

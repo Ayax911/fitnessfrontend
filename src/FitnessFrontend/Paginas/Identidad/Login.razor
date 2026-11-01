@@ -1,0 +1,129 @@
+@* RF-013: Autenticación de usuarios e inicio de sesión *@
+@page "/login"
+@using FitnessFrontend.Servicios.Identidad
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAutenticacionService AutenticacionService
+@inject NavigationManager NavigationManager
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card card-itm border-0 shadow">
+                <div class="card-header card-itm-header text-center py-4">
+                    <h2 class="h4 mb-0 fw-bold">Gimnasio ITM</h2>
+                    <span class="text-secondary small">Bienestar Universitario</span>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="h5 fw-bold mb-4 text-center">Iniciar Sesión</h3>
+
+                    @if (!string.IsNullOrWhiteSpace(_mensajeError))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @_mensajeError
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(_mensajeExito))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @_mensajeExito
+                        </div>
+                    }
+
+                    <EditForm Model="@_modelo" OnValidSubmit="ManejarLogin">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label for="emailInput" class="form-label fw-semibold">Correo Institucional</label>
+                            <InputText id="emailInput" class="form-control" @bind-Value="_modelo.Email" placeholder="usuario@correo.itm.edu.co" />
+                            <ValidationMessage For="@(() => _modelo.Email)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="passwordInput" class="form-label fw-semibold">Contraseña</label>
+                            <InputText id="passwordInput" type="password" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" />
+                            <ValidationMessage For="@(() => _modelo.Password)" class="text-danger small" />
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <BotonAccion Tipo="submit" 
+                                        Clase="btn-itm-primario" 
+                                        EstaProcesando="@_procesando" 
+                                        TextoProcesando="Validando credenciales...">
+                                Ingresar
+                            </BotonAccion>
+                        </div>
+                    </EditForm>
+
+                    <div class="text-center mt-3 pt-3 border-top">
+                        <span class="text-muted small">¿No tienes cuenta activa?</span>
+                        <a href="@ObtenerUrlRegistro()" class="fw-semibold ms-1">Registrarse</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "registrado")]
+    public bool? Registrado { get; set; }
+
+    private readonly LoginDto _modelo = new();
+    private bool _procesando;
+    private string? _mensajeError;
+    private string? _mensajeExito;
+
+    protected override void OnInitialized()
+    {
+        if (Registrado == true)
+        {
+            _mensajeExito = "Registro exitoso. Ingrese sus credenciales para continuar.";
+        }
+    }
+
+    private string ObtenerUrlRegistro()
+    {
+        return !string.IsNullOrWhiteSpace(ReturnUrl)
+            ? $"/registro?returnUrl={Uri.EscapeDataString(ReturnUrl)}"
+            : "/registro";
+    }
+
+    private async Task ManejarLogin()
+    {
+        _procesando = true;
+        _mensajeError = null;
+
+        var resultado = await AutenticacionService.IniciarSesionAsync(_modelo.Email, _modelo.Password);
+        _procesando = false;
+
+        if (resultado.EsExitoso)
+        {
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) && !ReturnUrl.Contains("://") && !ReturnUrl.StartsWith("//"))
+            {
+                NavigationManager.NavigateTo(ReturnUrl);
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/eventos");
+            }
+        }
+        else
+        {
+            _mensajeError = resultado.Mensaje ?? "Credenciales inválidas.";
+        }
+    }
+
+    public class LoginDto
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El correo es obligatorio.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Formato de correo inválido.")]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "La contraseña es obligatoria.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

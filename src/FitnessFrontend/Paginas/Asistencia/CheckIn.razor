@@ -1,0 +1,147 @@
+@* RF-005: Registrar check-in por código QR en sesión deportiva *@
+@page "/checkin/{Token}"
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAsistenciaClienteService AsistenciaService
+@inject IFlujoCheckInService FlujoCheckIn
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card card-itm shadow border-0 overflow-hidden">
+                <div class="card-header card-itm-header text-center py-3">
+                    <h2 class="h4 mb-0 fw-bold">Registro de Asistencia</h2>
+                    <small class="text-white-50">Control de asistencia por código QR</small>
+                </div>
+                <div class="card-body p-4 text-center">
+
+                    @* PENDIENTE (Bloque 2, pregunta 9):
+                       Si el usuario no tiene reserva confirmada para la sesión, se muestra
+                       el mensaje de rechazo que devuelve el backend tal cual. No se ofrece
+                       una acción de "reservar ahora" para no asumir que el caso es recuperable. *@
+
+                    @if (_evaluando)
+                    {
+                        <div class="py-5">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Validando...</span>
+                            </div>
+                            <p class="text-muted mb-0">Comprobando credenciales y sesión...</p>
+                        </div>
+                    }
+                    else if (_estado != null)
+                    {
+                        @if (_estado.EsCargando)
+                        {
+                            <div class="py-5">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Procesando...</span>
+                                </div>
+                                <p class="text-muted mb-0">Registrando su asistencia...</p>
+                            </div>
+                        }
+                        else if (_estado.EsError)
+                        {
+                            <div class="py-4">
+                                <div class="text-danger mb-3">
+                                    <span class="bi bi-x-circle-fill display-3"></span>
+                                </div>
+                                <h3 class="h4 fw-bold text-danger mb-2">No fue posible registrar la asistencia</h3>
+                                <div class="alert alert-danger mx-auto text-start" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <span class="bi bi-exclamation-triangle-fill me-2 fs-5"></span>
+                                        <div>@_estado.MensajeError</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <a href="/eventos" class="btn btn-outline-secondary">
+                                        <span class="bi bi-calendar3 me-1"></span> Ver actividades disponibles
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                        else if (_estado.EsExito && _estado.Valor != null)
+                        {
+                            var checkin = _estado.Valor;
+                            <div class="py-4">
+                                <div class="text-success mb-3">
+                                    <span class="bi bi-check-circle-fill display-3"></span>
+                                </div>
+                                <h3 class="h4 fw-bold text-success mb-2">¡Asistencia confirmada!</h3>
+                                <p class="lead mb-4">@(checkin.Mensaje ?? "Su asistencia ha sido registrada exitosamente.")</p>
+
+                                @if (!string.IsNullOrWhiteSpace(checkin.Detalle))
+                                {
+                                    <div class="bg-light p-3 rounded mb-4 text-start">
+                                        <p class="mb-0 small text-secondary">@checkin.Detalle</p>
+                                    </div>
+                                }
+
+                                <div class="d-grid gap-2">
+                                    <a href="/reservas" class="btn btn-itm-primario">
+                                        <span class="bi bi-journal-check me-1"></span> Ver mis reservas
+                                    </a>
+                                    <a href="/eventos" class="btn btn-outline-secondary">
+                                        Ir al inicio
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Token { get; set; }
+
+    private bool _evaluando = true;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<CheckInResultadoDto>? _estado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ProcesarFlujo();
+    }
+
+    private async Task ProcesarFlujo()
+    {
+        _evaluando = true;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var estaAutenticado = authState.User.Identity?.IsAuthenticated ?? false;
+
+        // Patrón 6: Evaluación pura del flujo de check-in (Casos A, B y C)
+        var decision = FlujoCheckIn.EvaluarInicio(Token, estaAutenticado);
+
+        switch (decision.Tipo)
+        {
+            case TipoDecisionCheckIn.CasoB_RequiereAutenticacion:
+                _evaluando = false;
+                // Caso B: Redirige a login con returnUrl para volver automáticamente tras autenticarse
+                var returnUrl = decision.ReturnUrl ?? $"/checkin/{Uri.EscapeDataString(Token ?? string.Empty)}";
+                NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+                return;
+
+            case TipoDecisionCheckIn.CasoC_TokenInvalido:
+                _evaluando = false;
+                // Caso C: Token inválido en ruta. Muestra error y nunca pantalla de login.
+                _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<CheckInResultadoDto>.Fallo(
+                    decision.MensajeError ?? "Código QR no válido.");
+                return;
+
+            case TipoDecisionCheckIn.CasoA_ProcederCheckIn:
+                _evaluando = false;
+                // Caso A: Con sesión iniciada, ejecuta la llamada HTTP hacia el backend
+                _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<CheckInResultadoDto>.Cargando();
+                _estado = await AsistenciaService.RegistrarCheckInAsync(decision.TokenSesion!);
+                return;
+        }
+    }
+}

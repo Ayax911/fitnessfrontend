@@ -1,0 +1,41 @@
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="container py-5 text-center">
+                            <div class="alert alert-warning shadow-sm">
+                                <h4 class="fw-bold">Acceso no autorizado</h4>
+                                <p>Tu rol actual no cuenta con permisos para ver este recurso.</p>
+                                <a href="/eventos" class="btn btn-itm-primario mt-2">Volver al inicio</a>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <FitnessFrontend.Paginas.Identidad.Login />
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="d-flex justify-content-center align-items-center vh-100 flex-column">
+                        <div class="spinner-border text-primary spinner-dim-lg" role="status">
+                            <span class="visually-hidden">Verificando sesión...</span>
+                        </div>
+                    </div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="container py-5 text-center">
+                    <h2 class="display-font">Página no encontrada</h2>
+                    <p class="lead">La ruta solicitada no existe o no está disponible.</p>
+                    <a href="/eventos" class="btn btn-itm-primario">Ir al catálogo de eventos</a>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

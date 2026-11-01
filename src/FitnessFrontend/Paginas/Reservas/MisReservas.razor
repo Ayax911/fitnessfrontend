@@ -1,0 +1,198 @@
+@* RF-004: Cancelar una reserva activa *@
+@* RF-020: Consultar sus propias reservas *@
+@page "/reservas"
+@attribute [Authorize]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Reservas
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IReservasClienteService ReservasService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-primary mb-1">Mis Reservas</h1>
+            <p class="text-muted mb-0">Consulta tus reservas activas, lista de espera y cancelaciones.</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" @onclick="CargarReservas" disabled="@(_estado?.EsCargando == true)">
+            <span class="bi bi-arrow-clockwise me-1"></span> Actualizar
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <EstadoDeCarga Estado="@_estado" AlReintentar="CargarReservas" MensajeCargando="Cargando tus reservas...">
+        <ExitoTemplate Context="reservas">
+            @if (reservas.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <div class="card card-itm p-5 d-inline-block">
+                        <h4 class="fw-bold text-muted mb-2">No tienes reservas registradas</h4>
+                        <p class="text-secondary mb-3">Aún no te has inscrito en ninguna actividad del gimnasio.</p>
+                        <a href="/eventos" class="btn btn-itm-primario">Explorar actividades</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive shadow-sm rounded">
+                    <table class="table table-hover align-middle mb-0 bg-white">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="py-3 ps-3">Actividad</th>
+                                <th scope="col" class="py-3">Horario</th>
+                                <th scope="col" class="py-3">Fecha de Solicitud</th>
+                                <th scope="col" class="py-3 text-center">Estado</th>
+                                <th scope="col" class="py-3 text-end pe-3">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reserva in reservas)
+                            {
+                                var reservaId = reserva.Id ?? Guid.Empty;
+                                var esCancelable = reserva.Estado == 0 || reserva.Estado == 1; // Confirmada o EnListaEspera
+                                var cancelandoEsta = _cancelandoReservaId == reservaId;
+
+                                <tr @key="reserva.Id">
+                                    <td class="ps-3 fw-semibold text-primary">
+                                        @(reserva.EventoNombre ?? "Actividad de gimnasio")
+                                    </td>
+                                    <td>
+                                        @if (reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
+                                        {
+                                            @ZonaHoraria.FormatearRango(reserva.FechaHoraInicio.Value, reserva.FechaHoraFin.Value)
+                                        }
+                                        else if (reserva.FechaHoraInicio.HasValue)
+                                        {
+                                            @ZonaHoraria.FormatearFechaHora(reserva.FechaHoraInicio.Value)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">
+                                        @(reserva.FechaHoraSolicitud.HasValue ? ZonaHoraria.FormatearFechaHora(reserva.FechaHoraSolicitud.Value) : "—")
+                                    </td>
+                                    <td class="text-center">
+                                        @ObtenerBadgeEstado(reserva.Estado)
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        @* PENDIENTE (RN-011 pendiente): la UI mantiene la acción siempre habilitada
+                                           mientras la reserva esté activa, dejando que el backend decida si está en plazo *@
+                                        @if (esCancelable)
+                                        {
+                                            <BotonAccion Tipo="button"
+                                                         Clase="btn-outline-danger btn-sm"
+                                                         EstaProcesando="@cancelandoEsta"
+                                                         TextoProcesando="Cancelando..."
+                                                         OnClick="@(() => CancelarReserva(reservaId))">
+                                                Cancelar
+                                            </BotonAccion>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>? _estado;
+    private Guid? _cancelandoReservaId;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarReservas();
+    }
+
+    private async Task CargarReservas()
+    {
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>.Cargando();
+        _estado = await ReservasService.ObtenerMisReservasAsync();
+    }
+
+    private async Task CancelarReserva(Guid reservaId)
+    {
+        if (reservaId == Guid.Empty) return;
+
+        _cancelandoReservaId = reservaId;
+        _mensajeAlerta = null;
+
+        var resultado = await ReservasService.CancelarReservaAsync(reservaId);
+        _cancelandoReservaId = null;
+
+        if (resultado.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = "Reserva cancelada correctamente.";
+            await CargarReservas();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = resultado.Mensaje ?? "No fue posible cancelar la reserva.";
+        }
+    }
+
+    private RenderFragment ObtenerBadgeEstado(int? estado) => builder =>
+    {
+        // 0: Confirmada, 1: EnListaEspera, 2: Cancelada, 3: Asistida, 4: NoAsistida, 5: NoAdjudicada
+        switch (estado)
+        {
+            case 0:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge badge-itm-disponible");
+                builder.AddContent(2, "Confirmada");
+                builder.CloseElement();
+                break;
+            case 1:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge bg-warning text-dark");
+                builder.AddContent(2, "En lista de espera");
+                builder.CloseElement();
+                break;
+            case 2:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge bg-secondary");
+                builder.AddContent(2, "Cancelada");
+                builder.CloseElement();
+                break;
+            case 3:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge bg-info text-dark");
+                builder.AddContent(2, "Asistida");
+                builder.CloseElement();
+                break;
+            case 4:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge bg-danger");
+                builder.AddContent(2, "No asistida");
+                builder.CloseElement();
+                break;
+            default:
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "badge bg-light text-muted border");
+                builder.AddContent(2, "Finalizada");
+                builder.CloseElement();
+                break;
+        }
+    };
+}

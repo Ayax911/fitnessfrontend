@@ -1,0 +1,59 @@
+@using QRCoder
+
+@* Patrón 6 (docs/arquitectura/04-patrones-de-diseno.md):
+   Componente puro desacoplado de reglas de negocio o asistencia.
+   Recibe una cadena y la renderiza como imagen vectorial SVG. *@
+<div class="codigo-qr-contenedor d-inline-block p-3 bg-white rounded shadow-sm text-center">
+    @if (!string.IsNullOrWhiteSpace(Valor))
+    {
+        @((MarkupString)_svgContenido)
+    }
+    else
+    {
+        <div class="text-muted p-4 border border-dashed rounded">
+            <span class="bi bi-qr-code text-secondary fs-1 d-block mb-2"></span>
+            <small>Sin valor para generar código QR</small>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Valor { get; set; }
+
+    [Parameter]
+    public int PixelesPorModulo { get; set; } = 8;
+
+    private string _svgContenido = string.Empty;
+    private string? _ultimoValor;
+
+    protected override void OnParametersSet()
+    {
+        if (Valor != _ultimoValor)
+        {
+            _ultimoValor = Valor;
+            GenerarQr();
+        }
+    }
+
+    private void GenerarQr()
+    {
+        if (string.IsNullOrWhiteSpace(Valor))
+        {
+            _svgContenido = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var generator = new QRCodeGenerator();
+            using var data = generator.CreateQrCode(Valor, QRCodeGenerator.ECCLevel.M);
+            var qrCode = new SvgQRCode(data);
+            _svgContenido = qrCode.GetGraphic(PixelesPorModulo);
+        }
+        catch
+        {
+            _svgContenido = "<p class='text-danger small'>Error al generar código QR</p>";
+        }
+    }
+}

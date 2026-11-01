@@ -1,0 +1,43 @@
+<button type="@Tipo" 
+        class="@ObtenerClaseBoton()" 
+        disabled="@(Deshabilitado || EstaProcesando)" 
+        @onclick="ManejarClick"
+        @attributes="AtributosAdicionales">
+    @if (EstaProcesando)
+    {
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        @if (!string.IsNullOrWhiteSpace(TextoProcesando))
+        {
+            <span>@TextoProcesando</span>
+        }
+        else
+        {
+            @ChildContent
+        }
+    }
+    else
+    {
+        @ChildContent
+    }
+</button>
+
+@code {
+    [Parameter] public string Tipo { get; set; } = "button";
+    [Parameter] public string Clase { get; set; } = "btn-itm-primario";
+    [Parameter] public bool Deshabilitado { get; set; }
+    [Parameter] public bool EstaProcesando { get; set; }
+    [Parameter] public string? TextoProcesando { get; set; }
+    [Parameter] public EventCallback<Microsoft.AspNetCore.Components.Web.MouseEventArgs> OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AtributosAdicionales { get; set; }
+
+    private string ObtenerClaseBoton() => $"btn {Clase}";
+
+    private async Task ManejarClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        if (!Deshabilitado && !EstaProcesando && OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(e);
+        }
+    }
+}

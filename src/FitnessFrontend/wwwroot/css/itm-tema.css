@@ -1,0 +1,231 @@
+/* 
+ * itm-tema.css — Sistema de diseño e identidad visual institucional ITM 2025
+ * Fuente: Manual de Imagen Institucional ITM (2025) y docs/arquitectura/07-identidad-visual-y-sistema-de-diseno.md
+ */
+
+:root {
+  /* Paleta institucional ITM */
+  --itm-azul-primario: #011C5B; /* PENDIENTE: valor en disputa, ver 07-identidad-visual-y-sistema-de-diseno.md */
+  --itm-negro: #000000;
+  --itm-gris: #C6C6C6; /* PENDIENTE: valor en disputa, ver 07-identidad-visual-y-sistema-de-diseno.md */
+  --itm-blanco: #FFFFFF;
+  
+  /* 
+   * PENDIENTE: Discrepancia del manual — el celeste de acento no tiene definición numérica en la lámina base.
+   * Se adopta #56ACDE (Facultad de Ingenierías) como marcador de posición.
+   * REGLA DE ACCESIBILIDAD WCAG AA: Ratio sobre blanco es 2.5:1 (NO CUMPLE AA).
+   * NUNCA usar --itm-celeste-acento como color de texto sobre fondo blanco.
+   */
+  --itm-celeste-acento: #56ACDE;
+
+  /* Colores de apoyo por módulo institucional */
+  --itm-modulo-eventos: #00A0B7;
+  --itm-modulo-reservas: #009030;
+  --itm-modulo-asistencia: #F19800;
+  --itm-modulo-priorizacion: #661081;
+
+  /* Sobrescritura de variables de Bootstrap 5 */
+  --bs-primary: var(--itm-azul-primario);
+  --bs-primary-rgb: 1, 28, 91;
+  --bs-body-font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --bs-body-color: var(--itm-negro);
+  --bs-body-bg: var(--itm-blanco);
+  --bs-link-color: var(--itm-azul-primario);
+  --bs-link-hover-color: var(--itm-azul-primario);
+}
+
+body {
+  font-family: var(--bs-body-font-family);
+  color: var(--itm-negro);
+  background-color: var(--itm-blanco);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Tipografía de contenido extenso */
+.texto-extenso {
+  font-family: 'Lato', system-ui, -apple-system, sans-serif;
+}
+
+/* Titulares con peso institucional */
+h1, h2, h3, h4, h5, h6, .display-font {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: var(--itm-azul-primario);
+}
+
+/* Skip link de accesibilidad heredado de Kinetic */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--itm-azul-primario);
+  color: var(--itm-blanco);
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Accesibilidad :focus-visible */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--itm-celeste-acento);
+  outline-offset: 2px;
+}
+
+/* Respeto a prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Botones institucionales */
+.btn-itm-primario {
+  background-color: var(--itm-azul-primario);
+  color: var(--itm-blanco) !important;
+  border: 1px solid var(--itm-azul-primario);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-itm-primario:hover:not(:disabled),
+.btn-itm-primario:focus:not(:disabled) {
+  background-color: var(--itm-azul-primario);
+  border-color: var(--itm-celeste-acento);
+  filter: brightness(1.15);
+  color: var(--itm-blanco) !important;
+}
+
+.btn-itm-primario:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-itm-secundario {
+  background-color: transparent;
+  color: var(--itm-azul-primario) !important;
+  border: 1px solid var(--itm-azul-primario);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-itm-secundario:hover:not(:disabled) {
+  background-color: rgba(1, 28, 91, 0.05);
+}
+
+/* Barra de navegación institucional */
+.navbar-itm {
+  background-color: var(--itm-azul-primario);
+  color: var(--itm-blanco);
+  border-bottom: 3px solid var(--itm-celeste-acento);
+}
+
+.navbar-itm .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-itm .nav-link:hover,
+.navbar-itm .nav-link.active {
+  color: var(--itm-blanco);
+  border-bottom: 2px solid var(--itm-celeste-acento);
+}
+
+/* Insignia / Pill de estado */
+.badge-itm-disponible {
+  background-color: var(--itm-modulo-reservas);
+  color: var(--itm-blanco);
+}
+
+.badge-itm-agotado {
+  background-color: var(--bs-danger);
+  color: var(--itm-blanco);
+}
+
+.badge-itm-neutro {
+  background-color: var(--itm-gris);
+  color: var(--itm-negro);
+}
+
+/* Tarjetas */
+.card-itm {
+  border: 1px solid var(--itm-gris);
+  border-radius: 8px;
+  background-color: var(--itm-blanco);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.card-itm:hover {
+  box-shadow: 0 4px 12px rgba(1, 28, 91, 0.12);
+}
+
+.card-itm-header {
+  border-bottom: 2px solid var(--itm-celeste-acento);
+  background-color: rgba(1, 28, 91, 0.02);
+  padding: 1rem;
+  font-weight: 700;
+  color: var(--itm-azul-primario);
+}
+
+/* Módulo de Priorización (Exclusivo Administrador - RN-020) */
+.card-itm-priorizacion {
+  border-top: 4px solid var(--itm-modulo-priorizacion) !important;
+}
+
+.badge-itm-priorizacion {
+  background-color: var(--itm-modulo-priorizacion);
+  color: var(--itm-blanco);
+}
+
+.text-itm-priorizacion {
+  color: var(--itm-modulo-priorizacion) !important;
+}
+
+.btn-itm-priorizacion {
+  background-color: var(--itm-modulo-priorizacion);
+  color: var(--itm-blanco);
+  border: 1px solid var(--itm-modulo-priorizacion);
+}
+
+.btn-itm-priorizacion:hover {
+  background-color: var(--itm-modulo-priorizacion);
+  filter: brightness(0.85);
+  color: var(--itm-blanco);
+}
+
+/* Clases utilitarias de dimensiones (M-08) */
+.spinner-dim-md {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.spinner-dim-lg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.usuario-email-truncate {
+  max-width: 200px;
+}

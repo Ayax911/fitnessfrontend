@@ -1,0 +1,85 @@
+@inherits LayoutComponentBase
+@using FitnessFrontend.Servicios.Identidad
+@inject IAutenticacionService AutenticacionService
+@inject NavigationManager NavigationManager
+
+<div class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-itm py-3">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/eventos">
+                    <span class="fs-4 fw-bold">ITM</span>
+                    <span class="ms-2 ps-2 border-start border-light fs-6 opacity-75">Bienestar Universitario</span>
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido" 
+                        aria-controls="navbarContenido" aria-expanded="false" aria-label="Alternar navegación">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarContenido">
+                    <AuthorizeView>
+                        <Authorized>
+                            <AuthorizeView Roles="Administrador" Context="adminContext">
+                                <Authorized>
+                                    <NavMenuAdministrador />
+                                </Authorized>
+                                <NotAuthorized>
+                                    <AuthorizeView Roles="Entrenador" Context="entrenadorContext">
+                                        <Authorized>
+                                            <NavMenuEntrenador />
+                                        </Authorized>
+                                        <NotAuthorized>
+                                            <NavMenuUsuario />
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                </NotAuthorized>
+                            </AuthorizeView>
+
+                            <div class="d-flex align-items-center ms-auto gap-3 text-light">
+                                <span class="small opacity-75 text-truncate usuario-email-truncate">
+                                    @context.User.Identity?.Name
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-light" @onclick="CerrarSesion">
+                                    Cerrar Sesión
+                                </button>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="d-flex align-items-center ms-auto gap-2">
+                                <a href="login" class="btn btn-sm btn-outline-light">Iniciar Sesión</a>
+                                <a href="registro" class="btn btn-sm btn-light text-primary fw-semibold">Registrarse</a>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content" class="flex-grow-1">
+        @Body
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-auto border-top">
+        <div class="container text-center text-md-start">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <p class="mb-0 fw-semibold">Instituto Tecnológico Metropolitano — ITM</p>
+                    <small class="text-white-50">Área de Bienestar Universitario · Plataforma de Gimnasio</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-white-50">Medellín, Colombia · Horario institucional</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private async Task CerrarSesion()
+    {
+        await AutenticacionService.CerrarSesionAsync();
+        NavigationManager.NavigateTo("/login");
+    }
+}
