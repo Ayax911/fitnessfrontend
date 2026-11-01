@@ -2,6 +2,15 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F5 · Reportes y exportación CSV (RF-033)
+- Creada función pura `GeneradorCsv.cs` con BOM UTF-8 (`\uFEFF`), separador `;`, escape de comillas y protección estricta contra inyección de fórmulas CSV (prefijo `'` ante `=`, `+`, `-`, `@`).
+- Creada página `Reportes.razor` (/admin/reportes) con 5 pestañas operativas: Asistencia por sesión, Ocupación de cupos, Inasistencias por actividad (agregado, sin datos personales RN-020), Horas pico en franjas locales `America/Bogota` y Uso de la plataforma.
+- Incorporado selector de fechas con atajos ("Últimos 7 días", "Este mes", "Mes anterior") y validación de rango invertido.
+- Botón de exportación CSV en cada pestaña con descarga directa a través de interop JS.
+- Incorporado enlace a Reportes en `NavMenuAdministrador.razor`.
+- Implementado servicio de fachada `IReportesClienteService`.
+- Implementadas las 5 pruebas obligatorias de F5 en `ReportesYExportacionCsvF5Tests.cs` y ampliado `AusenciaPriorizacionRN020Tests.cs` con los nuevos DTOs (127 pruebas en verde).
+
 ## F4 · Administración de sesiones, bloqueos y auditoría (RF-028, RF-029, RF-030, RF-031, RF-032)
 - Creada página `AdministrarSesion.razor` (/admin/sesiones/{id}): cancelación con motivo obligatorio y confirmación indicando el conteo de reservas afectadas (sin penalización RN-031), reprogramación de fecha/hora con manejo de bloqueos, inscripción de terceros en ventanilla y retiro de terceros con advertencia de promoción de lista de espera (RF-030).
 - Creada página `BloqueosCalendario.razor` (/admin/calendario): registro de cierres/mantenimientos/festivos con validación temporal, listado y eliminación con confirmación de consecuencia explícita.

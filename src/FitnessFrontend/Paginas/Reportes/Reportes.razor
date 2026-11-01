@@ -1,0 +1,525 @@
+@* RF-033: Reportes operativos y exportación CSV (Administrador) *@
+@page "/admin/reportes"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.Servicios.Reportes
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IReportesClienteService ReportesService
+@inject IZonaHorariaService ZonaHoraria
+@inject IJSRuntime JS
+
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Reportes y métricas operativas</h1>
+            <p>Monitoreo de asistencia, ocupación de cupos, inasistencias y horas de mayor afluencia.</p>
+        </div>
+        <button class="btn btn-itm-secundario btn-sm" @onclick="CargarReporteActual">Actualizar datos</button>
+    </div>
+
+    @* Selector de rango de fechas con atajos *@
+    <div class="card-itm p-3 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="fechaDesde" class="form-label small fw-bold">Fecha inicial:</label>
+                <input id="fechaDesde" type="date" class="form-control form-control-sm" @bind="_fechaDesdeLocal" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="fechaHasta" class="form-label small fw-bold">Fecha final:</label>
+                <input id="fechaHasta" type="date" class="form-control form-control-sm" @bind="_fechaHastaLocal" />
+            </div>
+            <div class="col-12 col-md-6 d-flex flex-wrap gap-2 align-items-center">
+                <button type="button" class="btn btn-itm-primario btn-sm" style="min-height: 38px;" @onclick="CargarReporteActual">
+                    Consultar
+                </button>
+                <div class="btn-group" role="group" aria-label="Atajos de fecha">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoUltimos7Dias">Últimos 7 días</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoEsteMes">Este mes</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoMesAnterior">Mes anterior</button>
+                </div>
+            </div>
+        </div>
+
+        @if (_errorRangoFechas != null)
+        {
+            <div class="alert alert-warning py-2 mt-2 mb-0 small" role="alert">
+                @_errorRangoFechas
+            </div>
+        }
+    </div>
+
+    @* Navegación por pestañas de reportes *@
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Asistencia" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Asistencia"))">
+                Asistencia por sesión
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Ocupacion" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Ocupacion"))">
+                Ocupación
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Inasistencias" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Inasistencias"))">
+                Inasistencias
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "HorasPico" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("HorasPico"))">
+                Horas pico
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Uso" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Uso"))">
+                Uso de plataforma
+            </button>
+        </li>
+    </ul>
+
+    @if (_cargando)
+    {
+        <div role="status" aria-busy="true">
+            <span class="itm-solo-lectores">Cargando datos del reporte...</span>
+            <EsqueletoTarjetas Cantidad="4" Mensaje="Cargando reporte..." />
+        </div>
+    }
+    else
+    {
+        @* Pestaña 1: Asistencia por sesión *@
+        @if (_pestañaActiva == "Asistencia")
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Asistencia por Sesión</h2>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvAsistencia">
+                        Descargar CSV
+                    </button>
+                </div>
+
+                @if (_reporteAsistencia.Count == 0)
+                {
+                    <p class="text-muted small">No hay sesiones registradas en el rango de fechas seleccionado.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Actividad</th>
+                                    <th>Fecha y Hora (Bogotá)</th>
+                                    <th>Capacidad</th>
+                                    <th>Inscritos</th>
+                                    <th>Asistentes</th>
+                                    <th>No Asistieron</th>
+                                    <th>% Asistencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in _reporteAsistencia)
+                                {
+                                    <tr @key="r.SesionId">
+                                        <td class="fw-semibold">@r.EventoNombre</td>
+                                        <td class="small">@ZonaHoraria.FormatearFechaHora(r.FechaHora)</td>
+                                        <td>@r.CupoMaximo</td>
+                                        <td>@r.Inscritos</td>
+                                        <td class="text-success fw-bold">@r.Asistentes</td>
+                                        <td class="text-danger">@r.NoAsistentes</td>
+                                        <td>
+                                            <span class="badge @(r.PorcentajeAsistencia >= 85 ? "bg-success" : "bg-warning text-dark")">
+                                                @r.PorcentajeAsistencia.ToString("F1")%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Pestaña 2: Ocupación *@
+        @if (_pestañaActiva == "Ocupacion")
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Ocupación de Cupos</h2>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvOcupacion">
+                        Descargar CSV
+                    </button>
+                </div>
+
+                @if (_reporteOcupacion.Count == 0)
+                {
+                    <p class="text-muted small">Sin datos de ocupación para el rango seleccionado.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Actividad</th>
+                                    <th>Fecha</th>
+                                    <th>Cupo Ofrecido</th>
+                                    <th>Cupo Ocupado</th>
+                                    <th>% Ocupación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in _reporteOcupacion)
+                                {
+                                    <tr @key="o.EventoNombre + o.Fecha.ToString()">
+                                        <td class="fw-semibold">@o.EventoNombre</td>
+                                        <td>@o.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td>@o.CupoTotal</td>
+                                        <td>@o.CupoOcupado</td>
+                                        <td>
+                                            <span class="badge @(o.PorcentajeOcupacion >= 90 ? "bg-success" : "bg-primary")">
+                                                @o.PorcentajeOcupacion.ToString("F1")%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Pestaña 3: Inasistencias (agregado, sin datos personales RN-020) *@
+        @if (_pestañaActiva == "Inasistencias")
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">Inasistencias por Actividad</h2>
+                        <p class="text-muted small mb-0">Datos consolidados a nivel de evento (respetando RN-020 y confidencialidad).</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvInasistencias">
+                        Descargar CSV
+                    </button>
+                </div>
+
+                @if (_reporteInasistencias.Count == 0)
+                {
+                    <p class="text-muted small">No hay inasistencias registradas en este periodo.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Actividad</th>
+                                    <th>Total Reservas</th>
+                                    <th>Inasistencias</th>
+                                    <th>Tasa de Inasistencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ina in _reporteInasistencias)
+                                {
+                                    <tr @key="ina.EventoNombre">
+                                        <td class="fw-semibold">@ina.EventoNombre</td>
+                                        <td>@ina.TotalReservas</td>
+                                        <td class="text-danger fw-bold">@ina.Inasistencias</td>
+                                        <td>
+                                            <span class="badge @(ina.TasaInasistencia > 15 ? "bg-danger" : "bg-secondary")">
+                                                @ina.TasaInasistencia.ToString("F1")%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Pestaña 4: Horas pico *@
+        @if (_pestañaActiva == "HorasPico")
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">Horas Pico y Afluencia</h2>
+                        <p class="text-muted small mb-0">Franjas de mayor concurrencia en hora local (America/Bogota).</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvHorasPico">
+                        Descargar CSV
+                    </button>
+                </div>
+
+                @if (_reporteHorasPico.Count == 0)
+                {
+                    <p class="text-muted small">Sin datos de horas pico en el rango seleccionado.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Franja Horaria</th>
+                                    <th>Ingresos y Asistencias</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var h in _reporteHorasPico)
+                                {
+                                    var horaLocal = new DateTime(2026, 1, 1, h.FranjaHora, 0, 0);
+                                    var textoFranja = horaLocal.ToString("hh:00 tt", new System.Globalization.CultureInfo("es-CO"));
+
+                                    <tr @key="h.DiaSemana + h.FranjaHora">
+                                        <td class="fw-semibold">@h.DiaSemana</td>
+                                        <td>@textoFranja – @horaLocal.AddHours(1).ToString("hh:00 tt", new System.Globalization.CultureInfo("es-CO"))</td>
+                                        <td>
+                                            <span class="badge bg-primary">@h.TotalIngresosYCheckins personas</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Pestaña 5: Uso de la plataforma *@
+        @if (_pestañaActiva == "Uso" && _reporteUso != null)
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Uso General de la Plataforma</h2>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvUso">
+                        Descargar CSV
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="p-3 border rounded text-center bg-light">
+                            <div class="text-muted small">Registros nuevos</div>
+                            <div class="h3 fw-bold text-primary mb-0 mt-1">@_reporteUso.RegistrosNuevos</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="p-3 border rounded text-center bg-light">
+                            <div class="text-muted small">Usuarios activos</div>
+                            <div class="h3 fw-bold text-success mb-0 mt-1">@_reporteUso.UsuariosActivos</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="p-3 border rounded text-center bg-light">
+                            <div class="text-muted small">Reservas creadas</div>
+                            <div class="h3 fw-bold text-dark mb-0 mt-1">@_reporteUso.ReservasCreadas</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="p-3 border rounded text-center bg-light">
+                            <div class="text-muted small">Cancelaciones</div>
+                            <div class="h3 fw-bold text-danger mb-0 mt-1">@_reporteUso.Cancelaciones</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string _pestañaActiva = "Asistencia";
+    private bool _cargando;
+    private string? _errorRangoFechas;
+
+    private DateTime _fechaDesdeLocal = DateTime.Today.AddDays(-14);
+    private DateTime _fechaHastaLocal = DateTime.Today;
+
+    private List<ReporteAsistenciaSesionDto> _reporteAsistencia = new();
+    private List<ReporteOcupacionDto> _reporteOcupacion = new();
+    private List<ReporteInasistenciasEventoDto> _reporteInasistencias = new();
+    private List<ReporteHorasPicoDto> _reporteHorasPico = new();
+    private ReporteUsoPlataformaDto? _reporteUso;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarReporteActual();
+    }
+
+    private void CambiarPestana(string pestana)
+    {
+        _pestañaActiva = pestana;
+        _ = CargarReporteActual();
+    }
+
+    private async Task CargarReporteActual()
+    {
+        if (_fechaHastaLocal < _fechaDesdeLocal)
+        {
+            _errorRangoFechas = "La fecha final debe ser posterior o igual a la fecha inicial.";
+            return;
+        }
+
+        _errorRangoFechas = null;
+        _cargando = true;
+
+        var desdeUtc = ZonaHoraria.AUtc(_fechaDesdeLocal.Date);
+        var hastaUtc = ZonaHoraria.AUtc(_fechaHastaLocal.Date.AddDays(1).AddTicks(-1));
+
+        try
+        {
+            switch (_pestañaActiva)
+            {
+                case "Asistencia":
+                    var resAsis = await ReportesService.ConsultarAsistenciaPorSesionAsync(desdeUtc, hastaUtc);
+                    if (resAsis.EsExito) _reporteAsistencia = (resAsis.Valor ?? new List<ReporteAsistenciaSesionDto>()).ToList();
+                    break;
+                case "Ocupacion":
+                    var resOcup = await ReportesService.ConsultarOcupacionAsync(desdeUtc, hastaUtc);
+                    if (resOcup.EsExito) _reporteOcupacion = (resOcup.Valor ?? new List<ReporteOcupacionDto>()).ToList();
+                    break;
+                case "Inasistencias":
+                    var resIna = await ReportesService.ConsultarInasistenciasAsync(desdeUtc, hastaUtc);
+                    if (resIna.EsExito) _reporteInasistencias = (resIna.Valor ?? new List<ReporteInasistenciasEventoDto>()).ToList();
+                    break;
+                case "HorasPico":
+                    var resPico = await ReportesService.ConsultarHorasPicoAsync(desdeUtc, hastaUtc);
+                    if (resPico.EsExito) _reporteHorasPico = (resPico.Valor ?? new List<ReporteHorasPicoDto>()).ToList();
+                    break;
+                case "Uso":
+                    var resUso = await ReportesService.ConsultarUsoPlataformaAsync(desdeUtc, hastaUtc);
+                    if (resUso.EsExito) _reporteUso = resUso.Valor;
+                    break;
+            }
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private void AtajoUltimos7Dias()
+    {
+        _fechaDesdeLocal = DateTime.Today.AddDays(-7);
+        _fechaHastaLocal = DateTime.Today;
+        _ = CargarReporteActual();
+    }
+
+    private void AtajoEsteMes()
+    {
+        var hoy = DateTime.Today;
+        _fechaDesdeLocal = new DateTime(hoy.Year, hoy.Month, 1);
+        _fechaHastaLocal = hoy;
+        _ = CargarReporteActual();
+    }
+
+    private void AtajoMesAnterior()
+    {
+        var hoy = DateTime.Today;
+        var primerDiaMesActual = new DateTime(hoy.Year, hoy.Month, 1);
+        var ultimoDiaMesAnterior = primerDiaMesActual.AddDays(-1);
+        _fechaDesdeLocal = new DateTime(ultimoDiaMesAnterior.Year, ultimoDiaMesAnterior.Month, 1);
+        _fechaHastaLocal = ultimoDiaMesAnterior;
+        _ = CargarReporteActual();
+    }
+
+    private async Task ExportarCsvAsistencia()
+    {
+        var cabeceras = new[] { "Actividad", "FechaHoraUtc", "Capacidad", "Inscritos", "Asistentes", "NoAsistentes", "PorcentajeAsistencia" };
+        var filas = _reporteAsistencia.Select(r => new[]
+        {
+            r.EventoNombre,
+            r.FechaHora.ToString("o"),
+            r.CupoMaximo.ToString(),
+            r.Inscritos.ToString(),
+            r.Asistentes.ToString(),
+            r.NoAsistentes.ToString(),
+            r.PorcentajeAsistencia.ToString("F1")
+        });
+
+        var csv = GeneradorCsv.Generar(cabeceras, filas);
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-asistencia-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+    }
+
+    private async Task ExportarCsvOcupacion()
+    {
+        var cabeceras = new[] { "Actividad", "Fecha", "CupoOfrecido", "CupoOcupado", "PorcentajeOcupacion" };
+        var filas = _reporteOcupacion.Select(o => new[]
+        {
+            o.EventoNombre,
+            o.Fecha.ToString("yyyy-MM-dd"),
+            o.CupoTotal.ToString(),
+            o.CupoOcupado.ToString(),
+            o.PorcentajeOcupacion.ToString("F1")
+        });
+
+        var csv = GeneradorCsv.Generar(cabeceras, filas);
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-ocupacion-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+    }
+
+    private async Task ExportarCsvInasistencias()
+    {
+        var cabeceras = new[] { "Actividad", "TotalReservas", "Inasistencias", "TasaInasistencia" };
+        var filas = _reporteInasistencias.Select(i => new[]
+        {
+            i.EventoNombre,
+            i.TotalReservas.ToString(),
+            i.Inasistencias.ToString(),
+            i.TasaInasistencia.ToString("F1")
+        });
+
+        var csv = GeneradorCsv.Generar(cabeceras, filas);
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-inasistencias-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+    }
+
+    private async Task ExportarCsvHorasPico()
+    {
+        var cabeceras = new[] { "DiaSemana", "FranjaHoraLocal", "TotalIngresosYCheckins" };
+        var filas = _reporteHorasPico.Select(h => new[]
+        {
+            h.DiaSemana,
+            $"{h.FranjaHora:D2}:00",
+            h.TotalIngresosYCheckins.ToString()
+        });
+
+        var csv = GeneradorCsv.Generar(cabeceras, filas);
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-horas-pico-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+    }
+
+    private async Task ExportarCsvUso()
+    {
+        if (_reporteUso == null) return;
+        var cabeceras = new[] { "Metrica", "Valor" };
+        var filas = new[]
+        {
+            new[] { "RegistrosNuevos", _reporteUso.RegistrosNuevos.ToString() },
+            new[] { "UsuariosActivos", _reporteUso.UsuariosActivos.ToString() },
+            new[] { "ReservasCreadas", _reporteUso.ReservasCreadas.ToString() },
+            new[] { "Cancelaciones", _reporteUso.Cancelaciones.ToString() }
+        };
+
+        var csv = GeneradorCsv.Generar(cabeceras, filas);
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-uso-plataforma-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+    }
+}
