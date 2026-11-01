@@ -2,6 +2,12 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F10 · Diseños diferidos de apelación y derechos del titular (RF-041, RF-042)
+- Creado documento de diseño conceptual y bocetos en texto `docs/plan-despliegue/04-diseno-ui-apelacion-y-derechos-titular.md`.
+- Diseñada pantalla conceptual de solicitud de revisión de reservas y asistencia (RF-041) con verificación estricta de confidencialidad RN-020 (sin revelar penalización ni nivel de confiabilidad al usuario).
+- Diseñada pantalla conceptual para el ejercicio de derechos del titular de datos personales (RF-042, Ley 1581 de 2012) para consulta portable, actualización y solicitud de supresión/anonimización respetando la inmutabilidad de los registros de auditoría.
+- Validación de que ninguna interfaz propuesta quiebra la confidencialidad de priorización institucional.
+
 ## F9 · Cierre visual, accesibilidad y verificación de navegación por rol
 - Ampliada `EditarEvento.razor` con tarjeta de gestión operativa conectando a la administración de sesiones y programación del evento.
 - Ampliadas las pruebas de navegación `NavegacionPorRolTests.cs` para validar que todas las rutas administrativas nuevas (`admin/auditoria`, `admin/reportes`, `admin/retroalimentacion`, `admin/calendario`) no sean visibles para roles de Usuario ni Entrenador.

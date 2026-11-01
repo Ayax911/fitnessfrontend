@@ -68,6 +68,7 @@
 | F7 / RF-038 | Reportar problema/sugerencia enviado y consultado en bandeja admin | ✅ probado (RetroalimentacionF7Tests.Prueba1, Prueba2, Prueba3, Prueba4, Prueba5) |
 | F8 / PWA | Manifiesto PWA standalone y soporte de instalación sin almacenamiento en caché obsoleto | ✅ probado (PwaF8Tests.ManifiestoPwa_ExisteYContienePropiedadesRequeridas) |
 | F9 / Cierre visual | Accesibilidad WCAG, skip-link, cobertura RF y aislamiento de rutas por rol | ✅ probado (NavegacionPorRolTests, AccesibilidadF9Tests) |
+| F10 / Diseños diferidos | Bocetos de UI para apelación (RF-041) y titular (RF-042) documentados sin quiebre de RN-020 | ✅ documentado (04-diseno-ui-apelacion-y-derechos-titular.md) |
 
 
 ## Pendiente que requiere a una persona
