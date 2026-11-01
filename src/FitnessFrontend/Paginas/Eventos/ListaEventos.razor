@@ -18,9 +18,15 @@
             <h1>Actividades</h1>
             <p>Elige un día y reserva tu cupo.</p>
         </div>
-        <button class="btn btn-itm-secundario btn-sm" @onclick="CargarEventos" disabled="@(_estado?.EsCargando == true)">
-            Actualizar
-        </button>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div class="btn-group" role="group" aria-label="Modo de visualización">
+                <a href="/eventos" class="btn btn-itm-primario btn-sm" aria-current="page">Lista</a>
+                <a href="/programacion" class="btn btn-itm-secundario btn-sm">Semana</a>
+            </div>
+            <button class="btn btn-itm-secundario btn-sm" @onclick="CargarEventos" disabled="@(_estado?.EsCargando == true)">
+                Actualizar
+            </button>
+        </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_mensajeGlobal))

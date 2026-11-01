@@ -49,6 +49,42 @@ public class EventosClienteService : IEventosClienteService
         }
     }
 
+    // RF-035: Programación por rango de fechas y paginación
+    public async Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(
+        DateTimeOffset? desde,
+        DateTimeOffset? hasta,
+        int? pagina = null,
+        int? tamano = null,
+        CancellationToken ct = default)
+    {
+        var resultadoBase = await ObtenerEventosDisponiblesAsync(ct);
+        if (!resultadoBase.EsExito || resultadoBase.Valor == null)
+        {
+            return resultadoBase;
+        }
+
+        var eventos = resultadoBase.Valor.AsEnumerable();
+
+        if (desde.HasValue)
+        {
+            eventos = eventos.Where(e => (e.Sesiones ?? new List<SesionResumenDto>())
+                .Any(s => (s.FechaHoraFin ?? s.FechaHoraInicio ?? DateTimeOffset.MinValue) >= desde.Value));
+        }
+
+        if (hasta.HasValue)
+        {
+            eventos = eventos.Where(e => (e.Sesiones ?? new List<SesionResumenDto>())
+                .Any(s => (s.FechaHoraInicio ?? DateTimeOffset.MaxValue) <= hasta.Value));
+        }
+
+        if (pagina.HasValue && tamano.HasValue && tamano.Value > 0)
+        {
+            eventos = eventos.Skip((pagina.Value - 1) * tamano.Value).Take(tamano.Value);
+        }
+
+        return EstadoDeCarga<IReadOnlyList<EventoResumenDto>>.Correcto(eventos.ToList());
+    }
+
     // RF-010: Consultar actividades asignadas al entrenador autenticado (RN-007)
     public async Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default)
     {

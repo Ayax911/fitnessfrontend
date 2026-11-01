@@ -1,13 +1,16 @@
 @* RF-004: Cancelar una reserva activa *@
 @* RF-020: Consultar sus propias reservas *@
+@* RF-036: Agregar una reserva al calendario personal (.ics) *@
 @page "/reservas"
 @attribute [Authorize]
 @using FitnessFrontend.ApiCliente.Models
 @using FitnessFrontend.Servicios.Reservas
+@using FitnessFrontend.Servicios.Calendario
 @using FitnessFrontend.Servicios.Infraestructura
 @using FitnessFrontend.Componentes.Compartidos
 @inject IReservasClienteService ReservasService
 @inject IZonaHorariaService ZonaHoraria
+@inject IJSRuntime JS
 
 <div class="itm-contenedor itm-pagina">
     <div class="itm-pagina__cabecera">
@@ -71,6 +74,25 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                                 @ObtenerBadgeEstado(reserva.Estado)
+
+                                @* RF-036: Agregar a mi calendario (.ics) *@
+                                @if (reserva.Estado == 0 && reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
+                                {
+                                    <button type="button"
+                                            class="btn btn-itm-secundario btn-sm"
+                                            style="min-height: 48px; display: inline-flex; align-items: center; gap: 6px;"
+                                            @onclick="@(() => DescargarIcs(reserva))"
+                                            aria-label="Agregar a mi calendario">
+                                        <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px;">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"/>
+                                            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/>
+                                            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                        <span>Agregar a mi calendario</span>
+                                    </button>
+                                }
+
                                 @* PENDIENTE (RN-011 pendiente): la UI mantiene la acción siempre habilitada
                                    mientras la reserva esté activa, dejando que el backend decida si está en plazo *@
                                 @if (esCancelable)
@@ -149,4 +171,21 @@
         builder.AddAttribute(2, nameof(InsigniaEstado.ChildContent), (RenderFragment)(b => b.AddContent(0, texto)));
         builder.CloseComponent();
     };
+
+    private async Task DescargarIcs(ReservaResumenDto reserva)
+    {
+        if (!reserva.FechaHoraInicio.HasValue || !reserva.FechaHoraFin.HasValue) return;
+
+        var datos = new GeneradorIcs.DatosEventoIcs(
+            reserva.Id ?? Guid.NewGuid(),
+            reserva.EventoNombre ?? "Actividad de Gimnasio ITM",
+            reserva.FechaHoraInicio.Value,
+            reserva.FechaHoraFin.Value,
+            "Reserva confirmada en el Gimnasio ITM (Bienestar Universitario)",
+            "Gimnasio ITM");
+
+        var ics = GeneradorIcs.Generar(datos);
+        var nombreArchivo = $"reserva-{reserva.Id ?? Guid.NewGuid():N}.ics";
+        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", nombreArchivo, "text/calendar;charset=utf-8", ics);
+    }
 }

@@ -38,6 +38,9 @@ public class MisActividadesPertenenciaTests : BunitContext
             return Task.FromResult(EstadoDeCarga<IReadOnlyList<EventoResumenDto>>.Correcto(new List<EventoResumenDto>()));
         }
 
+        public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default) =>
+            ObtenerEventosDisponiblesAsync(ct);
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default)
         {
             var actividades = _actividadesPorEntrenador.TryGetValue(_entrenadorActivo, out var list)

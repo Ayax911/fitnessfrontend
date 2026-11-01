@@ -50,10 +50,10 @@
 |---|---|---|
 | F1 / RF-026 | Sesión vencida durante un check-in (`/checkin/{token}`): renueva en silencio y completa sin redirigir a login | ✅ probado (RenovacionSesionF1Tests.Prueba5) |
 | F1 / RF-026 | 5 peticiones simultáneas con token vencido generan exactamente 1 llamada a refresh | ✅ probado (RenovacionSesionF1Tests.Prueba1) |
-| F2 / RF-035 | Vista semanal `/programacion` convierte a `America/Bogota` y muestra franjas de bloqueo | ⬜ pendiente F2 |
-| F2 / RF-036 | Descarga de archivo `.ics` desde Mis reservas confirmadas | ⬜ pendiente F2 |
-| F2 / RF-037 | Contador de lista de espera visible sin revelar posición personal (RN-020) | ⬜ pendiente F2 |
-| F2 / RF-038 | Sección `/ayuda` visible con preguntas frecuentes y enlaces de pie | ⬜ pendiente F2 |
+| F2 / RF-035 | Vista semanal `/programacion` convierte a `America/Bogota` y muestra franjas de bloqueo | ✅ probado (ProgramacionYCalendarioF2Tests.Prueba2, Prueba3) |
+| F2 / RF-036 | Descarga de archivo `.ics` desde Mis reservas confirmadas | ✅ probado (ProgramacionYCalendarioF2Tests.Prueba1, MisReservas) |
+| F2 / RF-037 | Contador de lista de espera visible sin revelar posición personal (RN-020) | ✅ probado (ProgramacionYCalendarioF2Tests.Prueba4, AusenciaPriorizacionRN020Tests) |
+| F2 / RF-038 | Sección `/ayuda` visible con preguntas frecuentes y enlaces de pie | ✅ probado (/ayuda) |
 | F3 / RF-027 | Entrenador marca/desmarca asistencia manual; desmarcar pide confirmación | ⬜ pendiente F3 |
 | F3 / RF-034 | Notas e incidencias de sesión guardadas como texto plano | ⬜ pendiente F3 |
 | F3 / RF-029 | Anuncios visibles en Mis reservas y detalle de sesión | ⬜ pendiente F3 |

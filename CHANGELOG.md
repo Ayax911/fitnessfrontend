@@ -2,6 +2,15 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F2 · Programación, calendario ics y ayuda (RF-035, RF-036, RF-037, RF-038)
+- Creada página `Programacion.razor` (/programacion) con selector [Lista | Semana], navegación semanal con botones táctiles de 48 px, conversión horaria a `America/Bogota`, visualización de franjas de bloqueo de calendario (RF-031) ("Cerrado · motivo") sin botones de reserva, y estado de lista de espera agregado sin posición personal (RN-020, AMB-D04).
+- Creado `GeneradorIcs.cs` (RFC 5545 función pura) con escape de caracteres (`,`, `;`, `\`, saltos de línea) y plegado de líneas a <= 75 octetos.
+- Agregado botón accesible "Agregar a mi calendario" en `MisReservas.razor` para reservas confirmadas, con descarga directa mediante `wwwroot/js/descarga.js`.
+- Creada página `Ayuda.razor` (/ayuda) con preguntas frecuentes estáticas marcadas `@* PENDIENTE: aprobación de Bienestar *@`, enlace a reporte de problemas y acceso en navegación.
+- Implementado servicio de fachada `IBloqueosClienteService` y `BloqueosClienteService`.
+- Ampliada `IEventosClienteService` con sobrecarga para consultar eventos por rango temporal (`desde`, `hasta`).
+- Agregadas las 5 pruebas obligatorias de F2 en `ProgramacionYCalendarioF2Tests.cs` y extendido `AusenciaPriorizacionRN020Tests.cs` con `EventoResumenDto` y `BloqueoCalendarioDto` (101 pruebas en verde).
+
 ## F1 · Renovación de sesión de un solo vuelo (RF-026)
 - Implementado Patrón 8 en `ManejadorDeAutenticacionHttp.cs` con sincronización mediante `SemaphoreSlim`.
 - Peticiones concurrentes con token vencido comparten un único refresh contra `POST /api/auth/refresh`.

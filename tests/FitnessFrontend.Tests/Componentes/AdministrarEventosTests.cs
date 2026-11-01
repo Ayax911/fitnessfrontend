@@ -51,6 +51,14 @@ public class AdministrarEventosTests : BunitContext
         public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
 
+        public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(
+            DateTimeOffset? desde,
+            DateTimeOffset? hasta,
+            int? pagina = null,
+            int? tamano = null,
+            CancellationToken ct = default) =>
+            throw new NotImplementedException();
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
 

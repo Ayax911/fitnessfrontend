@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using FitnessFrontend.ApiCliente.Models;
+using FitnessFrontend.Servicios.Bloqueos;
 using Xunit;
 
 namespace FitnessFrontend.Tests.Servicios;
@@ -104,6 +105,8 @@ public class AusenciaPriorizacionRN020Tests
     [InlineData(typeof(EntrenadorDto))]
     [InlineData(typeof(PaginaUsuariosDto))]
     [InlineData(typeof(PuntoAccesoDto))]
+    [InlineData(typeof(EventoResumenDto))]
+    [InlineData(typeof(BloqueoCalendarioDto))]
     public void DtosDeGestionDeUsuariosYPuntos_NoContienenCamposDePriorizacionNiConfiabilidad(Type tipo)
     {
         // RF-023, RF-024, RN-020: lo que consumen las pantallas nuevas se verifica por inspección de tipo

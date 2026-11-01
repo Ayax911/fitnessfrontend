@@ -1,0 +1,319 @@
+@* RF-035: Programación por rango de fechas y vista semanal *@
+@* RF-037: Estado agregado de la lista de espera (sin posición personal) *@
+@page "/programacion"
+@attribute [Authorize]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Reservas
+@using FitnessFrontend.Servicios.Bloqueos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IEventosClienteService EventosService
+@inject IBloqueosClienteService BloqueosService
+@inject IReservasClienteService ReservasService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Programación semanal</h1>
+            <p>Consulta las sesiones programadas y los cierres del gimnasio por semana.</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div class="btn-group" role="group" aria-label="Modo de visualización">
+                <a href="/eventos" class="btn btn-itm-secundario btn-sm">Lista</a>
+                <a href="/programacion" class="btn btn-itm-primario btn-sm" aria-current="page">Semana</a>
+            </div>
+            <button class="btn btn-itm-secundario btn-sm" @onclick="CargarSemanaActual">Esta semana</button>
+        </div>
+    </div>
+
+    @* Navegación entre semanas con botones de 48px accesibles *@
+    <div class="d-flex align-items-center justify-content-between mb-4 p-2 bg-light rounded" style="border: 1px solid var(--borde-tarjeta);">
+        <button type="button"
+                class="btn btn-itm-secundario"
+                style="min-height: 48px; min-width: 48px; padding: 0 16px;"
+                @onclick="SemanaAnterior"
+                aria-label="Semana anterior">
+            <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="d-none d-sm-inline ms-1">Anterior</span>
+        </button>
+
+        <h2 style="font-size: 16px; font-weight: 700; margin: 0; text-align: center;">
+            Semana del @ZonaHoraria.FormatearFecha(InicioSemanaLocal) al @ZonaHoraria.FormatearFecha(FinSemanaLocal)
+        </h2>
+
+        <button type="button"
+                class="btn btn-itm-secundario"
+                style="min-height: 48px; min-width: 48px; padding: 0 16px;"
+                @onclick="SemanaSiguiente"
+                aria-label="Semana siguiente">
+            <span class="d-none d-sm-inline me-1">Siguiente</span>
+            <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeGlobal))
+    {
+        <div class="alert @(_mensajeEsExito ? "alert-success" : "alert-warning") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeGlobal
+            <button type="button" class="btn-close" @onclick="() => _mensajeGlobal = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @if (_cargando)
+    {
+        <div role="status" aria-busy="true" class="mb-4">
+            <span class="itm-solo-lectores">Cargando programación de la semana...</span>
+            <EsqueletoTarjetas Cantidad="7" Mensaje="Cargando programación de la semana..." />
+        </div>
+    }
+    else if (_errorCarga != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @_errorCarga
+            <button class="btn btn-itm-primario btn-sm ms-3" @onclick="CargarDatos">Reintentar</button>
+        </div>
+    }
+    else
+    {
+        @* Cuadrícula semanal: en celular lista vertical por día; en desktop columnas *@
+        <div class="row g-3">
+            @for (int i = 0; i < 7; i++)
+            {
+                var diaActual = InicioSemanaLocal.AddDays(i).Date;
+                var sesionesDelDia = _sesionesSemana
+                    .Where(s => ZonaHoraria.AHoraLocal(s.Sesion.FechaHoraInicio ?? DateTimeOffset.MinValue).Date == diaActual)
+                    .OrderBy(s => s.Sesion.FechaHoraInicio)
+                    .ToList();
+
+                var bloqueosDelDia = _bloqueosSemana
+                    .Where(b => ZonaHoraria.AHoraLocal(b.Desde).Date <= diaActual && ZonaHoraria.AHoraLocal(b.Hasta).Date >= diaActual)
+                    .ToList();
+
+                <div class="col-12 col-md-6 col-xl">
+                    <div class="card-itm h-100 p-3" style="min-height: 220px; background: @(diaActual == DateTime.UtcNow.Date ? "#f0f7ff" : "#ffffff"); border: 1px solid @(diaActual == DateTime.UtcNow.Date ? "var(--azul-itm)" : "var(--borde-tarjeta)");">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span style="font-weight: 700; font-size: 14px; text-transform: capitalize;">
+                                @diaActual.ToString("dddd", new System.Globalization.CultureInfo("es-CO"))
+                            </span>
+                            <span class="badge bg-secondary" style="font-size: 12px;">
+                                @diaActual.ToString("dd/MM")
+                            </span>
+                        </div>
+
+                        @* Franjas de bloqueo de calendario (RF-031): sin botones de reserva *@
+                        @foreach (var bloqueo in bloqueosDelDia)
+                        {
+                            <div class="p-2 mb-2 rounded" style="background: #fff3cd; border-left: 4px solid #ffc107; font-size: 13px;">
+                                <div class="fw-bold text-dark">
+                                    <svg class="itm-icono me-1" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px;">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    Cerrado · @bloqueo.Motivo
+                                </div>
+                                <div class="text-muted" style="font-size: 11px;">
+                                    @ZonaHoraria.FormatearHora(bloqueo.Desde) – @ZonaHoraria.FormatearHora(bloqueo.Hasta)
+                                </div>
+                            </div>
+                        }
+
+                        @* Sesiones del día *@
+                        @if (sesionesDelDia.Count == 0 && bloqueosDelDia.Count == 0)
+                        {
+                            <p class="text-muted small my-auto text-center py-3">Sin actividades</p>
+                        }
+                        else
+                        {
+                            @foreach (var item in sesionesDelDia)
+                            {
+                                var sesion = item.Sesion;
+                                var evento = item.Evento;
+                                var sesionId = sesion.Id ?? Guid.Empty;
+                                var hayCupo = sesion.CuposDisponibles.HasValue && sesion.CuposDisponibles.Value > 0;
+                                var estaBloqueada = _sesionesVentanaCerrada.Contains(sesionId);
+                                var procesandoEsta = _sesionEnProcesoId == sesionId;
+
+                                <div class="p-2 mb-2 rounded border bg-white" style="font-size: 13px;">
+                                    <div class="fw-bold" style="color: var(--azul-institucional);">
+                                        @(sesion.FechaHoraInicio.HasValue ? ZonaHoraria.FormatearHora(sesion.FechaHoraInicio.Value) : "")
+                                        @if (sesion.FechaHoraFin.HasValue)
+                                        {
+                                            <span>– @ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)</span>
+                                        }
+                                    </div>
+                                    <div class="fw-semibold text-truncate" title="@evento.Nombre">@evento.Nombre</div>
+                                    <div class="text-muted small">@(evento.EntrenadorNombre ?? "Por asignar")</div>
+
+                                    <div class="mt-2 d-flex justify-content-between align-items-center">
+                                        @if (hayCupo)
+                                        {
+                                            <span class="badge bg-success" style="font-size: 11px;">@sesion.CuposDisponibles cupos</span>
+                                        }
+                                        else
+                                        {
+                                            @* PENDIENTE (AMB-D04): solo se muestra el total agregado de personas en espera; nunca la posición personal (RN-020). *@
+                                            <InsigniaEstado Tipo="espera">Agotado (Espera)</InsigniaEstado>
+                                        }
+                                    </div>
+
+                                    @if (estaBloqueada)
+                                    {
+                                        @* PENDIENTE (AMB-014): mensaje genérico neutro *@
+                                        <p class="itm-nota mt-1 mb-0" role="note" style="font-size: 11px;">No disponible aún</p>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-itm-primario w-100 mt-2"
+                                                style="min-height: 38px; font-size: 12px;"
+                                                disabled="@procesandoEsta"
+                                                @onclick="() => ReservarCupo(sesionId, evento.Nombre ?? string.Empty, hayCupo)">
+                                            @(procesandoEsta ? "Procesando..." : (hayCupo ? "Reservar" : "Unirme a espera"))
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public DateTime? FechaReferencia { get; set; }
+
+    private DateTime InicioSemanaLocal;
+    private DateTime FinSemanaLocal => InicioSemanaLocal.AddDays(6);
+
+    private bool _cargando = true;
+    private string? _errorCarga;
+    private string? _mensajeGlobal;
+    private bool _mensajeEsExito;
+    private Guid? _sesionEnProcesoId;
+    private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
+
+    private List<(EventoResumenDto Evento, SesionResumenDto Sesion)> _sesionesSemana = new();
+    private List<BloqueoCalendarioDto> _bloqueosSemana = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        EstablecerSemana(FechaReferencia ?? DateTime.UtcNow);
+        await CargarDatos();
+    }
+
+    private void EstablecerSemana(DateTime referenciaUtc)
+    {
+        var referenciaLocal = ZonaHoraria.AHoraLocal(referenciaUtc).Date;
+        // En Colombia y estándar ISO, la semana inicia en lunes (DayOfWeek.Monday = 1)
+        int diff = (7 + (referenciaLocal.DayOfWeek - DayOfWeek.Monday)) % 7;
+        InicioSemanaLocal = referenciaLocal.AddDays(-diff).Date;
+    }
+
+    private async Task SemanaAnterior()
+    {
+        InicioSemanaLocal = InicioSemanaLocal.AddDays(-7);
+        await CargarDatos();
+    }
+
+    private async Task SemanaSiguiente()
+    {
+        InicioSemanaLocal = InicioSemanaLocal.AddDays(7);
+        await CargarDatos();
+    }
+
+    private async Task CargarSemanaActual()
+    {
+        EstablecerSemana(DateTime.UtcNow);
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        _cargando = true;
+        _errorCarga = null;
+
+        try
+        {
+            // Convertimos la ventana semanal local a UTC para consultar el backend
+            // Zona horaria fija: America/Bogota (-05:00 sin horario de verano)
+            var offsetBogota = TimeSpan.FromHours(-5);
+            var desdeUtc = new DateTimeOffset(InicioSemanaLocal, offsetBogota).ToUniversalTime();
+            var hastaUtc = new DateTimeOffset(InicioSemanaLocal.AddDays(7).AddTicks(-1), offsetBogota).ToUniversalTime();
+
+            var tareaEventos = EventosService.ObtenerEventosDisponiblesAsync(desdeUtc, hastaUtc);
+            var tareaBloqueos = BloqueosService.ObtenerBloqueosAsync(desdeUtc, hastaUtc);
+
+            await Task.WhenAll(tareaEventos, tareaBloqueos);
+
+            var resEventos = await tareaEventos;
+            var resBloqueos = await tareaBloqueos;
+
+            if (resEventos.EsError)
+            {
+                _errorCarga = resEventos.MensajeError;
+                _cargando = false;
+                return;
+            }
+
+            _sesionesSemana = (resEventos.Valor ?? new List<EventoResumenDto>())
+                .SelectMany(e => (e.Sesiones ?? new List<SesionResumenDto>()).Select(s => (Evento: e, Sesion: s)))
+                .Where(x => x.Sesion.FechaHoraInicio.HasValue)
+                .ToList();
+
+            _bloqueosSemana = (resBloqueos.Valor ?? new List<BloqueoCalendarioDto>()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorCarga = $"Error al cargar la programación: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private async Task ReservarCupo(Guid sesionId, string eventoNombre, bool hayCupo)
+    {
+        if (sesionId == Guid.Empty) return;
+
+        _sesionEnProcesoId = sesionId;
+        _mensajeGlobal = null;
+
+        var resultado = await ReservasService.ReservarAsync(sesionId);
+        _sesionEnProcesoId = null;
+
+        if (resultado.EsExito && resultado.Valor != null)
+        {
+            var res = resultado.Valor;
+            var esListaEspera = res.Estado == 1;
+            _mensajeEsExito = true;
+            _mensajeGlobal = esListaEspera
+                ? $"Te has unido a la lista de espera para {eventoNombre}. Te notificaremos si se libera un cupo."
+                : $"¡Reserva confirmada con éxito para {eventoNombre}!";
+
+            await CargarDatos();
+        }
+        else
+        {
+            _mensajeEsExito = false;
+            if (resultado.CodigoError == "VentanaNoAbierta")
+            {
+                _sesionesVentanaCerrada.Add(sesionId);
+                _mensajeGlobal = "Las reservas para esta sesión aún no están disponibles.";
+            }
+            else
+            {
+                _mensajeGlobal = resultado.MensajeError ?? "No fue posible completar la reserva.";
+            }
+        }
+    }
+}
