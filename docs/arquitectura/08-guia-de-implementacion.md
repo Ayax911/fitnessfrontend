@@ -48,6 +48,9 @@ Esta tabla existe porque la revisión del backend del 2026-09-26 descubrió que 
 | **RF-007** | **Must** | **Administrador** | **Fase 4** | **`Paginas/Eventos/Administrar/CrearEvento.razor`** |
 | **RF-008** | **Must** | **Administrador** | **Fase 4** | **configuración de recurrencia dentro del formulario de RF-007** |
 | **RF-009** | **Should** | **Administrador** | **Fase 4** | **`Paginas/Eventos/Administrar/EditarEvento.razor`** |
+| RF-025 | Must | Usuario | **Fase 0** (ampliación 2026-10-31) | `Registro.razor` — nombre, tipo de usuario y autorización de tratamiento de datos |
+| RF-023 | Must | Administrador | **Fase 4** (ampliación 2026-10-31) | `Paginas/Usuarios/GestionUsuarios.razor`; selector de entrenador en `CrearEvento.razor`/`EditarEvento.razor`; búsqueda en `IndicadorUsuario.razor` |
+| RF-024 | Must | Administrador | **Fase 4** (ampliación 2026-10-31) | `Paginas/Asistencia/Administrar/PuntosAcceso.razor` (lista, alta, activar/desactivar, QR imprimible) |
 | RF-016 | Must | Administrador | **Fase 5** | `IndicadorUsuario.razor` |
 | RF-018 | Must | Administrador | **Fase 5** | `ConfiguracionSistema.razor` |
 
