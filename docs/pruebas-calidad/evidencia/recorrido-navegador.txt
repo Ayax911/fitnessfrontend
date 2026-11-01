@@ -1,0 +1,42 @@
+time="2026-11-01T07:40:48Z" level=info msg="EVENTOS_DOM tarjetas=2115 alto_px=615627 nodos=33912" source=console
+time="2026-11-01T07:40:49Z" level=error msg="Failed to load resource: the server responded with a status of 409 (Conflict)" browser_source=network line_number=0 source=browser stacktrace="<nil>" url="http://127.0.0.1:18080/api/reservas"
+time="2026-11-01T07:40:50Z" level=info msg="PRIMER_BOTON_RESERVAR: No se pueden realizar reservas para sesiones que ya han comenzado o que ya han sido consolidadas.\n            " source=console
+time="2026-11-01T07:40:50Z" level=info msg="CHIP_DIA: Mañana" source=console
+time="2026-11-01T07:40:53Z" level=info msg="RESERVA_MANANA: alert alert-success alert-dismissible fade show mb-4 :: ¡Reserva confirmada exitosamente! Puedes consultarla en Mis Reservas." source=console
+time="2026-11-01T07:41:19Z" level=info msg="ERRORES_CONSOLA=0 " source=console
+
+     ✓ CU-01: inicio de sesión lleva fuera de /login
+     ✓ RF-001: la lista de eventos muestra sesiones reservables
+     ✗ RF-001/RN-009: el primer "Reservar cupo" de la lista es reservable (no es una sesión pasada)
+      ↳  0% — ✓ 0 / ✗ 1
+     ✓ CU-01: reservar una sesión de mañana muestra éxito
+     ✓ RF-020: Mis reservas lista la reserva
+     ✓ RN-020: sin nivel/indicador de priorización en Mis reservas
+     ✓ RF-021: Mi historial carga sin error
+     ✓ RF-023: gestión de usuarios muestra cuentas reales (qa.)
+     ✗ RF-033: reportes reflejan datos reales (eventos "QA ...")
+      ↳  0% — ✓ 0 / ✗ 1
+     ✗ RF-032: auditoría muestra acciones reales (Eventos.Crear)
+      ↳  0% — ✓ 0 / ✗ 1
+
+     browser_data_received..........: 105 MB 2.2 MB/s
+     browser_data_sent..............: 333 kB 7.1 kB/s
+     browser_http_req_duration......: avg=265.92ms min=34µs    med=25.05ms  max=5.83s    p(95)=2.28s   
+     browser_http_req_failed........: 0.11%  1 out of 890
+     browser_web_vital_cls..........: avg=0.000526 min=0.00007 med=0.000125 max=0.002148 p(95)=0.001762
+     browser_web_vital_fcp..........: avg=475.75ms min=23.69ms med=39.25ms  max=3.74s    p(95)=2.29s   
+     browser_web_vital_fid..........: avg=799.99µs min=300µs   med=400µs    max=2.09ms   p(95)=1.84ms  
+     browser_web_vital_inp..........: avg=56ms     min=56ms    med=56ms     max=56ms     p(95)=56ms    
+     browser_web_vital_lcp..........: avg=1.98s    min=75ms    med=570.94ms max=8.84s    p(95)=7.3s    
+     browser_web_vital_ttfb.........: avg=1.5ms    min=1ms     med=1.54ms   max=1.79ms   p(95)=1.75ms  
+     checks.........................: 70.00% 7 out of 10
+     cliente_arranque_4g_lento_ms...: avg=8.84s    min=8.84s   med=8.84s    max=8.84s    p(95)=8.84s   
+     cliente_arranque_frio_ms.......: avg=920ms    min=920ms   med=920ms    max=920ms    p(95)=920ms   
+     cliente_lista_eventos_ms.......: avg=2.19s    min=2.19s   med=2.19s    max=2.19s    p(95)=2.19s   
+     data_received..................: 0 B    0 B/s
+     data_sent......................: 0 B    0 B/s
+     iteration_duration.............: avg=46.43s   min=46.43s  med=46.43s   max=46.43s   p(95)=46.43s  
+     iterations.....................: 1      0.021444/s
+     vus............................: 1      min=1        max=1
+     vus_max........................: 1      min=1        max=1
+

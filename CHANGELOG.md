@@ -2,6 +2,11 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## QA-1 · Pruebas de calidad ISO/IEC 25010 del cliente (test(qa))
+- Plan del cliente en `docs/pruebas-calidad/00-plan.md` (el plan conjunto está en el backend).
+- Scripts en `pruebas/`: imagen nginx local, tamaño de descarga, ZAP baseline y recorrido real con Chromium headless (k6 browser) con red móvil simulada. Sin cambios en el código de la aplicación.
+- Resultados del 2026-11-01 sobre `46e0dee` en `docs/pruebas-calidad/01-resultados.md`, con capturas y evidencia.
+
 ## F10 · Diseños diferidos de apelación y derechos del titular (RF-041, RF-042)
 - Creado documento de diseño conceptual y bocetos en texto `docs/plan-despliegue/04-diseno-ui-apelacion-y-derechos-titular.md`.
 - Diseñada pantalla conceptual de solicitud de revisión de reservas y asistencia (RF-041) con verificación estricta de confidencialidad RN-020 (sin revelar penalización ni nivel de confiabilidad al usuario).

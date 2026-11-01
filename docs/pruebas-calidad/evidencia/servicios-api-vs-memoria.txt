@@ -1,0 +1,17 @@
+API Servicios/Asistencia/AsistenciaClienteService.cs RF-005 RF-006 RF-012 RF-021 
+API Servicios/Asistencia/PuntosAccesoClienteService.cs RF-024 
+API Servicios/Eventos/EventosClienteService.cs RF-001 RF-007 RF-008 RF-009 RF-010 RF-035 
+API Servicios/Identidad/AutenticacionService.cs RF-013 RF-025 
+API Servicios/Priorizacion/PriorizacionClienteService.cs RF-016 RF-018 
+API Servicios/Reservas/ReservasClienteService.cs RF-002 RF-003 RF-004 RF-011 RF-020 
+API Servicios/Usuarios/UsuariosClienteService.cs RF-023 
+MEMORIA Servicios/Asistencia/AsistenciaManualClienteService.cs RF-027 
+MEMORIA Servicios/Asistencia/FlujoCheckInService.cs 
+MEMORIA Servicios/Auditoria/AuditoriaClienteService.cs RF-032 
+MEMORIA Servicios/Bloqueos/BloqueosClienteService.cs RF-031 
+MEMORIA Servicios/Eventos/NotasYAnunciosClienteService.cs RF-029 RF-034 
+MEMORIA Servicios/Infraestructura/LocalStorageService.cs 
+MEMORIA Servicios/Infraestructura/ZonaHorariaService.cs 
+MEMORIA Servicios/Reportes/ReportesClienteService.cs RF-033 
+MEMORIA Servicios/Retroalimentacion/RetroalimentacionClienteService.cs 
+MEMORIA Servicios/Sesiones/AdministracionSesionesClienteService.cs RF-028 RF-030 

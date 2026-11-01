@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   144, Skipped:     0, Total:   144, Duration: 2 s - FitnessFrontend.Tests.dll (net10.0)
