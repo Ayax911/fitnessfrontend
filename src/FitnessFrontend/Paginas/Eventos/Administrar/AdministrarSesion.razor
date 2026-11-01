@@ -1,0 +1,619 @@
+@* RF-028: Cancelar y reprogramar una sesión (Administrador) *@
+@* RF-029: Anuncio rápido a los inscritos *@
+@* RF-030: Reservas de terceros (inscribir y retirar) *@
+@page "/admin/sesiones/{IdSesion:guid}"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.Servicios.Sesiones
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAdministracionSesionesClienteService AdminSesionesService
+@inject INotasYAnunciosClienteService NotasAnunciosService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="itm-contenedor itm-pagina">
+    <div class="mb-4">
+        <a href="/programacion" class="text-decoration-none small text-muted">
+            ← Volver a programación
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Administración de Sesión</h1>
+        <p class="text-muted mb-0">Gestión de cancelaciones, reprogramaciones, inscripciones de ventanilla y avisos.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @if (_cargando)
+    {
+        <div role="status" aria-busy="true">
+            <span class="itm-solo-lectores">Cargando información de la sesión...</span>
+            <EsqueletoTarjetas Cantidad="2" Mensaje="Cargando detalles de la sesión..." />
+        </div>
+    }
+    else if (_errorCarga != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @_errorCarga
+            <button class="btn btn-itm-primario btn-sm ms-3" @onclick="CargarDetalles">Reintentar</button>
+        </div>
+    }
+    else if (_sesion != null)
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-lg-8">
+                <div class="card-itm p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h4 fw-bold text-primary mb-1">@_sesion.EventoNombre</h2>
+                        @if (_sesion.EstaCancelada)
+                        {
+                            <InsigniaEstado Tipo="cancelada">Sesión cancelada</InsigniaEstado>
+                        }
+                        else
+                        {
+                            <InsigniaEstado Tipo="ok">Activa</InsigniaEstado>
+                        }
+                    </div>
+
+                    <p class="text-muted mb-3">
+                        <strong>Horario:</strong> @ZonaHoraria.FormatearRango(_sesion.FechaHoraInicio, _sesion.FechaHoraFin)<br />
+                        <strong>Entrenador:</strong> @(_sesion.EntrenadorNombre ?? "Sin asignar")<br />
+                        <strong>Capacidad:</strong> @(_sesion.CupoMaximo - _sesion.CuposDisponibles) / @_sesion.CupoMaximo inscritos (@_sesion.CuposDisponibles cupos disponibles)
+                    </p>
+
+                    @if (_sesion.EstaCancelada && !string.IsNullOrWhiteSpace(_sesion.MotivoCancelacion))
+                    {
+                        <div class="alert alert-warning py-2 px-3 mb-3" role="note">
+                            <strong>Motivo de cancelación:</strong> @_sesion.MotivoCancelacion
+                        </div>
+                    }
+
+                    @* Panel de acciones operativas *@
+                    <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                        @if (!_sesion.EstaCancelada)
+                        {
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    style="min-height: 48px;"
+                                    @onclick="AbrirModalCancelar">
+                                Cancelar sesión
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-primary"
+                                    style="min-height: 48px;"
+                                    @onclick="AbrirModalReprogramar">
+                                Reprogramar fecha/hora
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-success"
+                                    style="min-height: 48px;"
+                                    @onclick="AbrirModalInscribirTercero">
+                                Inscribir tercero
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                @* Listado de reservas de la sesión *@
+                <div class="card-itm p-4">
+                    <h3 class="h5 fw-bold mb-3">Reservas e inscritos (@_sesion.Reservas.Count)</h3>
+                    @if (_sesion.Reservas.Count == 0)
+                    {
+                        <p class="text-muted small mb-0">No hay reservas registradas para esta sesión.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Correo</th>
+                                        <th>Estado</th>
+                                        <th class="text-end">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var res in _sesion.Reservas)
+                                    {
+                                        <tr @key="res.ReservaId">
+                                            <td class="fw-semibold">@res.NombreUsuario</td>
+                                            <td class="text-muted small">@res.Correo</td>
+                                            <td>
+                                                @if (res.Estado == 0)
+                                                {
+                                                    <InsigniaEstado Tipo="ok">Confirmada</InsigniaEstado>
+                                                }
+                                                else if (res.Estado == 1)
+                                                {
+                                                    <InsigniaEstado Tipo="espera">En espera</InsigniaEstado>
+                                                }
+                                                else
+                                                {
+                                                    <InsigniaEstado Tipo="cancelada">Cancelada</InsigniaEstado>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                @if (res.Estado == 0 || res.Estado == 1)
+                                                {
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            style="min-height: 40px;"
+                                                            @onclick="() => AbrirModalRetirarTercero(res)">
+                                                        Retirar
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* Sección lateral: Anuncios rápidos *@
+            <div class="col-12 col-lg-4">
+                <div class="card-itm p-4">
+                    <h3 class="h5 fw-bold mb-2">Aviso a inscritos (RF-029)</h3>
+                    <p class="text-muted small">Mensaje informativo en la app para los usuarios con reserva en esta sesión.</p>
+
+                    <div class="mb-2">
+                        <textarea class="form-control"
+                                  rows="3"
+                                  maxlength="500"
+                                  placeholder="Escribe el aviso..."
+                                  @bind="_mensajeAnuncio"
+                                  @bind:event="oninput"></textarea>
+                        <div class="text-end small text-muted mt-1">@_mensajeAnuncio.Length / 500</div>
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-itm-secundario w-100"
+                            style="min-height: 48px;"
+                            disabled="@(string.IsNullOrWhiteSpace(_mensajeAnuncio) || _publicandoAnuncio)"
+                            @onclick="PublicarAnuncio">
+                        @(_publicandoAnuncio ? "Publicando..." : "Publicar aviso")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal 1: Cancelar sesión con confirmación de consecuencia (RF-028) *@
+    @if (_mostrarModalCancelar && _sesion != null)
+    {
+        var confirmadas = _sesion.Reservas.Count(r => r.Estado == 0);
+        var espera = _sesion.Reservas.Count(r => r.Estado == 1);
+        var total = confirmadas + espera;
+
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger-subtle">
+                        <h2 class="modal-title h5 text-danger fw-bold" id="tituloCancelarSesion">Cancelar sesión deportiva</h2>
+                        <button type="button" class="btn-close" @onclick="() => _mostrarModalCancelar = false" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas cancelar la sesión de <strong>@_sesion.EventoNombre</strong>?</p>
+                        
+                        <div class="alert alert-warning" role="note">
+                            <h3 class="h6 fw-bold mb-1">Consecuencia de la cancelación:</h3>
+                            <p class="mb-1" id="resumenAfectados">
+                                Esta sesión tiene <strong>@total reservas afectadas</strong> (@confirmadas confirmadas y @espera en lista de espera).
+                            </p>
+                            <p class="small mb-0">
+                                Todas las reservas serán canceladas sin penalización en el indicador (RN-031). No se promoverá lista de espera.
+                            </p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motivoCancelacionSesion" class="form-label small fw-bold">Motivo de cancelación (obligatorio):</label>
+                            <input id="motivoCancelacionSesion"
+                                   type="text"
+                                   class="form-control"
+                                   placeholder="Ej. Mantenimiento urgente de la piscina"
+                                   @bind="_motivoCancelacion" />
+                            @if (_errorMotivoCancelar != null)
+                            {
+                                <div class="text-danger small mt-1">@_errorMotivoCancelar</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="() => _mostrarModalCancelar = false">
+                            Volver
+                        </button>
+                        <button type="button"
+                                class="btn btn-danger"
+                                style="min-height: 48px;"
+                                disabled="@_procesandoAccion"
+                                @onclick="ConfirmarCancelarSesion">
+                            @(_procesandoAccion ? "Cancelando..." : "Sí, cancelar sesión")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal 2: Reprogramar sesión (RF-028) *@
+    @if (_mostrarModalReprogramar && _sesion != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title h5 fw-bold">Reprogramar sesión</h2>
+                        <button type="button" class="btn-close" @onclick="() => _mostrarModalReprogramar = false" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="reprogInicio" class="form-label small fw-bold">Nueva fecha y hora de inicio:</label>
+                            <input id="reprogInicio" type="datetime-local" class="form-control" @bind="_nuevaFechaInicio" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="reprogFin" class="form-label small fw-bold">Nueva fecha y hora de fin:</label>
+                            <input id="reprogFin" type="datetime-local" class="form-control" @bind="_nuevaFechaFin" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="reprogMotivo" class="form-label small fw-bold">Motivo de reprogramación (obligatorio):</label>
+                            <input id="reprogMotivo" type="text" class="form-control" placeholder="Ej. Cambio de horario a solicitud del entrenador" @bind="_motivoReprogramacion" />
+                        </div>
+                        @if (_errorReprogramar != null)
+                        {
+                            <div class="alert alert-danger py-2 small" role="alert">@_errorReprogramar</div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="() => _mostrarModalReprogramar = false">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-itm-primario" style="min-height: 48px;" disabled="@_procesandoAccion" @onclick="ConfirmarReprogramar">
+                            @(_procesandoAccion ? "Guardando..." : "Confirmar reprogramación")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal 3: Inscribir tercero (RF-030) *@
+    @if (_mostrarModalInscribir && _sesion != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title h5 fw-bold">Inscribir reserva de tercero (ventanilla)</h2>
+                        <button type="button" class="btn-close" @onclick="() => _mostrarModalInscribir = false" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="idUsuarioTercero" class="form-label small fw-bold">ID del usuario:</label>
+                            <input id="idUsuarioTercero" type="text" class="form-control" placeholder="GUID de usuario" @bind="_usuarioIdTercero" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="motivoInscribir" class="form-label small fw-bold">Motivo de inscripción administrativa (obligatorio):</label>
+                            <input id="motivoInscribir" type="text" class="form-control" placeholder="Ej. Solicitud presencial en taquilla de bienestar" @bind="_motivoInscribir" />
+                        </div>
+                        @if (_errorInscribir != null)
+                        {
+                            <div class="alert alert-danger py-2 small" role="alert">@_errorInscribir</div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="() => _mostrarModalInscribir = false">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" style="min-height: 48px;" disabled="@_procesandoAccion" @onclick="ConfirmarInscribirTercero">
+                            @(_procesandoAccion ? "Inscribiendo..." : "Inscribir usuario")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal 4: Retirar tercero con consecuencia de promoción (RF-030) *@
+    @if (_reservaParaRetirar != null && _sesion != null)
+    {
+        var hayEspera = _sesion.Reservas.Any(r => r.Estado == 1);
+
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning-subtle">
+                        <h2 class="modal-title h5 text-dark fw-bold">Confirmar retiro de reserva</h2>
+                        <button type="button" class="btn-close" @onclick="() => _reservaParaRetirar = null" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Retirar la reserva de <strong>@_reservaParaRetirar.NombreUsuario</strong>?</p>
+                        
+                        <div class="alert alert-warning" role="note">
+                            <strong>Consecuencia:</strong>
+                            @if (hayEspera)
+                            {
+                                <span>Al retirar esta reserva, se liberará un cupo y se promoverá automáticamente al primer usuario en lista de espera (RN-021/RN-024).</span>
+                            }
+                            else
+                            {
+                                <span>El cupo quedará disponible para nuevas reservas.</span>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motivoRetiroTercero" class="form-label small fw-bold">Motivo del retiro (obligatorio):</label>
+                            <input id="motivoRetiroTercero" type="text" class="form-control" placeholder="Ej. Solicitud telefónica de cancelación" @bind="_motivoRetiro" />
+                            @if (_errorRetirar != null)
+                            {
+                                <div class="text-danger small mt-1">@_errorRetirar</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="() => _reservaParaRetirar = null">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" style="min-height: 48px;" disabled="@_procesandoAccion" @onclick="ConfirmarRetirarTercero">
+                            @(_procesandoAccion ? "Retirando..." : "Confirmar retiro")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdSesion { get; set; }
+
+    private bool _cargando = true;
+    private string? _errorCarga;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+    private bool _procesandoAccion;
+    private bool _publicandoAnuncio;
+
+    private SesionAdminDetalleDto? _sesion;
+
+    // Estados de modales
+    private bool _mostrarModalCancelar;
+    private string _motivoCancelacion = string.Empty;
+    private string? _errorMotivoCancelar;
+
+    private bool _mostrarModalReprogramar;
+    private DateTime _nuevaFechaInicio = DateTime.Today.AddDays(1).AddHours(9);
+    private DateTime _nuevaFechaFin = DateTime.Today.AddDays(1).AddHours(10);
+    private string _motivoReprogramacion = string.Empty;
+    private string? _errorReprogramar;
+
+    private bool _mostrarModalInscribir;
+    private string _usuarioIdTercero = string.Empty;
+    private string _motivoInscribir = string.Empty;
+    private string? _errorInscribir;
+
+    private ReservaAdminDetalleDto? _reservaParaRetirar;
+    private string _motivoRetiro = string.Empty;
+    private string? _errorRetirar;
+
+    private string _mensajeAnuncio = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDetalles();
+    }
+
+    private async Task CargarDetalles()
+    {
+        _cargando = true;
+        _errorCarga = null;
+
+        try
+        {
+            var res = await AdminSesionesService.ObtenerDetalleSesionAdminAsync(IdSesion);
+            if (res.EsExito)
+            {
+                _sesion = res.Valor;
+            }
+            else
+            {
+                _errorCarga = res.MensajeError;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorCarga = $"Error al cargar la sesión: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private void AbrirModalCancelar()
+    {
+        _motivoCancelacion = string.Empty;
+        _errorMotivoCancelar = null;
+        _mostrarModalCancelar = true;
+    }
+
+    private async Task ConfirmarCancelarSesion()
+    {
+        if (string.IsNullOrWhiteSpace(_motivoCancelacion))
+        {
+            _errorMotivoCancelar = "El motivo de cancelación es obligatorio.";
+            return;
+        }
+
+        _procesandoAccion = true;
+        _errorMotivoCancelar = null;
+
+        var res = await AdminSesionesService.CancelarSesionAsync(IdSesion, _motivoCancelacion);
+        _procesandoAccion = false;
+
+        if (res.EsExitoso)
+        {
+            _mostrarModalCancelar = false;
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Sesión cancelada correctamente.";
+            await CargarDetalles();
+        }
+        else
+        {
+            _errorMotivoCancelar = res.Mensaje ?? "Error al cancelar la sesión.";
+        }
+    }
+
+    private void AbrirModalReprogramar()
+    {
+        if (_sesion != null)
+        {
+            _nuevaFechaInicio = ZonaHoraria.AHoraLocal(_sesion.FechaHoraInicio).DateTime;
+            _nuevaFechaFin = ZonaHoraria.AHoraLocal(_sesion.FechaHoraFin).DateTime;
+        }
+        _motivoReprogramacion = string.Empty;
+        _errorReprogramar = null;
+        _mostrarModalReprogramar = true;
+    }
+
+    private async Task ConfirmarReprogramar()
+    {
+        if (string.IsNullOrWhiteSpace(_motivoReprogramacion))
+        {
+            _errorReprogramar = "El motivo de reprogramación es obligatorio.";
+            return;
+        }
+
+        if (_nuevaFechaFin <= _nuevaFechaInicio)
+        {
+            _errorReprogramar = "La hora de fin debe ser posterior a la de inicio.";
+            return;
+        }
+
+        _procesandoAccion = true;
+        _errorReprogramar = null;
+
+        var inicioUtc = ZonaHoraria.AUtc(_nuevaFechaInicio);
+        var finUtc = ZonaHoraria.AUtc(_nuevaFechaFin);
+
+        var res = await AdminSesionesService.ReprogramarSesionAsync(IdSesion, inicioUtc, finUtc, _motivoReprogramacion);
+        _procesandoAccion = false;
+
+        if (res.EsExitoso)
+        {
+            _mostrarModalReprogramar = false;
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Sesión reprogramada con éxito.";
+            await CargarDetalles();
+        }
+        else
+        {
+            _errorReprogramar = res.Mensaje ?? "No fue posible reprogramar la sesión.";
+        }
+    }
+
+    private void AbrirModalInscribirTercero()
+    {
+        _usuarioIdTercero = string.Empty;
+        _motivoInscribir = string.Empty;
+        _errorInscribir = null;
+        _mostrarModalInscribir = true;
+    }
+
+    private async Task ConfirmarInscribirTercero()
+    {
+        if (!Guid.TryParse(_usuarioIdTercero, out var usuarioGuid))
+        {
+            _errorInscribir = "Ingresa un GUID válido para el usuario.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_motivoInscribir))
+        {
+            _errorInscribir = "El motivo es obligatorio.";
+            return;
+        }
+
+        _procesandoAccion = true;
+        _errorInscribir = null;
+
+        var res = await AdminSesionesService.InscribirTerceroAsync(IdSesion, usuarioGuid, _motivoInscribir);
+        _procesandoAccion = false;
+
+        if (res.EsExitoso)
+        {
+            _mostrarModalInscribir = false;
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Usuario inscrito exitosamente.";
+            await CargarDetalles();
+        }
+        else
+        {
+            _errorInscribir = res.Mensaje ?? "No fue posible realizar la inscripción.";
+        }
+    }
+
+    private void AbrirModalRetirarTercero(ReservaAdminDetalleDto reserva)
+    {
+        _reservaParaRetirar = reserva;
+        _motivoRetiro = string.Empty;
+        _errorRetirar = null;
+    }
+
+    private async Task ConfirmarRetirarTercero()
+    {
+        if (_reservaParaRetirar == null) return;
+
+        if (string.IsNullOrWhiteSpace(_motivoRetiro))
+        {
+            _errorRetirar = "El motivo del retiro es obligatorio.";
+            return;
+        }
+
+        _procesandoAccion = true;
+        _errorRetirar = null;
+
+        var res = await AdminSesionesService.RetirarTerceroAsync(IdSesion, _reservaParaRetirar.ReservaId, _motivoRetiro);
+        _procesandoAccion = false;
+
+        if (res.EsExitoso)
+        {
+            _reservaParaRetirar = null;
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Reserva retirada con éxito.";
+            await CargarDetalles();
+        }
+        else
+        {
+            _errorRetirar = res.Mensaje ?? "No fue posible retirar la reserva.";
+        }
+    }
+
+    private async Task PublicarAnuncio()
+    {
+        if (string.IsNullOrWhiteSpace(_mensajeAnuncio)) return;
+
+        _publicandoAnuncio = true;
+        var res = await NotasAnunciosService.PublicarAnuncioAsync(IdSesion, _mensajeAnuncio);
+        _publicandoAnuncio = false;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = "Aviso publicado para los inscritos.";
+            _mensajeAnuncio = string.Empty;
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible publicar el aviso.";
+        }
+    }
+}

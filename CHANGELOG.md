@@ -2,6 +2,14 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F4 · Administración de sesiones, bloqueos y auditoría (RF-028, RF-029, RF-030, RF-031, RF-032)
+- Creada página `AdministrarSesion.razor` (/admin/sesiones/{id}): cancelación con motivo obligatorio y confirmación indicando el conteo de reservas afectadas (sin penalización RN-031), reprogramación de fecha/hora con manejo de bloqueos, inscripción de terceros en ventanilla y retiro de terceros con advertencia de promoción de lista de espera (RF-030).
+- Creada página `BloqueosCalendario.razor` (/admin/calendario): registro de cierres/mantenimientos/festivos con validación temporal, listado y eliminación con confirmación de consecuencia explícita.
+- Creada página `RegistroAuditoria.razor` (/admin/auditoria): consulta inmutable paginada (tamano=25) con filtros de fecha, tipo de acción y actor, conversión a `America/Bogota` mediante `IZonaHorariaService` y presentación adaptable (tarjetas en móvil y tabla en escritorio).
+- Incorporados enlaces de Bloqueos y Auditoría en la barra de navegación del Administrador (`NavMenuAdministrador.razor`).
+- Implementados servicios de fachada `IAdministracionSesionesClienteService` y `IAuditoriaClienteService`.
+- Implementadas las 5 pruebas obligatorias de F4 en `AdministracionSesionesYAuditoriaF4Tests.cs` y ampliado `AusenciaPriorizacionRN020Tests.cs` con los nuevos DTOs (117 pruebas en verde).
+
 ## F3 · Entrenador y sesión cancelada para el usuario (RF-027, RF-028, RF-029, RF-034)
 - Creada página `AsistenciaManual.razor` (/entrenador/sesiones/{id}/asistencia) con listado de inscritos, marcado manual directo, confirmación modal con consecuencia explícita para desmarcar ("revertirá el estado a No asistió y registrará auditoría"), y manejo de rechazo 403 por pertenencia.
 - Creada página `NotasDeSesion.razor` (/entrenador/sesiones/{id}/notas) con bitácora interna de notas/incidencias (RF-034) y publicación de anuncios a inscritos (RF-029), ambos con contadores de caracteres en vivo (1000 y 500) y escape estricto de HTML / scripts.

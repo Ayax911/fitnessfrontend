@@ -1,0 +1,256 @@
+@* RF-031: Calendario de bloqueos de gimnasio (Administrador) *@
+@page "/admin/calendario"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.Servicios.Bloqueos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IBloqueosClienteService BloqueosService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Calendario de bloqueos y cierres</h1>
+            <p>Gestiona los periodos festivos, mantenimientos y cierres extraordinarios del gimnasio.</p>
+        </div>
+        <button class="btn btn-itm-secundario btn-sm" @onclick="CargarBloqueos">Actualizar</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        @* Formulario de creación de bloqueo *@
+        <div class="col-12 col-lg-5">
+            <div class="card-itm p-4">
+                <h2 class="h5 fw-bold mb-3">Registrar nuevo cierre o bloqueo</h2>
+
+                <div class="mb-3">
+                    <label for="bloqueoTipo" class="form-label small fw-bold">Tipo de cierre:</label>
+                    <select id="bloqueoTipo" class="form-select form-select-sm" @bind="_nuevoTipo">
+                        <option value="Festivo">Festivo institucional / Nacional</option>
+                        <option value="Mantenimiento">Mantenimiento general o caldera</option>
+                        <option value="Cierre">Cierre extraordinario / Evento institucional</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="bloqueoMotivo" class="form-label small fw-bold">Motivo (se mostrará en la programación):</label>
+                    <input id="bloqueoMotivo"
+                           type="text"
+                           class="form-control"
+                           placeholder="Ej. Mantenimiento general de calderas"
+                           @bind="_nuevoMotivo" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="bloqueoDesde" class="form-label small fw-bold">Desde:</label>
+                    <input id="bloqueoDesde" type="datetime-local" class="form-control" @bind="_nuevaFechaDesde" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="bloqueoHasta" class="form-label small fw-bold">Hasta:</label>
+                    <input id="bloqueoHasta" type="datetime-local" class="form-control" @bind="_nuevaFechaHasta" />
+                </div>
+
+                @if (_errorCrear != null)
+                {
+                    <div class="alert alert-danger py-2 small mb-3" role="alert">@_errorCrear</div>
+                }
+
+                <button type="button"
+                        class="btn btn-itm-primario w-100"
+                        style="min-height: 48px;"
+                        disabled="@_guardando"
+                        @onclick="GuardarBloqueo">
+                    @(_guardando ? "Guardando bloqueo..." : "Crear bloqueo de calendario")
+                </button>
+            </div>
+        </div>
+
+        @* Lista de bloqueos existentes *@
+        <div class="col-12 col-lg-7">
+            <div class="card-itm p-4">
+                <h2 class="h5 fw-bold mb-3">Bloqueos programados (@_bloqueos.Count)</h2>
+
+                @if (_cargando)
+                {
+                    <div role="status" aria-busy="true">
+                        <span class="itm-solo-lectores">Cargando bloqueos...</span>
+                        <EsqueletoLista Cantidad="3" Mensaje="Cargando bloqueos de calendario..." />
+                    </div>
+                }
+                else if (_bloqueos.Count == 0)
+                {
+                    <p class="text-muted small mb-0">No hay bloqueos ni cierres programados actualmente.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var bloqueo in _bloqueos)
+                        {
+                            <div class="list-group-item px-0 py-3 border-bottom d-flex justify-content-between align-items-center" @key="bloqueo.Id">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge @(bloqueo.Tipo == "Festivo" ? "bg-info text-dark" : "bg-warning text-dark")">
+                                            @bloqueo.Tipo
+                                        </span>
+                                        <span class="fw-bold text-dark">@bloqueo.Motivo</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        @ZonaHoraria.FormatearRango(bloqueo.Desde, bloqueo.Hasta)
+                                    </div>
+                                </div>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        style="min-height: 40px;"
+                                        @onclick="() => IniciarEliminar(bloqueo)">
+                                    Eliminar
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Modal de confirmación para eliminar bloqueo *@
+    @if (_bloqueoParaEliminar != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger-subtle">
+                        <h2 class="modal-title h5 text-danger fw-bold">Eliminar bloqueo de calendario</h2>
+                        <button type="button" class="btn-close" @onclick="() => _bloqueoParaEliminar = null" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas eliminar el bloqueo <strong>@_bloqueoParaEliminar.Motivo</strong>?</p>
+                        <div class="alert alert-warning" role="note">
+                            <strong>Consecuencia:</strong> Esta acción habilitará nuevamente la creación de eventos y reservas en esa franja horaria. <em>No recreará sesiones canceladas previamente en este rango.</em>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="() => _bloqueoParaEliminar = null">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" style="min-height: 48px;" disabled="@_eliminando" @onclick="ConfirmarEliminarBloqueo">
+                            @(_eliminando ? "Eliminando..." : "Sí, eliminar bloqueo")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _cargando = true;
+    private bool _guardando;
+    private bool _eliminando;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+    private string? _errorCrear;
+
+    private List<BloqueoCalendarioDto> _bloqueos = new();
+    private BloqueoCalendarioDto? _bloqueoParaEliminar;
+
+    private string _nuevoTipo = "Festivo";
+    private string _nuevoMotivo = string.Empty;
+    private DateTime _nuevaFechaDesde = DateTime.Today.AddDays(1).AddHours(8);
+    private DateTime _nuevaFechaHasta = DateTime.Today.AddDays(1).AddHours(18);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarBloqueos();
+    }
+
+    private async Task CargarBloqueos()
+    {
+        _cargando = true;
+        try
+        {
+            var res = await BloqueosService.ObtenerBloqueosAsync();
+            if (res.EsExito)
+            {
+                _bloqueos = (res.Valor ?? new List<BloqueoCalendarioDto>())
+                    .OrderBy(b => b.Desde)
+                    .ToList();
+            }
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private async Task GuardarBloqueo()
+    {
+        if (string.IsNullOrWhiteSpace(_nuevoMotivo))
+        {
+            _errorCrear = "El motivo del bloqueo es obligatorio.";
+            return;
+        }
+
+        if (_nuevaFechaHasta <= _nuevaFechaDesde)
+        {
+            _errorCrear = "La fecha final debe ser posterior a la fecha inicial.";
+            return;
+        }
+
+        _guardando = true;
+        _errorCrear = null;
+
+        var desdeUtc = ZonaHoraria.AUtc(_nuevaFechaDesde);
+        var hastaUtc = ZonaHoraria.AUtc(_nuevaFechaHasta);
+
+        var request = new CrearBloqueoRequest(desdeUtc, hastaUtc, _nuevoMotivo, _nuevoTipo);
+        var res = await BloqueosService.CrearBloqueoAsync(request);
+        _guardando = false;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = "Bloqueo registrado correctamente.";
+            _nuevoMotivo = string.Empty;
+            await CargarBloqueos();
+        }
+        else
+        {
+            _errorCrear = res.Mensaje ?? "No fue posible registrar el bloqueo.";
+        }
+    }
+
+    private void IniciarEliminar(BloqueoCalendarioDto bloqueo)
+    {
+        _bloqueoParaEliminar = bloqueo;
+    }
+
+    private async Task ConfirmarEliminarBloqueo()
+    {
+        if (_bloqueoParaEliminar == null) return;
+
+        _eliminando = true;
+        var res = await BloqueosService.EliminarBloqueoAsync(_bloqueoParaEliminar.Id);
+        _eliminando = false;
+
+        if (res.EsExitoso)
+        {
+            _bloqueoParaEliminar = null;
+            _alertaEsExito = true;
+            _mensajeAlerta = "Bloqueo eliminado correctamente.";
+            await CargarBloqueos();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible eliminar el bloqueo.";
+        }
+    }
+}

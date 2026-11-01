@@ -58,10 +58,10 @@
 | F3 / RF-034 | Notas e incidencias de sesión guardadas como texto plano | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba3, Prueba5) |
 | F3 / RF-029 | Anuncios visibles en Mis reservas y detalle de sesión | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba3, MisReservas) |
 | F3 / RF-028 | Reserva en sesión cancelada muestra insignia "Sesión cancelada" sin botón cancelar | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba4, AusenciaPriorizacionRN020Tests) |
-| F4 / RF-028 | Cancelar sesión exige motivo y confirma indicando número de reservas afectadas | ⬜ pendiente F4 |
-| F4 / RF-030 | Inscribir a usuario de terceros respeta cupo y motivo | ⬜ pendiente F4 |
-| F4 / RF-031 | Bloqueos de calendario impiden reservas dentro del rango | ⬜ pendiente F4 |
-| F4 / RF-032 | Registro de auditoría administrativo consultable y paginado | ⬜ pendiente F4 |
+| F4 / RF-028 | Cancelar sesión exige motivo y confirma indicando número de reservas afectadas | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba1) |
+| F4 / RF-030 | Inscribir a usuario de terceros respeta cupo y motivo | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba2) |
+| F4 / RF-031 | Bloqueos de calendario impiden reservas dentro del rango | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba3, BloqueosCalendario) |
+| F4 / RF-032 | Registro de auditoría administrativo consultable y paginado | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba4, Prueba5) |
 | F5 / RF-033 | Reportes administrativos con exportación CSV | ⬜ pendiente F5 |
 | F6 / RF-039 | Pantalla de punto de acceso actualiza QR 2s antes de expirar | ⬜ pendiente F6 |
 | F6 / RF-039 | Escaneo de QR vencido muestra mensaje `QrVencido` sin bucle de reintento | ⬜ pendiente F6 |
