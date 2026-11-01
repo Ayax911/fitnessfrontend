@@ -15,7 +15,14 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var urlBaseApi = builder.Configuration["UrlBaseApi"] ?? "http://localhost:5224";
+// URL pública de la API. En desarrollo viene de appsettings.Development.json; en producción appsettings.json trae un
+// marcador que se sustituye al desplegar (variable URL_BASE_API de la imagen Docker o el paso de CI). Sin valor real, falla
+// al arrancar con un mensaje claro en lugar de llamar a una API equivocada.
+var urlBaseApi = builder.Configuration["UrlBaseApi"];
+if (string.IsNullOrWhiteSpace(urlBaseApi) || urlBaseApi.StartsWith("REEMPLAZAR", StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("UrlBaseApi no está configurada. Defina la URL de la API en wwwroot/appsettings.json (o la variable URL_BASE_API de la imagen Docker).");
+}
 
 // Servicios transversales de infraestructura
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
