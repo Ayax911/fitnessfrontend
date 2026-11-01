@@ -3,6 +3,7 @@
 using FitnessFrontend.ApiCliente.Api.Usuarios.Entrenadores;
 using FitnessFrontend.ApiCliente.Api.Usuarios.Item;
 using FitnessFrontend.ApiCliente.Api.Usuarios.Registro;
+using FitnessFrontend.ApiCliente.Api.Usuarios.Yo;
 using FitnessFrontend.ApiCliente.Models;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
@@ -29,6 +30,11 @@ namespace FitnessFrontend.ApiCliente.Api.Usuarios
         public global::FitnessFrontend.ApiCliente.Api.Usuarios.Registro.RegistroRequestBuilder Registro
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Usuarios.Registro.RegistroRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The yo property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Usuarios.Yo.YoRequestBuilder Yo
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Usuarios.Yo.YoRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>Gets an item from the FitnessFrontend.ApiCliente.api.usuarios.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>

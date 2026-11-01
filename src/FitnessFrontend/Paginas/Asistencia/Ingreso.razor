@@ -40,11 +40,10 @@
 
                                 <div class="bg-light p-3 rounded mb-4 text-start">
                                     <div class="row g-2 small">
-                                        <div class="col-5 text-muted">Punto de acceso:</div>
-                                        <div class="col-7 fw-semibold">@IdPuntoAcceso</div>
+                                        @* Se muestra el NOMBRE del punto que devuelve el backend; el identificador de la URL es el token del QR y no se enseña *@
                                         @if (!string.IsNullOrWhiteSpace(resultado.Detalle))
                                         {
-                                            <div class="col-5 text-muted">Detalle:</div>
+                                            <div class="col-5 text-muted">Punto de acceso:</div>
                                             <div class="col-7 fw-semibold">@resultado.Detalle</div>
                                         }
                                     </div>

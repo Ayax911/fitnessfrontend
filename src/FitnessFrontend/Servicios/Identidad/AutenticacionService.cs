@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -13,8 +14,9 @@ namespace FitnessFrontend.Servicios.Identidad;
 // RF-013: Servicio de autenticación con ASP.NET Core Identity y Bearer Token
 public class AutenticacionService : IAutenticacionService
 {
-    private const string ClaveToken = "itm_token_acceso";
-    private const string ClaveRefreshToken = "itm_refresh_token";
+    private const string ClaveToken = ProveedorEstadoAutenticacion.ClaveToken;
+    private const string ClaveRefreshToken = ProveedorEstadoAutenticacion.ClaveRefreshToken;
+    private const string ClavePerfil = ProveedorEstadoAutenticacion.ClavePerfil;
 
     private readonly FitnessApiClient _apiClient;
     private readonly ILocalStorageService _localStorage;
@@ -52,7 +54,18 @@ public class AutenticacionService : IAutenticacionService
                 await _localStorage.GuardarItemAsync(ClaveRefreshToken, respuesta.RefreshToken);
             }
 
-            _authStateProvider.NotificarAutenticado(respuesta.AccessToken);
+            // El token es opaco: identidad y roles se piden al backend (GET /api/usuarios/yo) con el token recién guardado.
+            // Si eso falla NO se deja una sesión a medias (token sin perfil) ni se culpa a las credenciales.
+            var perfil = await ObtenerPerfilAsync();
+            if (perfil == null)
+            {
+                await LimpiarSesionAsync();
+                return ResultadoOperacion.Fallo("No fue posible obtener su perfil. Intente iniciar sesión de nuevo.", "PerfilNoDisponible");
+            }
+
+            await _localStorage.GuardarItemAsync(ClavePerfil, ProveedorEstadoAutenticacion.SerializarPerfil(perfil));
+
+            _authStateProvider.NotificarAutenticado(respuesta.AccessToken, perfil);
             return ResultadoOperacion.Exito();
         }
         catch (ApiException apiEx)
@@ -62,6 +75,21 @@ public class AutenticacionService : IAutenticacionService
         catch (Exception ex)
         {
             return ResultadoOperacion.Fallo($"Error al comunicarse con el servicio de autenticación: {ex.Message}", "ErrorConexion");
+        }
+    }
+
+    private async Task<PerfilSesion?> ObtenerPerfilAsync()
+    {
+        try
+        {
+            var dto = await _apiClient.Api.Usuarios.Yo.GetAsync();
+            return dto?.Id == null
+                ? null
+                : new PerfilSesion(dto.Id.Value, dto.Email ?? string.Empty, dto.Roles ?? new List<string>());
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -105,6 +133,7 @@ public class AutenticacionService : IAutenticacionService
     {
         await _localStorage.EliminarItemAsync(ClaveToken);
         await _localStorage.EliminarItemAsync(ClaveRefreshToken);
+        await _localStorage.EliminarItemAsync(ClavePerfil);
         _authStateProvider.NotificarDesautenticado();
     }
 

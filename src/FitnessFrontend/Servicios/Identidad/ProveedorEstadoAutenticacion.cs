@@ -1,15 +1,23 @@
 using System;
+using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FitnessFrontend.Servicios.Infraestructura;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace FitnessFrontend.Servicios.Identidad;
 
-// RF-013: Estado de autenticación para Blazor WASM persistido en localStorage
+// RF-013: Estado de autenticación para Blazor WASM persistido en localStorage.
+// Identidad y roles vienen del perfil guardado al iniciar sesión (PerfilSesion); si no hay perfil se intenta leer un JWT
+// (compatibilidad por si el backend emitiera JWT). Con un token sin claims legibles la sesión se trata como anónima
+// en lugar de "autenticada sin roles", que dejaba al usuario sin ninguna pantalla utilizable.
 public class ProveedorEstadoAutenticacion : AuthenticationStateProvider
 {
-    private const string ClaveToken = "itm_token_acceso";
+    public const string ClaveToken = "itm_token_acceso";
+    public const string ClaveRefreshToken = "itm_refresh_token";
+    public const string ClavePerfil = "itm_perfil";
+
     private readonly ILocalStorageService _localStorage;
     private readonly AuthenticationState _estadoAnonimo;
 
@@ -29,9 +37,8 @@ public class ProveedorEstadoAutenticacion : AuthenticationStateProvider
                 return _estadoAnonimo;
             }
 
-            var claims = JwtTokenParser.ParseClaimsFromJwt(token);
-            var identity = new ClaimsIdentity(claims, "jwt");
-            return new AuthenticationState(new ClaimsPrincipal(identity));
+            var perfilJson = await _localStorage.ObtenerItemAsync(ClavePerfil);
+            return Construir(token, DeserializarPerfil(perfilJson));
         }
         catch
         {
@@ -39,16 +46,37 @@ public class ProveedorEstadoAutenticacion : AuthenticationStateProvider
         }
     }
 
-    public void NotificarAutenticado(string token)
+    public void NotificarAutenticado(string token, PerfilSesion? perfil = null)
     {
-        var claims = JwtTokenParser.ParseClaimsFromJwt(token);
-        var identity = new ClaimsIdentity(claims, "jwt");
-        var usuario = new ClaimsPrincipal(identity);
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(usuario)));
+        NotifyAuthenticationStateChanged(Task.FromResult(Construir(token, perfil)));
     }
 
     public void NotificarDesautenticado()
     {
         NotifyAuthenticationStateChanged(Task.FromResult(_estadoAnonimo));
+    }
+
+    public static string SerializarPerfil(PerfilSesion perfil) => JsonSerializer.Serialize(perfil);
+
+    private static PerfilSesion? DeserializarPerfil(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try { return JsonSerializer.Deserialize<PerfilSesion>(json); }
+        catch (JsonException) { return null; }
+    }
+
+    private AuthenticationState Construir(string token, PerfilSesion? perfil)
+    {
+        var claims = perfil != null
+            ? perfil.ComoClaims().ToList()
+            : JwtTokenParser.ParseClaimsFromJwt(token).ToList();
+
+        if (claims.Count == 0)
+        {
+            return _estadoAnonimo;
+        }
+
+        var identity = new ClaimsIdentity(claims, perfil != null ? PerfilSesion.TipoAutenticacion : "jwt");
+        return new AuthenticationState(new ClaimsPrincipal(identity));
     }
 }

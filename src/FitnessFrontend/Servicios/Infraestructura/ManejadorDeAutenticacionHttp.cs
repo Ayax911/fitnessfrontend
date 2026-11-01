@@ -45,6 +45,7 @@ public class ManejadorDeAutenticacionHttp : DelegatingHandler
         {
             await _localStorage.EliminarItemAsync(ClaveToken);
             await _localStorage.EliminarItemAsync("itm_refresh_token");
+            await _localStorage.EliminarItemAsync(ProveedorEstadoAutenticacion.ClavePerfil);
             _authStateProvider.NotificarDesautenticado();
 
             var uriActual = _navigationManager.Uri;
