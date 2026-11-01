@@ -49,13 +49,15 @@ public class PuntosAccesoTests : BunitContext
             p.Nombre = nombre; p.Activo = activo;
             return Task.FromResult(EstadoDeCarga<PuntoAccesoDto>.Correcto(p));
         }
+
+        public Task<EstadoDeCarga<QrPuntoAccesoDto>> ObtenerQrActualAsync(Guid puntoAccesoId, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<QrPuntoAccesoDto>.Correcto(new QrPuntoAccesoDto("token_actual", DateTimeOffset.UtcNow.AddSeconds(15), 15, "Recepción")));
     }
 
     private (PuntosFalso, IRenderedComponent<PuntosAcceso>) Preparar()
     {
         var falso = new PuntosFalso();
         Services.AddSingleton<IPuntosAccesoClienteService>(falso);
-        JSInterop.SetupVoid("window.print");
         return (falso, Render<PuntosAcceso>());
     }
 
@@ -73,37 +75,25 @@ public class PuntosAccesoTests : BunitContext
     }
 
     [Fact]
-    public void VerQr_CodificaLaUrlConElTokenFijo_NuncaConElGuidInterno()
+    public void AbrirPantalla_ContieneEnlaceConIdDelPunto_Y_TargetBlank()
     {
         var (_, cut) = Preparar();
 
-        Clic(cut, "Ver QR");
-
-        var url = cut.Find(".qr-imprimible p.text-break").TextContent;
-        Assert.EndsWith($"/ingreso/{TokenRecepcion}", url);
-        Assert.DoesNotContain(IdRecepcion.ToString(), cut.Find(".qr-imprimible").InnerHtml);
-        Assert.NotEmpty(cut.FindAll(".qr-imprimible svg"));   // el QR se renderizó
+        var enlace = cut.FindAll("a").FirstOrDefault(a => a.TextContent.Trim() == "Abrir pantalla");
+        Assert.NotNull(enlace);
+        Assert.Equal($"/admin/puntos-acceso/{IdRecepcion}/pantalla", enlace.GetAttribute("href"));
+        Assert.Equal("_blank", enlace.GetAttribute("target"));
     }
 
     [Fact]
-    public void VerQrDeUnPuntoDesactivado_AvisaQueNoRegistraraIngresos()
-    {
-        var (_, cut) = Preparar();
-
-        Clic(cut, "Ver QR", indice: 1);
-
-        Assert.Contains("desactivado", cut.Find(".alert-warning").TextContent);
-    }
-
-    [Fact]
-    public void Crear_EnviaElNombre_Y_AbreElQrDelPuntoNuevo()
+    public void Crear_EnviaElNombre_Y_AgregaElPuntoALaLista()
     {
         var (falso, cut) = Preparar();
 
         cut.Find("#nombrePuntoNuevo").Input("Gimnasio sur");
         cut.Find("form").Submit();
 
-        cut.WaitForAssertion(() => Assert.Contains("/ingreso/tokenNuevo", cut.Markup));
+        cut.WaitForAssertion(() => Assert.Contains("Gimnasio sur", cut.Markup));
         Assert.Equal("Gimnasio sur", Assert.Single(falso.Creados));
     }
 

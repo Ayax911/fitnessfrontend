@@ -61,4 +61,17 @@ public class PuntosAccesoClienteService : IPuntosAccesoClienteService
             return EstadoDeCarga<PuntoAccesoDto>.Fallo(mensaje, codigo);
         }
     }
+
+    public Task<EstadoDeCarga<QrPuntoAccesoDto>> ObtenerQrActualAsync(Guid puntoAccesoId, CancellationToken ct = default)
+    {
+        var ahora = DateTimeOffset.UtcNow;
+        var periodoSegundos = 15;
+        var unix = ahora.ToUnixTimeSeconds();
+        var inicioPeriodo = unix - (unix % periodoSegundos);
+        var finPeriodo = DateTimeOffset.FromUnixTimeSeconds(inicioPeriodo + periodoSegundos);
+        var token = $"dyn_{puntoAccesoId:N}_{inicioPeriodo}";
+
+        return Task.FromResult(EstadoDeCarga<QrPuntoAccesoDto>.Correcto(
+            new QrPuntoAccesoDto(token, finPeriodo, periodoSegundos, "Punto de Acceso Principal")));
+    }
 }

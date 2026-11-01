@@ -13,7 +13,7 @@
     <div class="mb-4 pb-2 border-bottom">
         <h1 class="h2 fw-bold mb-1"><span class="bi bi-qr-code me-2"></span>Puntos de acceso</h1>
         <p class="text-muted mb-0">
-            Cada punto (p. ej. recepción) tiene un QR fijo para registrar el ingreso general. Imprímalo y colóquelo en el lugar.
+            Cada punto de acceso físico cuenta con una pantalla con código QR dinámico rotativo (RF-039) para registrar el ingreso seguro al gimnasio.
         </p>
     </div>
 
@@ -81,7 +81,7 @@
                                         }
                                         else
                                         {
-                                            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="() => VerQr(p)">Ver QR</button>
+                                            <a href="@($"/admin/puntos-acceso/{p.Id}/pantalla")" target="_blank" class="btn btn-sm btn-outline-primary me-1">Abrir pantalla</a>
                                             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="() => IniciarRenombrar(p)">Renombrar</button>
                                             <button type="button" class="btn btn-sm @(p.Activo == true ? "btn-outline-danger" : "btn-outline-success")"
                                                     @onclick="() => AlternarActivo(p)" disabled="@_procesando">
@@ -97,30 +97,6 @@
             }
         </ExitoTemplate>
     </EstadoDeCarga>
-
-    @if (_puntoQr != null)
-    {
-        <section class="card card-itm shadow-sm mt-4" aria-labelledby="tituloQr">
-            <div class="card-body p-4 text-center">
-                @if (_puntoQr.Activo != true)
-                {
-                    <div class="alert alert-warning" role="alert">
-                        Este punto está desactivado: su QR no registrará ingresos hasta que lo active.
-                    </div>
-                }
-                <div class="qr-imprimible">
-                    <h2 id="tituloQr" class="h4 fw-bold mb-1">Registro de ingreso — @_puntoQr.Nombre</h2>
-                    <p class="text-muted mb-3">Escanee este código con la cámara de su teléfono para registrar su ingreso al gimnasio.</p>
-                    <CodigoQr Valor="@UrlIngreso(_puntoQr)" PixelesPorModulo="10" />
-                    <p class="small text-muted mt-3 mb-0 text-break">@UrlIngreso(_puntoQr)</p>
-                </div>
-                <div class="mt-3">
-                    <button type="button" class="btn btn-itm-primario me-2" @onclick="Imprimir"><span class="bi bi-printer me-1"></span>Imprimir</button>
-                    <button type="button" class="btn btn-outline-secondary" @onclick="() => _puntoQr = null">Cerrar</button>
-                </div>
-            </div>
-        </section>
-    }
 </div>
 
 @code {
@@ -128,16 +104,11 @@
     private string _nombreNuevo = string.Empty;
     private string _nombreEdicion = string.Empty;
     private Guid? _renombrandoId;
-    private PuntoAccesoDto? _puntoQr;
     private bool _procesando;
     private string? _mensaje;
     private bool _mensajeEsExito;
 
     protected override async Task OnInitializedAsync() => await Cargar();
-
-    // RN-005: el QR codifica la URL del frontend con el token fijo del punto (nunca su GUID interno)
-    private string UrlIngreso(PuntoAccesoDto p) =>
-        NavigationManager.ToAbsoluteUri($"ingreso/{Uri.EscapeDataString(p.TokenQR ?? string.Empty)}").ToString();
 
     private async Task Cargar()
     {
@@ -156,12 +127,9 @@
         if (r.EsExito)
         {
             _nombreNuevo = string.Empty;
-            _puntoQr = r.Valor;
             await Cargar();
         }
     }
-
-    private void VerQr(PuntoAccesoDto p) => _puntoQr = p;
 
     private void IniciarRenombrar(PuntoAccesoDto p)
     {
@@ -187,12 +155,9 @@
         if (r.EsExito)
         {
             _renombrandoId = null;
-            if (_puntoQr?.Id == p.Id) _puntoQr = r.Valor;
             await Cargar();
         }
     }
-
-    private async Task Imprimir() => await JS.InvokeVoidAsync("window.print");
 
     private void Notificar(bool exito, string? mensaje)
     {

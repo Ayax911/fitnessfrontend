@@ -11,3 +11,24 @@ window.itmDescarga = {
         URL.revokeObjectURL(url);
     }
 };
+
+window.itmPantalla = {
+    _wakeLock: null,
+    solicitarWakeLock: async function () {
+        if ('wakeLock' in navigator) {
+            try {
+                this._wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                // Silencioso si no se permite o está minimizado
+            }
+        }
+    },
+    liberarWakeLock: function () {
+        if (this._wakeLock) {
+            try {
+                this._wakeLock.release();
+            } catch (err) {}
+            this._wakeLock = null;
+        }
+    }
+};

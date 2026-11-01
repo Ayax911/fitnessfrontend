@@ -63,8 +63,8 @@
 | F4 / RF-031 | Bloqueos de calendario impiden reservas dentro del rango | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba3, BloqueosCalendario) |
 | F4 / RF-032 | Registro de auditoría administrativo consultable y paginado | ✅ probado (AdministracionSesionesYAuditoriaF4Tests.Prueba4, Prueba5) |
 | F5 / RF-033 | Reportes administrativos con exportación CSV | ✅ probado (ReportesYExportacionCsvF5Tests.Prueba1, Prueba2, GeneradorCsv) |
-| F6 / RF-039 | Pantalla de punto de acceso actualiza QR 2s antes de expirar | ⬜ pendiente F6 |
-| F6 / RF-039 | Escaneo de QR vencido muestra mensaje `QrVencido` sin bucle de reintento | ⬜ pendiente F6 |
+| F6 / RF-039 | Pantalla de punto de acceso actualiza QR 2s antes de expirar | ✅ probado (PantallaPuntoAccesoF6Tests.Prueba1, Prueba3) |
+| F6 / RF-039 | Escaneo de QR vencido muestra mensaje `QrVencido` sin bucle de reintento | ✅ probado (PantallaPuntoAccesoF6Tests.Prueba4) |
 | F7 / RF-038 | Reportar problema/sugerencia enviado y consultado en bandeja admin | ⬜ pendiente F7 |
 
 

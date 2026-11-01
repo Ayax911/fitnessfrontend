@@ -1,0 +1,71 @@
+@* Indicador circular SVG de cuenta regresiva para el QR dinámico (RF-039) *@
+<div class="itm-anillo-contenedor" style="width: @(TamanoPx)px; height: @(TamanoPx)px;" aria-hidden="true" aria-live="off">
+    <svg class="itm-anillo-svg" viewBox="0 0 60 60" width="@TamanoPx" height="@TamanoPx">
+        <circle class="itm-anillo-fondo"
+                cx="30" cy="30" r="26"
+                fill="none"
+                stroke="#e2e8f0"
+                stroke-width="4" />
+        <circle class="itm-anillo-progreso"
+                cx="30" cy="30" r="26"
+                fill="none"
+                stroke="var(--azul-itm, #005691)"
+                stroke-width="4"
+                stroke-dasharray="163.36"
+                stroke-dashoffset="@DashOffset"
+                stroke-linecap="round"
+                transform="rotate(-90 30 30)" />
+    </svg>
+    <div class="itm-anillo-texto">
+        @Math.Max(0, (int)Math.Ceiling(SegundosRestantes))s
+    </div>
+</div>
+
+<style>
+    .itm-anillo-contenedor {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .itm-anillo-svg {
+        display: block;
+    }
+    .itm-anillo-progreso {
+        transition: stroke-dashoffset 1s linear;
+    }
+    @@media (prefers-reduced-motion: reduce) {
+        .itm-anillo-progreso {
+            transition: none !important;
+        }
+    }
+    .itm-anillo-texto {
+        position: absolute;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--azul-institucional, #002e5f);
+        text-align: center;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public double SegundosRestantes { get; set; }
+
+    [Parameter]
+    public double PeriodoTotal { get; set; } = 15;
+
+    [Parameter]
+    public int TamanoPx { get; set; } = 64;
+
+    private double DashOffset
+    {
+        get
+        {
+            if (PeriodoTotal <= 0) return 0;
+            var proporcion = Math.Clamp(SegundosRestantes / PeriodoTotal, 0.0, 1.0);
+            const double circunferencia = 163.36; // 2 * PI * 26
+            return circunferencia * (1.0 - proporcion);
+        }
+    }
+}

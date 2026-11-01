@@ -1,0 +1,229 @@
+@* RF-039: Pantalla de punto de acceso con QR dinámico (Administrador) *@
+@page "/admin/puntos-acceso/{IdPunto:guid}/pantalla"
+@attribute [Authorize(Roles = "Administrador")]
+@implements IDisposable
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IPuntosAccesoClienteService PuntosService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<div class="pantalla-punto-acceso">
+    <div class="pantalla-tarjeta text-center">
+        @* Logo oficial azul ITM *@
+        <div class="mb-3">
+            <img src="img/itm-horizontal-azul.png" alt="ITM Institución Universitaria" style="height: 48px; max-width: 100%; object-fit: contain;" />
+        </div>
+
+        <h1 class="h3 fw-bold text-dark mb-1">@(_puntoNombre ?? "Punto de Acceso")</h1>
+        <p class="text-muted small mb-4">Escanea el código QR con tu celular para registrar tu ingreso general.</p>
+
+        @if (_cargandoInicial)
+        {
+            <div class="py-5" role="status" aria-busy="true">
+                <span class="itm-solo-lectores">Iniciando pantalla de acceso...</span>
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+            </div>
+        }
+        else if (_tokenActual != null && !_qrVencido)
+        {
+            @* QR Grande que codifica {BaseUri}ingreso/{token} *@
+            <div class="qr-contenedor p-3 bg-white rounded shadow-sm d-inline-block border mb-3">
+                <CodigoQr Valor="@UrlIngresoActual" PixelesPorModulo="9" />
+            </div>
+
+            @* Anillo de cuenta regresiva (aria-live off para no saturar lectores de pantalla) *@
+            <div class="d-flex justify-content-center align-items-center gap-3 mt-2" aria-live="off">
+                <AnilloCuentaRegresiva SegundosRestantes="@_segundosRestantes" PeriodoTotal="@_periodoSegundos" TamanoPx="54" />
+                <span class="text-muted small" style="font-size: 13px;">El código se renueva automáticamente</span>
+            </div>
+        }
+        else
+        {
+            @* Estado cuando falló la renovación y el QR previo ya venció: NUNCA mostrar QR vencido como válido *@
+            <div class="alert alert-warning py-4 px-3 my-4 rounded border text-center" role="alert">
+                <div class="spinner-border text-warning mb-2" role="status"></div>
+                <h2 class="h5 fw-bold text-dark mb-1">Sin conexión con el servidor</h2>
+                <p class="small text-muted mb-0">Reintentando obtener un nuevo código de acceso seguro...</p>
+            </div>
+        }
+
+        <div class="mt-4 pt-3 border-top text-muted" style="font-size: 11px;">
+            Área de Bienestar Universitario · Institución Universitaria ITM
+        </div>
+    </div>
+</div>
+
+<style>
+    .pantalla-punto-acceso {
+        min-height: 100vh;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .pantalla-tarjeta {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        padding: 32px;
+        max-width: 500px;
+        width: 100%;
+        border: 1px solid #e2e8f0;
+    }
+    .qr-contenedor {
+        max-width: 100%;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Guid IdPunto { get; set; }
+
+    private bool _cargandoInicial = true;
+    private string? _tokenActual;
+    private string? _puntoNombre;
+    private DateTimeOffset _validoHasta = DateTimeOffset.MinValue;
+    private int _periodoSegundos = 15;
+    private double _segundosRestantes;
+    private bool _qrVencido;
+
+    private System.Threading.Timer? _timerTick;
+    private System.Threading.Timer? _timerRenovacion;
+    private readonly CancellationTokenSource _cts = new();
+
+    private string UrlIngresoActual =>
+        NavigationManager.ToAbsoluteUri($"ingreso/{Uri.EscapeDataString(_tokenActual ?? string.Empty)}").ToString();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerQrDelServidor();
+        _cargandoInicial = false;
+
+        // Temporizador de 250ms para suavidad en la cuenta regresiva visual
+        _timerTick = new System.Threading.Timer(OnTick, null, 0, 250);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("itmPantalla.solicitarWakeLock");
+            }
+            catch {}
+        }
+    }
+
+    private async Task ObtenerQrDelServidor()
+    {
+        if (_cts.IsCancellationRequested) return;
+
+        try
+        {
+            var res = await PuntosService.ObtenerQrActualAsync(IdPunto, _cts.Token);
+            if (res.EsExito && res.Valor != null)
+            {
+                var dto = res.Valor;
+                _tokenActual = dto.Token;
+                _validoHasta = dto.ValidoHasta;
+                _periodoSegundos = dto.PeriodoSegundos;
+                _puntoNombre = dto.PuntoAccesoNombre;
+                _qrVencido = false;
+
+                ProgramarSiguientePeticion();
+            }
+            else
+            {
+                ManejarFalloRed();
+            }
+        }
+        catch
+        {
+            ManejarFalloRed();
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ProgramarSiguientePeticion()
+    {
+        _timerRenovacion?.Dispose();
+
+        // Patrón 9: Programa la siguiente petición exactamente 2 segundos antes de validoHasta
+        var ahora = DateTimeOffset.UtcNow;
+        var tiempoHastaVencimiento = _validoHasta - ahora;
+        var adelanto = TimeSpan.FromSeconds(2);
+        var espera = tiempoHastaVencimiento - adelanto;
+
+        if (espera <= TimeSpan.Zero)
+        {
+            espera = TimeSpan.FromMilliseconds(500);
+        }
+
+        _timerRenovacion = new System.Threading.Timer(async _ =>
+        {
+            await ObtenerQrDelServidor();
+        }, null, (int)espera.TotalMilliseconds, Timeout.Infinite);
+    }
+
+    private void ManejarFalloRed()
+    {
+        // Si hay fallo de red, el QR vigente se sigue mostrando hasta su vencimiento.
+        // Si ya venció, se oculta para no engañar a los estudiantes con un token inválido.
+        var ahora = DateTimeOffset.UtcNow;
+        if (ahora >= _validoHasta)
+        {
+            _qrVencido = true;
+        }
+
+        // Reintento con espera corta (3 segundos)
+        _timerRenovacion?.Dispose();
+        _timerRenovacion = new System.Threading.Timer(async _ =>
+        {
+            await ObtenerQrDelServidor();
+        }, null, 3000, Timeout.Infinite);
+    }
+
+    private void OnTick(object? state)
+    {
+        if (_cts.IsCancellationRequested) return;
+
+        var ahora = DateTimeOffset.UtcNow;
+        var restantes = (_validoHasta - ahora).TotalSeconds;
+
+        _segundosRestantes = Math.Max(0, restantes);
+
+        if (restantes <= 0)
+        {
+            if (!_qrVencido)
+            {
+                _qrVencido = true;
+                _ = InvokeAsync(StateHasChanged);
+            }
+        }
+        else
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _timerTick?.Dispose();
+        _timerRenovacion?.Dispose();
+
+        try
+        {
+            _ = JS.InvokeVoidAsync("itmPantalla.liberarWakeLock");
+        }
+        catch {}
+    }
+}

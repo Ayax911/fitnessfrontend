@@ -34,9 +34,19 @@
                 <div class="itm-resultado">
                     <span class="itm-resultado__sello itm-resultado__sello--error"><svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
                     <h1>No se pudo registrar el ingreso</h1>
-                    @* RN-030: el rechazo del backend se muestra tal cual; sin cuenta regresiva ni explicación propia *@
-                    <div class="alert alert-danger w-100 text-start" role="alert">@error.Mensaje</div>
-                    <button type="button" class="btn btn-itm-secundario itm-btn-bloque" @onclick="RegistrarIngreso">Reintentar</button>
+                    @if (error.Codigo == "QrVencido" || error.Mensaje?.Contains("vencido", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        <div class="alert alert-warning w-100 text-start" role="alert">
+                            <strong>Código QR vencido:</strong> El código dinámico de la pantalla ha expirado. Por favor, escanee de nuevo el código que se muestra en la pantalla del punto de acceso.
+                        </div>
+                        <a href="/eventos" class="btn btn-itm-secundario itm-btn-bloque">Ir a inicio</a>
+                    }
+                    else
+                    {
+                        @* RN-030: el rechazo del backend se muestra tal cual; sin cuenta regresiva ni explicación propia *@
+                        <div class="alert alert-danger w-100 text-start" role="alert">@error.Mensaje</div>
+                        <button type="button" class="btn btn-itm-secundario itm-btn-bloque" @onclick="RegistrarIngreso">Reintentar</button>
+                    }
                 </div>
             </ErrorTemplate>
             <ExitoTemplate Context="resultado">

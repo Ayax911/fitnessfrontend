@@ -2,6 +2,14 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F6 · Pantalla de punto de acceso con QR dinámico (RF-039)
+- Creado componente `AnilloCuentaRegresiva.razor` con SVG circular, `aria-live="off"` y compatibilidad con `prefers-reduced-motion`.
+- Creada página `PantallaPuntoAcceso.razor` (/admin/puntos-acceso/{id}/pantalla) siguiendo el Patrón 9: actualización preventiva 2 segundos antes de `validoHasta`, retención del QR actual si falla la red hasta que expire, visualización clara de "Sin conexión con el servidor", solicitud de Screen Wake Lock para evitar suspensión de pantalla y liberación total de recursos (`Dispose`) para prevenir fugas de temporizadores.
+- Actualizada página `PuntosAcceso.razor`: reemplazada la vista imprimible y CSS `@media print` (D4: ya no se imprimen QR fijos) por botón accesible "Abrir pantalla" (`target="_blank"`).
+- Actualizada página `Ingreso.razor`: manejo explícito del error de backend `QrVencido`, ofreciendo instrucciones claras al usuario para volver a escanear la pantalla física y suprimiendo el bucle de reintento directo con el mismo token vencido.
+- Implementado servicio de fachada `IPuntosAccesoClienteService` con DTO rotativo `QrPuntoAccesoDto`.
+- Ampliado `AusenciaPriorizacionRN020Tests.cs` y agregadas las 5 pruebas obligatorias de F6 en `PantallaPuntoAccesoF6Tests.cs` (132 pruebas en verde).
+
 ## F5 · Reportes y exportación CSV (RF-033)
 - Creada función pura `GeneradorCsv.cs` con BOM UTF-8 (`\uFEFF`), separador `;`, escape de comillas y protección estricta contra inyección de fórmulas CSV (prefijo `'` ante `=`, `+`, `-`, `@`).
 - Creada página `Reportes.razor` (/admin/reportes) con 5 pestañas operativas: Asistencia por sesión, Ocupación de cupos, Inasistencias por actividad (agregado, sin datos personales RN-020), Horas pico en franjas locales `America/Bogota` y Uso de la plataforma.
