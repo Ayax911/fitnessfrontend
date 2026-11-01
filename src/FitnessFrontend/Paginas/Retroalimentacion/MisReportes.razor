@@ -1,0 +1,109 @@
+@* RF-038: Consultar reportes y sugerencias del usuario *@
+@page "/mis-reportes"
+@attribute [Authorize]
+@using FitnessFrontend.Componentes.Compartidos
+@using FitnessFrontend.Servicios.Retroalimentacion
+@using FitnessFrontend.Servicios.Infraestructura
+@inject IRetroalimentacionClienteService RetroalimentacionService
+@inject IZonaHorariaService ZonaHorariaService
+
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Mis reportes y sugerencias</h1>
+            <p>Historial y estado de tus reportes de fallas técnicas y sugerencias enviadas a Bienestar Universitario.</p>
+        </div>
+        <a href="/ayuda/reportar" class="btn btn-itm-primario" style="min-height: 48px; display: inline-flex; align-items: center;">
+            <svg class="itm-icono me-2" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px;">
+                <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Nuevo reporte
+        </a>
+    </div>
+
+    <EstadoDeCarga T="IReadOnlyList<ReporteProblemaDto>" Estado="@_estadoReportes" AlReintentar="CargarReportesAsync">
+        <CargandoTemplate>
+            <div class="d-flex flex-column gap-3 mt-3">
+                <div class="card-itm p-3 itm-esqueleto" style="height: 120px;"></div>
+                <div class="card-itm p-3 itm-esqueleto" style="height: 120px;"></div>
+            </div>
+        </CargandoTemplate>
+        <ExitoTemplate Context="reportes">
+            @if (reportes.Count == 0)
+            {
+                <div class="card-itm p-5 text-center mt-3">
+                    <p class="text-secondary mb-3">No has enviado ningún reporte o sugerencia todavía.</p>
+                    <div>
+                        <a href="/ayuda/reportar" class="btn btn-itm-secundario">Crear un reporte</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3 mt-3">
+                    @foreach (var r in reportes)
+                    {
+                        <div class="card-itm p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-dark border">@r.Tipo</span>
+                                    <span class="text-secondary small">@ZonaHorariaService.FormatearFechaHora(r.FechaCreacionUtc)</span>
+                                    @if (!string.IsNullOrWhiteSpace(r.RutaOrigen))
+                                    {
+                                        <span class="badge text-bg-light border small">Origen: @r.RutaOrigen</span>
+                                    }
+                                </div>
+                                <div>
+                                    <InsigniaEstado Tipo="@MapearEstadoInsignia(r.Estado)">
+                                        @MapearEstadoTexto(r.Estado)
+                                    </InsigniaEstado>
+                                </div>
+                            </div>
+
+                            <p class="mb-0 text-break" style="white-space: pre-wrap; font-size: 15px; color: var(--color-texto);">@r.Mensaje</p>
+
+                            @if (!string.IsNullOrWhiteSpace(r.RespuestaAdmin))
+                            {
+                                <div class="mt-3 p-3 rounded" style="background-color: var(--fondo-suave, #f4f7f9); border-left: 4px solid var(--azul-itm, #003865);">
+                                    <div class="fw-semibold small text-primary mb-1">Respuesta del equipo de Bienestar:</div>
+                                    <p class="mb-0 text-break small" style="white-space: pre-wrap;">@r.RespuestaAdmin</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>> _estadoReportes = 
+        FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>>.Cargando();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarReportesAsync();
+    }
+
+    private async Task CargarReportesAsync()
+    {
+        _estadoReportes = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>>.Cargando();
+        _estadoReportes = await RetroalimentacionService.ObtenerMisReportesAsync();
+    }
+
+    private static string MapearEstadoInsignia(string estado) => estado.ToLowerInvariant() switch
+    {
+        "resuelto" => "ok",
+        "enrevisión" or "en revision" or "en_revision" => "ingreso",
+        "descartado" => "cancelada",
+        _ => "espera"
+    };
+
+    private static string MapearEstadoTexto(string estado) => estado switch
+    {
+        "EnRevisión" => "En revisión",
+        _ => estado
+    };
+}

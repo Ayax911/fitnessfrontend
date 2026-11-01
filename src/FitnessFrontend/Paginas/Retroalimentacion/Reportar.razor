@@ -1,0 +1,162 @@
+@* RF-038: Reportar problemas y sugerencias *@
+@page "/ayuda/reportar"
+@page "/reportar"
+@attribute [Authorize]
+@using FitnessFrontend.Servicios.Retroalimentacion
+@using FitnessFrontend.Servicios.Infraestructura
+@inject IRetroalimentacionClienteService RetroalimentacionService
+@inject NavigationManager NavigationManager
+
+<div class="itm-contenedor itm-pagina" style="max-width: 680px; margin: 0 auto;">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Reportar un problema o sugerencia</h1>
+            <p>Cuéntanos si experimentaste una falla técnica o si tienes una idea para mejorar los servicios del gimnasio ITM.</p>
+        </div>
+    </div>
+
+    @if (_enviadoExitosamente)
+    {
+        <div class="card-itm p-4 text-center mt-3" role="alert" aria-live="polite">
+            <div class="mb-3">
+                <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" style="width: 48px; height: 48px; color: var(--color-exito, #107c10);">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M7 12l3.5 3.5L17 8.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 class="h4 fw-bold mb-2">¡Reporte recibido!</h2>
+            <p class="text-secondary mb-4">
+                Tu reporte ha sido registrado exitosamente. El equipo de Bienestar Universitario lo revisará para dar oportuna atención.
+            </p>
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                <a href="/mis-reportes" class="btn btn-itm-primario" style="min-height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                    Consultar mis reportes
+                </a>
+                <a href="/ayuda" class="btn btn-itm-secundario" style="min-height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                    Volver a Ayuda
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(_errorMensaje))
+        {
+            <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                <svg class="itm-icono me-2 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px;">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>@_errorMensaje</span>
+            </div>
+        }
+
+        <div class="card-itm p-4 mt-2">
+            <form @onsubmit="EnviarAsync">
+                <div class="mb-3">
+                    <label for="tipoReporte" class="form-label fw-semibold">Tipo de mensaje</label>
+                    <select id="tipoReporte" class="form-select" @bind="_tipo" style="min-height: 48px;">
+                        <option value="Problema">Problema o falla técnica</option>
+                        <option value="Sugerencia">Sugerencia de mejora</option>
+                        <option value="Pregunta">Pregunta o inquietud</option>
+                    </select>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Ruta))
+                {
+                    <div class="mb-3">
+                        <label for="rutaOrigen" class="form-label text-secondary small">Página de origen</label>
+                        <input id="rutaOrigen" type="text" class="form-control" value="@Ruta" readonly />
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="mensajeReporte" class="form-label fw-semibold mb-0">Descripción detallada</label>
+                        <span class="small @(_mensaje.Length > 1000 ? "text-danger fw-bold" : "text-secondary")" aria-live="polite">
+                            @_mensaje.Length / 1000
+                        </span>
+                    </div>
+                    <textarea id="mensajeReporte"
+                              class="form-control @(_mensaje.Length > 1000 ? "is-invalid" : "")"
+                              rows="5"
+                              placeholder="Describe claramente lo ocurrido o tu propuesta..."
+                              @bind="_mensaje"
+                              @bind:event="oninput"
+                              maxlength="1000"
+                              required></textarea>
+                    <div class="form-text">Por favor no incluyas contraseñas ni datos sensibles en la descripción.</div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4">
+                    <a href="/ayuda" class="btn btn-itm-secundario" style="min-height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                            class="btn btn-itm-primario"
+                            disabled="@(_enviando || string.IsNullOrWhiteSpace(_mensaje) || _mensaje.Length > 1000)"
+                            style="min-height: 48px; min-width: 160px; display: inline-flex; align-items: center; justify-content: center;">
+                        @if (_enviando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Enviando...</span>
+                        }
+                        else
+                        {
+                            <span>Enviar reporte</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "ruta")]
+    public string? Ruta { get; set; }
+
+    private string _tipo = "Problema";
+    private string _mensaje = string.Empty;
+    private bool _enviando;
+    private bool _enviadoExitosamente;
+    private string? _errorMensaje;
+
+    private async Task EnviarAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_mensaje) || _mensaje.Length > 1000)
+        {
+            return;
+        }
+
+        _enviando = true;
+        _errorMensaje = null;
+
+        try
+        {
+            var dto = new CrearReporteDto(_tipo, _mensaje.Trim(), Ruta);
+            var resultado = await RetroalimentacionService.EnviarReporteAsync(dto);
+
+            if (resultado.EsExito)
+            {
+                _enviadoExitosamente = true;
+            }
+            else
+            {
+                if (resultado.CodigoError == "429")
+                {
+                    _errorMensaje = "Ha enviado varios reportes recientemente; por favor intente más tarde.";
+                }
+                else
+                {
+                    _errorMensaje = resultado.MensajeError ?? "No fue posible registrar el reporte. Por favor intente más tarde.";
+                }
+            }
+        }
+        finally
+        {
+            _enviando = false;
+        }
+    }
+}

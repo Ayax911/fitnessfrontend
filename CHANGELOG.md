@@ -2,6 +2,14 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F7 · Retroalimentación y reporte de problemas (RF-038)
+- Creada página `Reportar.razor` (/ayuda/reportar y /reportar): formulario para Problema, Sugerencia o Pregunta con contador en vivo (≤ 1000 caracteres), ruta de origen precargada por query string sin agentes de usuario ni datos invasivos, y manejo respetuoso de 429 ("Ha enviado varios reportes recientemente; por favor intente más tarde.") sin culpar al usuario.
+- Creada página `MisReportes.razor` (/mis-reportes): consulta y seguimiento de reportes propios con insignias accesibles, conversión de fechas a `America/Bogota` mediante `IZonaHorariaService` y renderizado de texto plano estricto contra inyección HTML/scripts.
+- Creada página `BandejaAdministrador.razor` (/admin/retroalimentacion): panel administrativo (`[Authorize(Roles = "Administrador")]`) con filtro por estado (Pendiente, En revisión, Resuelto, Descartado), actualización de estados y respuesta institucional.
+- Incorporado enlace a Retroalimentación en la navegación del Administrador (`NavMenuAdministrador.razor`).
+- Implementado servicio de fachada `IRetroalimentacionClienteService` con aislamiento por usuario autenticado.
+- Ampliado `AusenciaPriorizacionRN020Tests.cs` y agregadas las 5 pruebas obligatorias de F7 en `RetroalimentacionF7Tests.cs` (139 pruebas en verde).
+
 ## F6 · Pantalla de punto de acceso con QR dinámico (RF-039)
 - Creado componente `AnilloCuentaRegresiva.razor` con SVG circular, `aria-live="off"` y compatibilidad con `prefers-reduced-motion`.
 - Creada página `PantallaPuntoAcceso.razor` (/admin/puntos-acceso/{id}/pantalla) siguiendo el Patrón 9: actualización preventiva 2 segundos antes de `validoHasta`, retención del QR actual si falla la red hasta que expire, visualización clara de "Sin conexión con el servidor", solicitud de Screen Wake Lock para evitar suspensión de pantalla y liberación total de recursos (`Dispose`) para prevenir fugas de temporizadores.

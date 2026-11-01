@@ -1,0 +1,158 @@
+@* RF-038: Bandeja de administración de retroalimentación y reportes *@
+@page "/admin/retroalimentacion"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.Componentes.Compartidos
+@using FitnessFrontend.Servicios.Retroalimentacion
+@using FitnessFrontend.Servicios.Infraestructura
+@inject IRetroalimentacionClienteService RetroalimentacionService
+@inject IZonaHorariaService ZonaHorariaService
+
+<div class="itm-contenedor itm-pagina">
+    <div class="itm-pagina__cabecera">
+        <div>
+            <h1>Bandeja de retroalimentación</h1>
+            <p>Atención y seguimiento a fallas técnicas, preguntas y sugerencias remitidas por la comunidad usuaria.</p>
+        </div>
+    </div>
+
+    <div class="card-itm p-3 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <label for="filtroEstado" class="form-label mb-0 fw-semibold">Filtrar por estado:</label>
+                <select id="filtroEstado" class="form-select form-select-sm" style="width: auto; min-height: 38px;" @bind="_estadoSeleccionado" @bind:after="CargarReportesAsync">
+                    <option value="Todos">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="EnRevisión">En revisión</option>
+                    <option value="Resuelto">Resuelto</option>
+                    <option value="Descartado">Descartado</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="CargarReportesAsync" disabled="@_cargando">
+                Actualizar lista
+            </button>
+        </div>
+    </div>
+
+    <EstadoDeCarga T="IReadOnlyList<ReporteProblemaDto>" Estado="@_estadoReportes" AlReintentar="CargarReportesAsync">
+        <CargandoTemplate>
+            <div class="d-flex flex-column gap-3">
+                <div class="card-itm p-3 itm-esqueleto" style="height: 100px;"></div>
+                <div class="card-itm p-3 itm-esqueleto" style="height: 100px;"></div>
+            </div>
+        </CargandoTemplate>
+        <ExitoTemplate Context="reportes">
+            @if (reportes.Count == 0)
+            {
+                <div class="card-itm p-5 text-center">
+                    <p class="text-secondary mb-0">No se encontraron reportes con los filtros seleccionados.</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var r in reportes)
+                    {
+                        <div class="card-itm p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <span class="badge bg-light text-dark border">@r.Tipo</span>
+                                    <span class="fw-semibold">@r.UsuarioNombre</span>
+                                    <span class="text-secondary small">· @ZonaHorariaService.FormatearFechaHora(r.FechaCreacionUtc)</span>
+                                    @if (!string.IsNullOrWhiteSpace(r.RutaOrigen))
+                                    {
+                                        <span class="badge text-bg-light border small">Página: @r.RutaOrigen</span>
+                                    }
+                                </div>
+                                <div>
+                                    <InsigniaEstado Tipo="@MapearEstadoInsignia(r.Estado)">
+                                        @MapearEstadoTexto(r.Estado)
+                                    </InsigniaEstado>
+                                </div>
+                            </div>
+
+                            <p class="mb-3 text-break" style="white-space: pre-wrap; font-size: 15px;">@r.Mensaje</p>
+
+                            @if (!string.IsNullOrWhiteSpace(r.RespuestaAdmin))
+                            {
+                                <div class="p-3 mb-3 rounded" style="background-color: var(--fondo-suave, #f4f7f9); border-left: 4px solid var(--azul-itm, #003865);">
+                                    <div class="fw-semibold small text-primary mb-1">Respuesta guardada:</div>
+                                    <p class="mb-0 text-break small" style="white-space: pre-wrap;">@r.RespuestaAdmin</p>
+                                </div>
+                            }
+
+                            <div class="pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <span class="small text-secondary">Acciones de gestión:</span>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Cambiar estado del reporte">
+                                    @if (r.Estado != "Pendiente")
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary" @onclick='() => CambiarEstadoAsync(r.Id, "Pendiente")'>
+                                            Marcar Pendiente
+                                        </button>
+                                    }
+                                    @if (r.Estado != "EnRevisión")
+                                    {
+                                        <button type="button" class="btn btn-outline-primary" @onclick='() => CambiarEstadoAsync(r.Id, "EnRevisión")'>
+                                            En revisión
+                                        </button>
+                                    }
+                                    @if (r.Estado != "Resuelto")
+                                    {
+                                        <button type="button" class="btn btn-outline-success" @onclick='() => CambiarEstadoAsync(r.Id, "Resuelto")'>
+                                            Resolver
+                                        </button>
+                                    }
+                                    @if (r.Estado != "Descartado")
+                                    {
+                                        <button type="button" class="btn btn-outline-danger" @onclick='() => CambiarEstadoAsync(r.Id, "Descartado")'>
+                                            Descartar
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private string _estadoSeleccionado = "Todos";
+    private bool _cargando;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>> _estadoReportes = 
+        FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>>.Cargando();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarReportesAsync();
+    }
+
+    private async Task CargarReportesAsync()
+    {
+        _cargando = true;
+        _estadoReportes = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReporteProblemaDto>>.Cargando();
+        _estadoReportes = await RetroalimentacionService.ListarBandejaAdminAsync(_estadoSeleccionado);
+        _cargando = false;
+    }
+
+    private async Task CambiarEstadoAsync(Guid id, string nuevoEstado)
+    {
+        await RetroalimentacionService.CambiarEstadoAsync(id, nuevoEstado);
+        await CargarReportesAsync();
+    }
+
+    private static string MapearEstadoInsignia(string estado) => estado.ToLowerInvariant() switch
+    {
+        "resuelto" => "ok",
+        "enrevisión" or "en revision" or "en_revision" => "ingreso",
+        "descartado" => "cancelada",
+        _ => "espera"
+    };
+
+    private static string MapearEstadoTexto(string estado) => estado switch
+    {
+        "EnRevisión" => "En revisión",
+        _ => estado
+    };
+}

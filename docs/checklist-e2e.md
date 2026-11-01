@@ -65,7 +65,7 @@
 | F5 / RF-033 | Reportes administrativos con exportación CSV | ✅ probado (ReportesYExportacionCsvF5Tests.Prueba1, Prueba2, GeneradorCsv) |
 | F6 / RF-039 | Pantalla de punto de acceso actualiza QR 2s antes de expirar | ✅ probado (PantallaPuntoAccesoF6Tests.Prueba1, Prueba3) |
 | F6 / RF-039 | Escaneo de QR vencido muestra mensaje `QrVencido` sin bucle de reintento | ✅ probado (PantallaPuntoAccesoF6Tests.Prueba4) |
-| F7 / RF-038 | Reportar problema/sugerencia enviado y consultado en bandeja admin | ⬜ pendiente F7 |
+| F7 / RF-038 | Reportar problema/sugerencia enviado y consultado en bandeja admin | ✅ probado (RetroalimentacionF7Tests.Prueba1, Prueba2, Prueba3, Prueba4, Prueba5) |
 
 
 ## Pendiente que requiere a una persona

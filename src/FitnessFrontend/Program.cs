@@ -72,5 +72,6 @@ builder.Services.AddScoped<FitnessFrontend.Servicios.Eventos.INotasYAnunciosClie
 builder.Services.AddScoped<FitnessFrontend.Servicios.Sesiones.IAdministracionSesionesClienteService, FitnessFrontend.Servicios.Sesiones.AdministracionSesionesClienteService>();
 builder.Services.AddScoped<FitnessFrontend.Servicios.Auditoria.IAuditoriaClienteService, FitnessFrontend.Servicios.Auditoria.AuditoriaClienteService>();
 builder.Services.AddScoped<FitnessFrontend.Servicios.Reportes.IReportesClienteService, FitnessFrontend.Servicios.Reportes.ReportesClienteService>();
+builder.Services.AddScoped<FitnessFrontend.Servicios.Retroalimentacion.IRetroalimentacionClienteService, FitnessFrontend.Servicios.Retroalimentacion.RetroalimentacionClienteService>();
 
 await builder.Build().RunAsync();
