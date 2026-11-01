@@ -87,6 +87,7 @@ public class AdministrarEventosTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IEventosClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
 
         var cut = Render<CrearEvento>();
@@ -110,6 +111,7 @@ public class AdministrarEventosTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IEventosClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
 
         var cut = Render<CrearEvento>();
@@ -133,6 +135,7 @@ public class AdministrarEventosTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IEventosClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
 
         var cut = Render<EditarEvento>(parameters => parameters

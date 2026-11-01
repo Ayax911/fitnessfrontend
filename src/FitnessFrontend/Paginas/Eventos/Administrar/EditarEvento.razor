@@ -54,8 +54,8 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label for="entrenadorId" class="form-label fw-semibold">ID del Entrenador (GUID)</label>
-                                <InputText id="entrenadorId" class="form-control" @bind-Value="_entrenadorIdStr" />
+                                <label for="entrenadorId" class="form-label fw-semibold">Entrenador responsable</label>
+                                <SelectorEntrenador Id="entrenadorId" @bind-Value="_entrenadorId" />
                             </div>
 
                             <div class="col-12 col-md-6">
@@ -145,7 +145,7 @@
         Activo = true
     };
 
-    private string? _entrenadorIdStr;
+    private Guid? _entrenadorId;
     private DateTime? _fechaAperturaLocal;
     private bool _activoValor = true;
 
@@ -164,22 +164,7 @@
     {
         _mensajeAlerta = null;
 
-        Guid? entrenadorId = null;
-        if (!string.IsNullOrWhiteSpace(_entrenadorIdStr))
-        {
-            if (Guid.TryParse(_entrenadorIdStr, out var gid))
-            {
-                entrenadorId = gid;
-            }
-            else
-            {
-                _mensajeAlerta = "El ID del entrenador no tiene formato GUID válido.";
-                _alertaEsExito = false;
-                return;
-            }
-        }
-
-        _request.EntrenadorId = entrenadorId;
+        _request.EntrenadorId = _entrenadorId;
         _request.Activo = _activoValor;
 
         if (_fechaAperturaLocal.HasValue)

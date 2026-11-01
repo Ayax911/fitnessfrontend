@@ -118,6 +118,7 @@ public class PriorizacionAislamientoRolTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IPriorizacionClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
 
         var cut = Render<IndicadorUsuario>(parameters => parameters
@@ -143,6 +144,7 @@ public class PriorizacionAislamientoRolTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IPriorizacionClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
 
         var cut = Render<ConfiguracionSistema>();
 
@@ -177,6 +179,7 @@ public class PriorizacionAislamientoRolTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IPriorizacionClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
 
         var cut = Render<ConfiguracionSistema>();
 
@@ -205,6 +208,7 @@ public class PriorizacionAislamientoRolTests : BunitContext
 
         Services.AddSingleton<AuthenticationStateProvider>(auth);
         Services.AddSingleton<IPriorizacionClienteService>(servicio);
+        Services.AddSingleton<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService>(new UsuariosClienteServiceFalso());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
 
         var cut = Render<IndicadorUsuario>(parameters => parameters

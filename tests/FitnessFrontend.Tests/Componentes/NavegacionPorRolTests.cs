@@ -21,6 +21,8 @@ public class NavegacionPorRolTests : BunitContext
         Assert.DoesNotContain("entrenador/actividades", markup);
         Assert.DoesNotContain("admin/eventos/crear", markup);
         Assert.DoesNotContain("admin/priorizacion", markup);
+        Assert.DoesNotContain("admin/usuarios", markup);
+        Assert.DoesNotContain("admin/puntos-acceso", markup);
     }
 
     [Fact]
@@ -36,6 +38,8 @@ public class NavegacionPorRolTests : BunitContext
         Assert.DoesNotContain("admin/eventos/crear", markup);
         Assert.DoesNotContain("admin/priorizacion", markup);
         Assert.DoesNotContain("admin/configuracion", markup);
+        Assert.DoesNotContain("admin/usuarios", markup);
+        Assert.DoesNotContain("admin/puntos-acceso", markup);
     }
 
     [Fact]
@@ -48,6 +52,8 @@ public class NavegacionPorRolTests : BunitContext
         Assert.Contains("href=\"admin/eventos/crear\"", markup);
         Assert.Contains("href=\"admin/priorizacion/usuarios\"", markup);
         Assert.Contains("href=\"admin/configuracion\"", markup);
+        Assert.Contains("href=\"admin/usuarios\"", markup);        // RF-023
+        Assert.Contains("href=\"admin/puntos-acceso\"", markup);   // RF-024
 
         // No debe contener actividades exclusivas de entrenador
         Assert.DoesNotContain("entrenador/actividades", markup);

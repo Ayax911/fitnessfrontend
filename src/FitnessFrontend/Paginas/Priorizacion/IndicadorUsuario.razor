@@ -7,6 +7,7 @@
 @using FitnessFrontend.Servicios.Infraestructura
 @using FitnessFrontend.Componentes.Compartidos
 @inject IPriorizacionClienteService PriorizacionService
+@inject FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService UsuariosService
 @inject IZonaHorariaService ZonaHoraria
 
 <div class="container py-4">
@@ -18,37 +19,68 @@
         <p class="text-muted mb-0">Auditoría del nivel de prioridad y métricas de confiabilidad de un usuario (RN-020).</p>
     </div>
 
-    @* Buscador de usuario por GUID *@
+    @* RF-016 + RF-023: se busca a la persona por nombre o correo; ya no se escribe un GUID *@
     <div class="card card-itm card-itm-priorizacion shadow-sm mb-4">
         <div class="card-body p-4">
-            <label for="inputUsuarioId" class="form-label fw-bold small text-uppercase text-muted">
-                Identificador de Usuario (GUID)
+            <label for="inputBusquedaUsuario" class="form-label fw-bold small text-uppercase text-muted">
+                Buscar usuario por nombre o correo
             </label>
-            <div class="input-group">
-                <input id="inputUsuarioId" type="text" class="form-control" placeholder="Ej. 3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                       @bind="_guidBusqueda" @bind:event="oninput" />
-                <button class="btn btn-itm-priorizacion" type="button" @onclick="BuscarUsuario" disabled="@_buscando">
+            <form @onsubmit="BuscarCoincidencias" @onsubmit:preventDefault class="input-group">
+                <input id="inputBusquedaUsuario" type="search" class="form-control" placeholder="Ej. maria o maria@itm.edu.co"
+                       @bind="_busqueda" @bind:event="oninput" />
+                <button class="btn btn-itm-priorizacion" type="submit" disabled="@_buscando">
                     @if (_buscando)
                     {
                         <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                        <span>Consultando...</span>
+                        <span>Buscando...</span>
                     }
                     else
                     {
                         <span class="bi bi-search me-1"></span>
-                        <span>Consultar</span>
+                        <span>Buscar</span>
                     }
                 </button>
-            </div>
+            </form>
             <div class="form-text small">
-                Consulte el historial y nivel actual asignado automáticamente por el motor de priorización.
+                Elija a la persona para consultar el nivel asignado automáticamente por el motor de priorización.
             </div>
+
+            @if (_coincidencias != null)
+            {
+                @if (_coincidencias.EsError)
+                {
+                    <div class="alert alert-danger mt-3 mb-0" role="alert">@_coincidencias.MensajeError</div>
+                }
+                else if (_coincidencias.Valor?.Items == null || _coincidencias.Valor.Items.Count == 0)
+                {
+                    <div class="text-muted mt-3">No se encontraron usuarios con esos criterios.</div>
+                }
+                else
+                {
+                    <ul class="list-group mt-3" aria-label="Coincidencias">
+                        @foreach (var u in _coincidencias.Valor.Items)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <span class="fw-semibold">@u.NombreCompleto</span>
+                                    <span class="text-muted small ms-2">@u.Email</span>
+                                </span>
+                                <button type="button" class="btn btn-sm btn-itm-priorizacion" @onclick="() => Consultar(u.Id!.Value)" disabled="@_buscando">Consultar</button>
+                            </li>
+                        }
+                    </ul>
+                    @if ((_coincidencias.Valor.Total ?? 0) > _coincidencias.Valor.Items.Count)
+                    {
+                        <div class="form-text small mt-2">Se muestran los primeros @_coincidencias.Valor.Items.Count de @_coincidencias.Valor.Total. Refine la búsqueda.</div>
+                    }
+                }
+            }
         </div>
     </div>
 
     @if (_estado != null)
     {
-        <EstadoDeCarga Estado="@_estado" AlReintentar="BuscarUsuario" MensajeCargando="Consultando métricas del usuario...">
+        <EstadoDeCarga Estado="@_estado" AlReintentar="ReintentarConsulta" MensajeCargando="Consultando métricas del usuario...">
             <ExitoTemplate Context="indicador">
                 <div class="row g-4">
                     <div class="col-12 col-md-6 col-lg-4">
@@ -159,33 +191,41 @@
     [Parameter]
     public Guid? IdUsuario { get; set; }
 
-    private string? _guidBusqueda;
+    private string? _busqueda;
     private bool _buscando;
+    private Guid? _ultimoUsuarioId;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<PaginaUsuariosDto>? _coincidencias;
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>? _estado;
 
     protected override async Task OnParametersSetAsync()
     {
+        // Enlace directo desde Usuarios y roles: /admin/priorizacion/usuarios/{id}
         if (IdUsuario.HasValue && IdUsuario != Guid.Empty)
         {
-            _guidBusqueda = IdUsuario.Value.ToString();
             await Consultar(IdUsuario.Value);
         }
     }
 
-    private async Task BuscarUsuario()
+    private async Task BuscarCoincidencias()
     {
-        if (string.IsNullOrWhiteSpace(_guidBusqueda) || !Guid.TryParse(_guidBusqueda, out var id))
+        if (string.IsNullOrWhiteSpace(_busqueda))
         {
-            _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>.Fallo(
-                "Por favor ingrese un GUID de usuario válido.");
+            _coincidencias = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<PaginaUsuariosDto>.Fallo(
+                "Escriba el nombre o el correo de la persona.");
             return;
         }
 
-        await Consultar(id);
+        _buscando = true;
+        _coincidencias = await UsuariosService.BuscarAsync(_busqueda, null, 1, 10);
+        _buscando = false;
     }
+
+    private Task ReintentarConsulta() =>
+        _ultimoUsuarioId.HasValue ? Consultar(_ultimoUsuarioId.Value) : Task.CompletedTask;
 
     private async Task Consultar(Guid usuarioId)
     {
+        _ultimoUsuarioId = usuarioId;
         _buscando = true;
         _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IndicadorAdministradorDto>.Cargando();
         _estado = await PriorizacionService.ConsultarIndicadorUsuarioAsync(usuarioId);

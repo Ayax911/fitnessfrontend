@@ -98,4 +98,23 @@ public class AusenciaPriorizacionRN020Tests
             }
         }
     }
+
+    [Theory]
+    [InlineData(typeof(UsuarioResumenDto))]
+    [InlineData(typeof(EntrenadorDto))]
+    [InlineData(typeof(PaginaUsuariosDto))]
+    [InlineData(typeof(PuntoAccesoDto))]
+    public void DtosDeGestionDeUsuariosYPuntos_NoContienenCamposDePriorizacionNiConfiabilidad(Type tipo)
+    {
+        // RF-023, RF-024, RN-020: lo que consumen las pantallas nuevas se verifica por inspección de tipo
+        foreach (var prop in tipo.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            var nombre = prop.Name.ToLowerInvariant();
+            foreach (var prohibida in PalabrasProhibidas)
+            {
+                Assert.False(nombre.Contains(prohibida),
+                    $"Violación de RN-020: la propiedad '{prop.Name}' en '{tipo.Name}' expone información de priorización.");
+            }
+        }
+    }
 }

@@ -229,3 +229,23 @@ textarea:focus-visible {
 .usuario-email-truncate {
   max-width: 200px;
 }
+
+/* RF-024: impresión del QR de un punto de acceso — solo se imprime el bloque .qr-imprimible */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .qr-imprimible,
+  .qr-imprimible * {
+    visibility: visible;
+  }
+
+  .qr-imprimible {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    text-align: center;
+  }
+}

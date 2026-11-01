@@ -1,0 +1,199 @@
+@* RF-023: Gestión de usuarios y roles (Administrador). RN-020: esta pantalla no muestra nivel de priorización. *@
+@page "/admin/usuarios"
+@attribute [Authorize(Roles = "Administrador")]
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Usuarios
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IUsuariosClienteService UsuariosService
+
+<div class="container py-4">
+    <div class="mb-4 pb-2 border-bottom">
+        <h1 class="h2 fw-bold mb-1"><span class="bi bi-people me-2"></span>Usuarios y roles</h1>
+        <p class="text-muted mb-0">Busque personas por nombre o correo y asigne los roles Entrenador o Administrador.</p>
+    </div>
+
+    <div class="card card-itm shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form @onsubmit="BuscarDesdeInicio" @onsubmit:preventDefault class="row g-3 align-items-end">
+                <div class="col-12 col-md-6">
+                    <label for="busquedaUsuario" class="form-label fw-semibold">Nombre o correo</label>
+                    <input id="busquedaUsuario" type="search" class="form-control" @bind="_busqueda" @bind:event="oninput" placeholder="Ej. maria o maria@itm.edu.co" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="filtroRol" class="form-label fw-semibold">Rol</label>
+                    <select id="filtroRol" class="form-select" @bind="_rolFiltro">
+                        <option value="">Todos</option>
+                        @foreach (var rol in RolesDisponibles)
+                        {
+                            <option value="@rol">@rol</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 d-grid">
+                    <BotonAccion Tipo="submit" Clase="btn-itm-primario" EstaProcesando="@_buscando" TextoProcesando="Buscando...">
+                        <span class="bi bi-search me-1"></span>Buscar
+                    </BotonAccion>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensaje))
+    {
+        <div class="alert @(_mensajeEsExito ? "alert-success" : "alert-danger")" role="alert" aria-live="polite">@_mensaje</div>
+    }
+
+    <EstadoDeCarga Estado="@_estado" AlReintentar="Buscar" MensajeCargando="Buscando usuarios...">
+        <ExitoTemplate Context="pagina">
+            @{
+                var items = pagina.Items ?? new List<UsuarioResumenDto>();
+                var total = pagina.Total ?? 0;
+                var tamano = pagina.Tamano ?? TamanoPagina;
+                var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamano));
+            }
+            @if (items.Count == 0)
+            {
+                <div class="text-center py-5 text-muted">No se encontraron usuarios con esos criterios.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <caption class="visually-hidden">Usuarios registrados</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Roles</th>
+                                <th scope="col" class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in items)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@u.NombreCompleto</td>
+                                    <td>@u.Email</td>
+                                    <td>@(u.TipoUsuario?.ToString() ?? "—")</td>
+                                    <td>
+                                        @foreach (var r in u.Roles ?? new List<string>())
+                                        {
+                                            <span class="badge text-bg-secondary me-1">@r</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary me-1" href="/admin/priorizacion/usuarios/@u.Id">Ver indicador</a>
+                                        <button type="button" class="btn btn-sm btn-itm-primario" @onclick="() => IniciarEdicion(u)">Editar roles</button>
+                                    </td>
+                                </tr>
+                                @if (_editandoId == u.Id)
+                                {
+                                    <tr>
+                                        <td colspan="5" class="bg-body-tertiary">
+                                            <fieldset class="p-2">
+                                                <legend class="h6 fw-bold">Roles de @u.NombreCompleto</legend>
+                                                @foreach (var rol in RolesDisponibles)
+                                                {
+                                                    var idCheck = $"rol-{u.Id}-{rol}";
+                                                    <div class="form-check form-check-inline">
+                                                        <input id="@idCheck" type="checkbox" class="form-check-input"
+                                                               checked="@_rolesSeleccionados.Contains(rol)"
+                                                               @onchange="e => AlternarRol(rol, (bool)(e.Value ?? false))" />
+                                                        <label for="@idCheck" class="form-check-label">@rol</label>
+                                                    </div>
+                                                }
+                                                <div class="form-text small mb-2">El cambio se aplica en el próximo inicio de sesión de la persona.</div>
+                                                <BotonAccion Clase="btn-itm-primario btn-sm" EstaProcesando="@_guardando" TextoProcesando="Guardando..." OnClick="GuardarRoles">Guardar</BotonAccion>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" @onclick="CancelarEdicion" disabled="@_guardando">Cancelar</button>
+                                            </fieldset>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Paginación de usuarios" class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">@total usuario(s) — página @_pagina de @totalPaginas</span>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" disabled="@(_pagina <= 1)" @onclick="Anterior">Anterior</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_pagina >= totalPaginas)" @onclick="Siguiente">Siguiente</button>
+                    </div>
+                </nav>
+            }
+        </ExitoTemplate>
+    </EstadoDeCarga>
+</div>
+
+@code {
+    private const int TamanoPagina = 20;
+    private static readonly string[] RolesDisponibles = { "Usuario", "Entrenador", "Administrador" };
+
+    private string? _busqueda;
+    private string _rolFiltro = string.Empty;
+    private int _pagina = 1;
+    private bool _buscando;
+    private bool _guardando;
+    private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<PaginaUsuariosDto>? _estado;
+
+    private Guid? _editandoId;
+    private readonly HashSet<string> _rolesSeleccionados = new();
+    private string? _mensaje;
+    private bool _mensajeEsExito;
+
+    protected override async Task OnInitializedAsync() => await Buscar();
+
+    private async Task BuscarDesdeInicio()
+    {
+        _pagina = 1;
+        await Buscar();
+    }
+
+    private async Task Buscar()
+    {
+        _buscando = true;
+        _editandoId = null;
+        _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<PaginaUsuariosDto>.Cargando();
+        _estado = await UsuariosService.BuscarAsync(_busqueda, _rolFiltro, _pagina, TamanoPagina);
+        _buscando = false;
+    }
+
+    private async Task Anterior() { _pagina = Math.Max(1, _pagina - 1); await Buscar(); }
+    private async Task Siguiente() { _pagina++; await Buscar(); }
+
+    private void IniciarEdicion(UsuarioResumenDto u)
+    {
+        _mensaje = null;
+        _editandoId = u.Id;
+        _rolesSeleccionados.Clear();
+        foreach (var r in u.Roles ?? new List<string>()) _rolesSeleccionados.Add(r);
+    }
+
+    private void CancelarEdicion() => _editandoId = null;
+
+    private void AlternarRol(string rol, bool marcado)
+    {
+        if (marcado) _rolesSeleccionados.Add(rol); else _rolesSeleccionados.Remove(rol);
+    }
+
+    private async Task GuardarRoles()
+    {
+        if (_editandoId is not Guid id) return;
+
+        _guardando = true;
+        var resultado = await UsuariosService.ActualizarRolesAsync(id, _rolesSeleccionados);
+        _guardando = false;
+
+        // El mensaje de rechazo (p. ej. último administrador) es el que entrega el backend
+        _mensajeEsExito = resultado.EsExitoso;
+        _mensaje = resultado.Mensaje;
+
+        if (resultado.EsExitoso)
+        {
+            await Buscar();
+        }
+    }
+}

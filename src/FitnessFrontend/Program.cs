@@ -57,5 +57,7 @@ builder.Services.AddScoped<FitnessFrontend.Servicios.Reservas.IReservasClienteSe
 builder.Services.AddScoped<FitnessFrontend.Servicios.Asistencia.IAsistenciaClienteService, FitnessFrontend.Servicios.Asistencia.AsistenciaClienteService>();
 builder.Services.AddSingleton<FitnessFrontend.Servicios.Asistencia.IFlujoCheckInService, FitnessFrontend.Servicios.Asistencia.FlujoCheckInService>();
 builder.Services.AddScoped<FitnessFrontend.Servicios.Priorizacion.IPriorizacionClienteService, FitnessFrontend.Servicios.Priorizacion.PriorizacionClienteService>();
+builder.Services.AddScoped<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService, FitnessFrontend.Servicios.Usuarios.UsuariosClienteService>();
+builder.Services.AddScoped<FitnessFrontend.Servicios.Asistencia.IPuntosAccesoClienteService, FitnessFrontend.Servicios.Asistencia.PuntosAccesoClienteService>();
 
 await builder.Build().RunAsync();

@@ -73,8 +73,8 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label for="entrenadorId" class="form-label fw-semibold">ID del Entrenador Asignado (Opcional)</label>
-                            <InputText id="entrenadorId" class="form-control" @bind-Value="_entrenadorIdStr" placeholder="GUID del entrenador responsable" />
+                            <label for="entrenadorId" class="form-label fw-semibold">Entrenador responsable (opcional)</label>
+                            <SelectorEntrenador Id="entrenadorId" @bind-Value="_entrenadorId" />
                         </div>
 
                         @* RN-028 (BLK-05): La UI exige explícitamente la fecha de apertura de reservas.
@@ -188,7 +188,7 @@
 
 @code {
     private readonly ModeloCreacion _modelo = new();
-    private string? _entrenadorIdStr;
+    private Guid? _entrenadorId;
     private DateTime? _fechaAperturaReservasLocal;
     private DateTime? _inicioUnicaLocal;
     private DateTime? _finUnicaLocal;
@@ -247,20 +247,6 @@
             return;
         }
 
-        Guid? entrenadorId = null;
-        if (!string.IsNullOrWhiteSpace(_entrenadorIdStr))
-        {
-            if (Guid.TryParse(_entrenadorIdStr, out var gid))
-            {
-                entrenadorId = gid;
-            }
-            else
-            {
-                _mensajeError = "El ID del entrenador no tiene un formato GUID válido.";
-                return;
-            }
-        }
-
         // Conversión a UTC mediante el servicio centralizado (Patrón 3 / I-03)
         var fechaAperturaUtc = ZonaHoraria.AUtc(_fechaAperturaReservasLocal.Value);
 
@@ -269,7 +255,7 @@
             Nombre = _modelo.Nombre,
             Descripcion = _modelo.Descripcion,
             CupoMaximoPorDefecto = _modelo.CupoMaximoPorDefecto,
-            EntrenadorId = entrenadorId,
+            EntrenadorId = _entrenadorId,
             FechaAperturaReservas = fechaAperturaUtc,
             EsRecurrente = _modelo.EsRecurrente
         };

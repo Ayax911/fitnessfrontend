@@ -1,0 +1,62 @@
+@* RF-023, RF-007, RF-009: lista desplegable de entrenadores; reemplaza el campo donde el administrador escribía un GUID *@
+@using FitnessFrontend.ApiCliente.Models
+@using FitnessFrontend.Servicios.Usuarios
+@inject IUsuariosClienteService UsuariosService
+
+<select id="@Id" class="form-select" @onchange="AlCambiar" disabled="@_cargando" aria-describedby="@(Id)-ayuda">
+    <option value="" selected="@(!Value.HasValue)">Sin entrenador asignado</option>
+    @foreach (var e in _entrenadores)
+    {
+        <option value="@e.Id" selected="@(Value == e.Id)">@e.NombreCompleto (@e.Email)</option>
+    }
+    @if (Value.HasValue && !_entrenadores.Any(e => e.Id == Value))
+    {
+        <option value="@Value" selected>Entrenador actual (ya no tiene rol de entrenador)</option>
+    }
+</select>
+<div id="@(Id)-ayuda" class="form-text small">
+    @if (_error != null)
+    {
+        <span class="text-danger">@_error</span>
+    }
+    else if (!_cargando && _entrenadores.Count == 0)
+    {
+        <span>No hay entrenadores registrados. Asigne el rol Entrenador desde Usuarios.</span>
+    }
+    else
+    {
+        <span>Solo aparecen usuarios con rol Entrenador.</span>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "entrenadorId";
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+
+    private List<EntrenadorDto> _entrenadores = new();
+    private bool _cargando = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await UsuariosService.ListarEntrenadoresAsync();
+        if (estado.EsExito && estado.Valor != null)
+        {
+            _entrenadores = estado.Valor;
+        }
+        else
+        {
+            _error = estado.MensajeError ?? "No fue posible cargar los entrenadores.";
+        }
+
+        _cargando = false;
+    }
+
+    private async Task AlCambiar(ChangeEventArgs e)
+    {
+        Guid? nuevo = Guid.TryParse(e.Value?.ToString(), out var id) ? id : null;
+        Value = nuevo;
+        await ValueChanged.InvokeAsync(nuevo);
+    }
+}

@@ -85,7 +85,7 @@ public class CheckInCasosTests : BunitContext
         public Task<ResultadoOperacion> IniciarSesionAsync(string email, string password) =>
             Task.FromResult(ResultadoOperacion.Exito());
 
-        public Task<ResultadoOperacion> RegistrarAsync(string email, string password) =>
+        public Task<ResultadoOperacion> RegistrarAsync(string email, string password, string nombreCompleto, FitnessFrontend.ApiCliente.Models.TipoUsuario tipoUsuario, bool aceptaTratamientoDatos) =>
             Task.FromResult(ResultadoOperacion.Exito());
 
         public Task CerrarSesionAsync() => Task.CompletedTask;
@@ -214,6 +214,9 @@ public class CheckInCasosTests : BunitContext
         Assert.Contains("returnUrl=", enlaceVolverLogin.GetAttribute("href"));
 
         // Llena el formulario de Registro y envía
+        cutRegistro.Find("#regNombreInput").Change("Nuevo Estudiante");
+        cutRegistro.Find("#regTipoInput").Change("Estudiante");
+        cutRegistro.Find("#regAutorizacionInput").Change(true);
         cutRegistro.Find("#regEmailInput").Change("nuevo.estudiante@itm.edu.co");
         cutRegistro.Find("#regPasswordInput").Change("Password123!");
         cutRegistro.Find("#regConfirmPasswordInput").Change("Password123!");

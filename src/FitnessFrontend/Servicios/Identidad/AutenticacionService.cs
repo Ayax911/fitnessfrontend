@@ -65,26 +65,34 @@ public class AutenticacionService : IAutenticacionService
         }
     }
 
-    public async Task<ResultadoOperacion> RegistrarAsync(string email, string password)
+    // RF-013, RF-025: /api/auth/register está bloqueado en el backend; el registro real es /api/usuarios/registro
+    public async Task<ResultadoOperacion> RegistrarAsync(string email, string password, string nombreCompleto, TipoUsuario tipoUsuario, bool aceptaTratamientoDatos)
     {
         try
         {
-            var body = new RegisterRequest
+            var body = new RegistroUsuarioRequest
             {
                 Email = email,
-                Password = password
+                Password = password,
+                NombreCompleto = nombreCompleto,
+                TipoUsuario = tipoUsuario,
+                AceptaTratamientoDatos = aceptaTratamientoDatos
             };
 
-            await _apiClient.Api.Auth.Register.PostAsync(body);
+            await _apiClient.Api.Usuarios.Registro.PostAsync(body);
             return ResultadoOperacion.Exito("Registro completado exitosamente.");
-        }
-        catch (ApiException apiEx)
-        {
-            return ResultadoOperacion.Fallo($"No fue posible completar el registro ({apiEx.ResponseStatusCode}). Verifique que la contraseña cumpla los requisitos de seguridad.", "ErrorRegistro");
         }
         catch (Exception ex)
         {
-            return ResultadoOperacion.Fallo($"Error de conexión al registrar usuario: {ex.Message}", "ErrorConexion");
+            var (mensaje, codigo) = ErroresApi.Traducir(ex, "completar el registro");
+
+            // El backend devuelve las reglas de Identity en inglés; se muestra el requisito en español
+            if (codigo == "ContrasenaInvalida")
+            {
+                mensaje = "La contraseña no cumple los requisitos de seguridad: mínimo 6 caracteres, con mayúscula, minúscula, número y un símbolo.";
+            }
+
+            return ResultadoOperacion.Fallo(mensaje, codigo ?? "ErrorRegistro");
         }
     }
 

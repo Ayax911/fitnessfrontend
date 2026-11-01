@@ -1,7 +1,8 @@
-@* RF-013: Registro de nuevos usuarios en la plataforma *@
+@* RF-013, RF-025: Registro de nuevos usuarios con perfil y autorización de tratamiento de datos (RNF-011) *@
 @page "/registro"
 @using FitnessFrontend.Servicios.Identidad
 @using FitnessFrontend.Componentes.Compartidos
+@using FitnessFrontend.ApiCliente.Models
 @inject IAutenticacionService AutenticacionService
 @inject NavigationManager NavigationManager
 
@@ -34,6 +35,24 @@
                         <DataAnnotationsValidator />
 
                         <div class="mb-3">
+                            <label for="regNombreInput" class="form-label fw-semibold">Nombre completo</label>
+                            <InputText id="regNombreInput" class="form-control" @bind-Value="_modelo.NombreCompleto" placeholder="Nombre y apellidos" autocomplete="name" />
+                            <ValidationMessage For="@(() => _modelo.NombreCompleto)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="regTipoInput" class="form-label fw-semibold">Tipo de usuario</label>
+                            <InputSelect id="regTipoInput" class="form-select" @bind-Value="_modelo.TipoUsuario">
+                                <option value="">Seleccione...</option>
+                                <option value="@TipoUsuario.Estudiante">Estudiante</option>
+                                <option value="@TipoUsuario.Profesor">Profesor</option>
+                                <option value="@TipoUsuario.Externo">Externo</option>
+                                <option value="@TipoUsuario.Contratista">Contratista</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _modelo.TipoUsuario)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
                             <label for="regEmailInput" class="form-label fw-semibold">Correo Institucional</label>
                             <InputText id="regEmailInput" class="form-control" @bind-Value="_modelo.Email" placeholder="usuario@correo.itm.edu.co" />
                             <ValidationMessage For="@(() => _modelo.Email)" class="text-danger small" />
@@ -42,7 +61,7 @@
                         <div class="mb-3">
                             <label for="regPasswordInput" class="form-label fw-semibold">Contraseña</label>
                             <InputText id="regPasswordInput" type="password" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" />
-                            <div class="form-text small">Mínimo 6 caracteres, incluir mayúscula, minúscula y número.</div>
+                            <div class="form-text small">Mínimo 6 caracteres, con mayúscula, minúscula, número y un símbolo.</div>
                             <ValidationMessage For="@(() => _modelo.Password)" class="text-danger small" />
                         </div>
 
@@ -50,6 +69,16 @@
                             <label for="regConfirmPasswordInput" class="form-label fw-semibold">Confirmar Contraseña</label>
                             <InputText id="regConfirmPasswordInput" type="password" class="form-control" @bind-Value="_modelo.ConfirmPassword" placeholder="••••••••" />
                             <ValidationMessage For="@(() => _modelo.ConfirmPassword)" class="text-danger small" />
+                        </div>
+
+                        @* PENDIENTE (RNF-011, validación jurídica): el texto y el enlace oficial del aviso de privacidad
+                           no están definidos. La casilla es obligatoria (RF-025); el backend rechaza el registro sin ella. *@
+                        <div class="form-check mb-4">
+                            <InputCheckbox id="regAutorizacionInput" class="form-check-input" @bind-Value="_modelo.AceptaTratamientoDatos" />
+                            <label for="regAutorizacionInput" class="form-check-label small">
+                                Autorizo el tratamiento de mis datos personales conforme a la Ley 1581 de 2012.
+                            </label>
+                            <ValidationMessage For="@(() => _modelo.AceptaTratamientoDatos)" class="text-danger small d-block" />
                         </div>
 
                         <div class="d-grid gap-2 mb-3">
@@ -94,7 +123,8 @@
         _mensajeError = null;
         _mensajeExito = null;
 
-        var resultado = await AutenticacionService.RegistrarAsync(_modelo.Email, _modelo.Password);
+        var resultado = await AutenticacionService.RegistrarAsync(
+            _modelo.Email, _modelo.Password, _modelo.NombreCompleto, _modelo.TipoUsuario!.Value, _modelo.AceptaTratamientoDatos);
         _procesando = false;
 
         if (resultado.EsExitoso)
@@ -114,6 +144,15 @@
 
     public class RegistroDto
     {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Seleccione el tipo de usuario.")]
+        public TipoUsuario? TipoUsuario { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Debe autorizar el tratamiento de sus datos personales para registrarse.")]
+        public bool AceptaTratamientoDatos { get; set; }
+
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El correo institucional es obligatorio.")]
         [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Formato de correo inválido.")]
         public string Email { get; set; } = string.Empty;
