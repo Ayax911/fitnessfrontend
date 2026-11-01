@@ -12,6 +12,7 @@ Insumo de entrada: [docs/requisitos/](../requisitos/00-indice.md) de este reposi
 6. [Flujo de check-in por QR](06-flujo-checkin-qr.md) — el único flujo de negocio que el backend delega explícitamente a este repositorio.
 7. [Identidad visual y sistema de diseño](07-identidad-visual-y-sistema-de-diseno.md) — cómo se adapta la plantilla base (Kinetic) a la marca institucional del ITM: tokens de color (con las discrepancias del manual documentadas, no resueltas en silencio), tipografía, contraste WCAG verificado, y el mapeo componente a componente.
 8. [Guía de implementación y verificación](08-guia-de-implementacion.md) — **documento de trabajo día a día:** orden de lectura, reglas de comportamiento, la tabla de cobertura RF → fase → pantalla, las seis fases con su Definición de Hecho, y la estrategia de pruebas.
+9. [Rediseño visual](09-rediseno-visual.md) — lo que el rediseño añadió al sistema de diseño: logo oficial, navegación responsive, insignias de estado, esqueletos de carga, estados de interacción y los valores derivados que siguen pendientes de confirmar.
 
 ## Decisiones clave (resumen para orientarse rápido)
 

@@ -19,6 +19,8 @@ Dos agentes en [`.agents/agents/`](.agents/agents/), pensados para usarse en par
 
 La UI adapta la plantilla base [`../kinetic/`](../kinetic/) a la paleta y tipografía del Manual de Imagen ITM 2025 (`../recursos-diseno/Manual-ITM-V-2025.pdf`) — ver el detalle en [`docs/arquitectura/07-identidad-visual-y-sistema-de-diseno.md`](docs/arquitectura/07-identidad-visual-y-sistema-de-diseno.md).
 
+El rediseño (logo oficial, navegación responsive, insignias, esqueletos de carga) está en [`docs/arquitectura/09-rediseno-visual.md`](docs/arquitectura/09-rediseno-visual.md). El historial de cambios está en [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Ejecutar en desarrollo
 
 Requisitos: .NET 10 SDK y el backend corriendo (`../fitnessbackend`, ver su README).

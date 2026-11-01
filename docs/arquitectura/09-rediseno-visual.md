@@ -14,3 +14,20 @@ Complementa [07-identidad-visual-y-sistema-de-diseno.md](07-identidad-visual-y-s
 
 ## Lo que no cambia
 RN-020 y AMB-014: ninguna pantalla de Usuario o Entrenador muestra priorización ni la fecha de apertura de reservas.
+
+## Dónde está cada cosa
+| Pieza | Ubicación |
+|---|---|
+| Tokens, botones, campos, alertas, insignias, esqueletos, responsive | `src/FitnessFrontend/wwwroot/css/itm-tema.css` |
+| Logos | `src/FitnessFrontend/wwwroot/img/` |
+| Barra superior, menú desplegable y barra inferior | `Layout/MainLayout.razor`, `Layout/NavMenu*.razor`, `Layout/NavTabsUsuario.razor` |
+| Insignia de estado | `Componentes/Compartidos/InsigniaEstado.razor` |
+| Esqueletos | `Componentes/Compartidos/EsqueletoTarjetas.razor`, `EsqueletoLista.razor`, `EstadoDeCarga.razor` |
+| Pantallas rediseñadas | `Paginas/Eventos/ListaEventos`, `Paginas/Reservas/MisReservas`, `Paginas/Asistencia/{MiHistorial,CheckIn,Ingreso}`, `Paginas/Identidad/{Login,Registro}` |
+| Pruebas | `tests/FitnessFrontend.Tests/Componentes/InsigniaYEsqueletosTests.cs` |
+
+## Comportamientos a tener en cuenta
+- **Selector de día** (Eventos): filtra en el cliente solo para presentar; "Todos" es la opción por defecto. No aplica ninguna regla de negocio.
+- **Barra de cupo**: su ancho sale de `CupoMaximo` y `CuposOcupados` que informa el backend; el cliente no decide si hay cupo.
+- La insignia de una reserva confirmada dice "Confirmada".
+- Pendiente de revisión visual: Registro y pantallas de administración a ancho de celular, y Check-in/Ingreso en pantalla.
