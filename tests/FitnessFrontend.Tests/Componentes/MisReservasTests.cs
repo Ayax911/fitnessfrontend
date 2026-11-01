@@ -46,6 +46,24 @@ public class MisReservasTests : BunitContext
             Task.FromResult(EstadoDeCarga<IReadOnlyList<ReservaInscritoDto>>.Correcto(new List<ReservaInscritoDto>()));
     }
 
+    private class FakeNotasYAnunciosClienteService : FitnessFrontend.Servicios.Eventos.INotasYAnunciosClienteService
+    {
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.NotaIncidenciaDto>>> ObtenerNotasAsync(Guid sesionId, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.NotaIncidenciaDto>>.Correcto(new List<FitnessFrontend.Servicios.Eventos.NotaIncidenciaDto>()));
+
+        public Task<ResultadoOperacion> CrearNotaAsync(Guid sesionId, string tipo, string contenido, CancellationToken ct = default) =>
+            Task.FromResult(ResultadoOperacion.Exito());
+
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>> ObtenerAnunciosPorSesionAsync(Guid sesionId, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>.Correcto(new List<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>()));
+
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>> ObtenerAnunciosMisReservasAsync(CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>.Correcto(new List<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>()));
+
+        public Task<ResultadoOperacion> PublicarAnuncioAsync(Guid sesionId, string mensaje, CancellationToken ct = default) =>
+            Task.FromResult(ResultadoOperacion.Exito());
+    }
+
     [Fact]
     public async Task MisReservas_DebeMostrarListadoYPermitirCancelar()
     {
@@ -70,6 +88,7 @@ public class MisReservasTests : BunitContext
 
         Services.AddSingleton<IReservasClienteService>(fakeService);
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+        Services.AddSingleton<FitnessFrontend.Servicios.Eventos.INotasYAnunciosClienteService>(new FakeNotasYAnunciosClienteService());
 
         var cut = Render<MisReservas>();
         var markup = cut.Markup;

@@ -1,0 +1,276 @@
+@* RF-034: Notas e incidencias de sesión (Entrenador y Administrador) *@
+@* RF-029: Anuncios a inscritos en la app *@
+@page "/entrenador/sesiones/{IdSesion:guid}/notas"
+@attribute [Authorize(Roles = "Entrenador,Administrador")]
+@using FitnessFrontend.Servicios.Eventos
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject INotasYAnunciosClienteService NotasAnunciosService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="itm-contenedor itm-pagina">
+    <div class="mb-4">
+        <a href="/entrenador/actividades" class="text-decoration-none small text-muted">
+            ← Volver a mis actividades
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Notas, Incidencias y Anuncios</h1>
+        <p class="text-muted mb-0">Registra bitácora interna de la sesión y publica avisos importantes para los usuarios inscritos.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        @* Sección 1: Notas e Incidencias internas (RF-034) *@
+        <div class="col-12 col-lg-6">
+            <div class="card-itm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Bitácora interna (RF-034)</h2>
+                    <span class="badge bg-secondary">Privado</span>
+                </div>
+                <p class="text-muted small">Visible exclusivamente para el entrenador asignado y la administración.</p>
+
+                <div class="mb-3">
+                    <label for="tipoNota" class="form-label small fw-bold">Tipo de registro:</label>
+                    <select id="tipoNota" class="form-select form-select-sm" @bind="_tipoNota">
+                        <option value="Nota">Nota informativa / Seguimiento</option>
+                        <option value="Incidencia">Incidencia / Reporte de equipo o espacio</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label for="contenidoNota" class="form-label small fw-bold">Descripción:</label>
+                    <textarea id="contenidoNota"
+                              class="form-control"
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="Describe la nota o incidencia ocurrida durante la sesión..."
+                              @bind="_contenidoNota"
+                              @bind:event="oninput"></textarea>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <span class="text-muted small">Máximo 1000 caracteres</span>
+                        <span class="small fw-semibold @(_contenidoNota.Length >= 950 ? "text-danger" : "text-muted")" id="contadorNota">
+                            @_contenidoNota.Length / 1000
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn btn-itm-primario w-100 mb-4"
+                        style="min-height: 48px;"
+                        disabled="@(_guardandoNota || string.IsNullOrWhiteSpace(_contenidoNota))"
+                        @onclick="GuardarNota">
+                    @(_guardandoNota ? "Guardando..." : "Guardar nota en bitácora")
+                </button>
+
+                <h3 class="h6 fw-bold border-top pt-3 mb-3">Registros anteriores:</h3>
+                @if (_cargandoNotas)
+                {
+                    <p class="text-muted small">Cargando bitácora...</p>
+                }
+                else if (_notas.Count == 0)
+                {
+                    <p class="text-muted small fst-italic">No hay notas registradas para esta sesión.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                        @foreach (var nota in _notas)
+                        {
+                            <div class="list-group-item px-0 py-2 border-bottom" @key="nota.Id">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge @(nota.Tipo == "Incidencia" ? "bg-danger" : "bg-info text-dark")">
+                                        @nota.Tipo
+                                    </span>
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        @ZonaHoraria.FormatearFechaHora(nota.CreadaEn)
+                                    </span>
+                                </div>
+                                @* Renderizado seguro como texto plano (RF-034 escape) *@
+                                <p class="mb-1 mt-2 text-dark" style="white-space: pre-wrap; font-size: 13px;">@nota.Contenido</p>
+                                <span class="text-muted" style="font-size: 11px;">Por: @nota.CreadaPorNombre</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Sección 2: Anuncios para inscritos (RF-029) *@
+        <div class="col-12 col-lg-6">
+            <div class="card-itm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Anuncios a inscritos (RF-029)</h2>
+                    <span class="badge bg-primary">Visible en la app</span>
+                </div>
+                <p class="text-muted small">Avisos dentro de la aplicación para los usuarios con reserva en esta sesión.</p>
+
+                <div class="mb-2">
+                    <label for="mensajeAnuncio" class="form-label small fw-bold">Mensaje para los inscritos:</label>
+                    <textarea id="mensajeAnuncio"
+                              class="form-control"
+                              rows="4"
+                              maxlength="500"
+                              placeholder="Ej. Traer toalla obligatoria e hidratación; nos reuniremos en el área de tatami..."
+                              @bind="_mensajeAnuncio"
+                              @bind:event="oninput"></textarea>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <span class="text-muted small">Máximo 500 caracteres</span>
+                        <span class="small fw-semibold @(_mensajeAnuncio.Length >= 480 ? "text-danger" : "text-muted")" id="contadorAnuncio">
+                            @_mensajeAnuncio.Length / 500
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn btn-itm-secundario w-100 mb-4"
+                        style="min-height: 48px;"
+                        disabled="@(_publicandoAnuncio || string.IsNullOrWhiteSpace(_mensajeAnuncio))"
+                        @onclick="PublicarAnuncio">
+                    @(_publicandoAnuncio ? "Publicando..." : "Publicar aviso a inscritos")
+                </button>
+
+                <h3 class="h6 fw-bold border-top pt-3 mb-3">Avisos activos:</h3>
+                @if (_cargandoAnuncios)
+                {
+                    <p class="text-muted small">Cargando avisos...</p>
+                }
+                else if (_anuncios.Count == 0)
+                {
+                    <p class="text-muted small fst-italic">No hay avisos publicados para esta sesión.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                        @foreach (var anuncio in _anuncios)
+                        {
+                            <div class="list-group-item px-0 py-2 border-bottom" @key="anuncio.Id">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary-subtle text-primary fw-bold">Aviso</span>
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        @ZonaHoraria.FormatearFechaHora(anuncio.FechaPublicacion)
+                                    </span>
+                                </div>
+                                @* Renderizado seguro como texto plano (RF-029 escape) *@
+                                <p class="mb-1 mt-2 text-dark" style="white-space: pre-wrap; font-size: 13px;">@anuncio.Mensaje</p>
+                                <span class="text-muted" style="font-size: 11px;">Publicado por: @anuncio.PublicadoPorNombre</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdSesion { get; set; }
+
+    private bool _cargandoNotas = true;
+    private bool _cargandoAnuncios = true;
+    private bool _guardandoNota;
+    private bool _publicandoAnuncio;
+
+    private string _tipoNota = "Nota";
+    private string _contenidoNota = string.Empty;
+    private string _mensajeAnuncio = string.Empty;
+
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+
+    private List<NotaIncidenciaDto> _notas = new();
+    private List<AnuncioSesionDto> _anuncios = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(CargarNotas(), CargarAnuncios());
+    }
+
+    private async Task CargarNotas()
+    {
+        _cargandoNotas = true;
+        try
+        {
+            var res = await NotasAnunciosService.ObtenerNotasAsync(IdSesion);
+            if (res.EsExito)
+            {
+                _notas = (res.Valor ?? new List<NotaIncidenciaDto>()).ToList();
+            }
+        }
+        finally
+        {
+            _cargandoNotas = false;
+        }
+    }
+
+    private async Task CargarAnuncios()
+    {
+        _cargandoAnuncios = true;
+        try
+        {
+            var res = await NotasAnunciosService.ObtenerAnunciosPorSesionAsync(IdSesion);
+            if (res.EsExito)
+            {
+                _anuncios = (res.Valor ?? new List<AnuncioSesionDto>()).ToList();
+            }
+        }
+        finally
+        {
+            _cargandoAnuncios = false;
+        }
+    }
+
+    private async Task GuardarNota()
+    {
+        if (string.IsNullOrWhiteSpace(_contenidoNota)) return;
+
+        _guardandoNota = true;
+        _mensajeAlerta = null;
+
+        var res = await NotasAnunciosService.CrearNotaAsync(IdSesion, _tipoNota, _contenidoNota);
+        _guardandoNota = false;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = "Nota guardada con éxito en la bitácora.";
+            _contenidoNota = string.Empty;
+            await CargarNotas();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible guardar la nota.";
+        }
+    }
+
+    private async Task PublicarAnuncio()
+    {
+        if (string.IsNullOrWhiteSpace(_mensajeAnuncio)) return;
+
+        _publicandoAnuncio = true;
+        _mensajeAlerta = null;
+
+        var res = await NotasAnunciosService.PublicarAnuncioAsync(IdSesion, _mensajeAnuncio);
+        _publicandoAnuncio = false;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = "Aviso publicado correctamente para los inscritos.";
+            _mensajeAnuncio = string.Empty;
+            await CargarAnuncios();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible publicar el aviso.";
+        }
+    }
+}

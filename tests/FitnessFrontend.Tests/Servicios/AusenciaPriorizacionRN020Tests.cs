@@ -107,6 +107,9 @@ public class AusenciaPriorizacionRN020Tests
     [InlineData(typeof(PuntoAccesoDto))]
     [InlineData(typeof(EventoResumenDto))]
     [InlineData(typeof(BloqueoCalendarioDto))]
+    [InlineData(typeof(FitnessFrontend.Servicios.Asistencia.InscritoAsistenciaManualDto))]
+    [InlineData(typeof(FitnessFrontend.Servicios.Eventos.NotaIncidenciaDto))]
+    [InlineData(typeof(FitnessFrontend.Servicios.Eventos.AnuncioSesionDto))]
     public void DtosDeGestionDeUsuariosYPuntos_NoContienenCamposDePriorizacionNiConfiabilidad(Type tipo)
     {
         // RF-023, RF-024, RN-020: lo que consumen las pantallas nuevas se verifica por inspección de tipo

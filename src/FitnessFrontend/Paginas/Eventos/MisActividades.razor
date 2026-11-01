@@ -77,12 +77,20 @@
                                                         </span>
                                                     </div>
 
-                                                    <div class="d-flex gap-2 justify-content-end mt-2">
-                                                        @* RF-011: Ver inscritos de la sesión (Fase 2) *@
+                                                    <div class="d-flex flex-wrap gap-2 justify-content-end mt-2">
+                                                        @* RF-011: Ver inscritos de la sesión *@
                                                         <a href="@($"/entrenador/sesiones/{sesion.Id}/inscritos")" class="btn btn-sm btn-outline-primary">
-                                                            Ver inscritos
+                                                            Inscritos
                                                         </a>
-                                                        @* RF-012: Generar QR de asistencia (Fase 3) *@
+                                                        @* RF-027: Asistencia manual *@
+                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/asistencia")" class="btn btn-sm btn-outline-success">
+                                                            Asistencia manual
+                                                        </a>
+                                                        @* RF-034 / RF-029: Notas y avisos *@
+                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/notas")" class="btn btn-sm btn-outline-secondary">
+                                                            Notas y avisos
+                                                        </a>
+                                                        @* RF-012: Generar QR de asistencia *@
                                                         <a href="@($"/entrenador/sesiones/{sesion.Id}/qr")" class="btn btn-sm btn-itm-primario">
                                                             Código QR
                                                         </a>

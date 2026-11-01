@@ -1,0 +1,278 @@
+@* RF-027: Asistencia manual de entrenador y administrador *@
+@page "/entrenador/sesiones/{IdSesion:guid}/asistencia"
+@attribute [Authorize(Roles = "Entrenador,Administrador")]
+@using FitnessFrontend.Servicios.Asistencia
+@using FitnessFrontend.Servicios.Infraestructura
+@using FitnessFrontend.Componentes.Compartidos
+@inject IAsistenciaManualClienteService AsistenciaManualService
+@inject IZonaHorariaService ZonaHoraria
+
+<div class="itm-contenedor itm-pagina">
+    <div class="mb-4">
+        <a href="/entrenador/actividades" class="text-decoration-none small text-muted">
+            ← Volver a mis actividades
+        </a>
+        <h1 class="h2 fw-bold text-primary mt-2 mb-1">Registro manual de asistencia</h1>
+        <p class="text-muted mb-0">Marca o desmarca la asistencia presencial de los inscritos cuando el código QR no esté disponible.</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_mensajeAlerta))
+    {
+        <div class="alert @(_alertaEsExito ? "alert-success" : "alert-danger") alert-dismissible fade show mb-4" role="alert">
+            @_mensajeAlerta
+            <button type="button" class="btn-close" @onclick="() => _mensajeAlerta = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @if (_es403)
+    {
+        <div class="alert alert-danger" role="alert">
+            <h2 class="h5 fw-bold">Acceso no autorizado</h2>
+            <p class="mb-0">No tienes permisos para gestionar la asistencia de esta sesión deportiva (autorización por pertenencia).</p>
+        </div>
+    }
+    else if (_cargando)
+    {
+        <div role="status" aria-busy="true">
+            <span class="itm-solo-lectores">Cargando lista de inscritos para asistencia...</span>
+            <EsqueletoLista Cantidad="5" Mensaje="Cargando lista de asistencia..." />
+        </div>
+    }
+    else if (_errorCarga != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @_errorCarga
+            <button class="btn btn-itm-primario btn-sm ms-3" @onclick="CargarInscritos">Reintentar</button>
+        </div>
+    }
+    else if (_inscritos.Count == 0)
+    {
+        <div class="card-itm p-5 text-center">
+            <h2 class="h5 fw-bold text-muted mb-2">No hay inscritos en esta sesión</h2>
+            <p class="text-secondary mb-0">No hay usuarios con reserva activa para registrar asistencia.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card-itm mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-bold">Total inscritos: @_inscritos.Count</span>
+                <span class="badge bg-success">
+                    Asistieron: @_inscritos.Count(x => x.Asistio) / @_inscritos.Count
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="py-3 ps-3">Usuario</th>
+                            <th scope="col" class="py-3">Correo</th>
+                            <th scope="col" class="py-3 text-center">Estado</th>
+                            <th scope="col" class="py-3 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inscrito in _inscritos)
+                        {
+                            var esConfirmado = inscrito.Asistio;
+                            var reservaId = inscrito.ReservaId;
+                            var enProceso = _procesandoReservaId == reservaId;
+
+                            <tr @key="inscrito.ReservaId">
+                                <td class="ps-3 fw-semibold">@inscrito.NombreCompleto</td>
+                                <td class="text-muted small">@inscrito.Correo</td>
+                                <td class="text-center">
+                                    @if (esConfirmado)
+                                    {
+                                        <InsigniaEstado Tipo="asistida">Asistió</InsigniaEstado>
+                                        @if (inscrito.FechaHoraMarcado.HasValue)
+                                        {
+                                            <div class="text-muted" style="font-size: 11px;">
+                                                @ZonaHoraria.FormatearHora(inscrito.FechaHoraMarcado.Value) (Manual)
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <InsigniaEstado Tipo="no">No registrada</InsigniaEstado>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (!esConfirmado)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-success"
+                                                style="min-height: 48px; min-width: 130px;"
+                                                disabled="@enProceso"
+                                                @onclick="() => MarcarAsistencia(reservaId)">
+                                            @(enProceso ? "Marcando..." : "Marcar presente")
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                style="min-height: 48px; min-width: 130px;"
+                                                disabled="@enProceso"
+                                                @onclick="() => IniciarDesmarcado(inscrito)">
+                                            Desmarcar
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @* Diálogo accesible de confirmación con consecuencia explícita *@
+    @if (_inscritoParaDesmarcar != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning-subtle">
+                        <h2 class="modal-title h5 text-dark fw-bold" id="tituloConfirmacion">Confirmar desmarcado de asistencia</h2>
+                        <button type="button" class="btn-close" @onclick="CancelarDesmarcado" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas desmarcar la asistencia de <strong>@_inscritoParaDesmarcar.NombreCompleto</strong>?</p>
+                        <div class="alert alert-warning mb-3" role="note">
+                            <strong>Consecuencia:</strong> Esta acción revertirá el estado a <em>No asistió</em> y registrará un evento de auditoría administrativo.
+                        </div>
+                        <div class="mb-3">
+                            <label for="motivoDesmarcado" class="form-label small fw-semibold">Motivo del desmarcado (opcional):</label>
+                            <input id="motivoDesmarcado" type="text" class="form-control form-control-sm" @bind="_motivoDesmarcado" placeholder="Ej. Marcado por error" maxlength="200" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-itm-secundario" style="min-height: 48px;" @onclick="CancelarDesmarcado">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" style="min-height: 48px;" @onclick="ConfirmarDesmarcado">
+                            Sí, desmarcar asistencia
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid IdSesion { get; set; }
+
+    private bool _cargando = true;
+    private bool _es403;
+    private string? _errorCarga;
+    private string? _mensajeAlerta;
+    private bool _alertaEsExito;
+    private Guid? _procesandoReservaId;
+
+    private List<InscritoAsistenciaManualDto> _inscritos = new();
+    private InscritoAsistenciaManualDto? _inscritoParaDesmarcar;
+    private string? _motivoDesmarcado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarInscritos();
+    }
+
+    private async Task CargarInscritos()
+    {
+        _cargando = true;
+        _errorCarga = null;
+        _es403 = false;
+
+        try
+        {
+            var res = await AsistenciaManualService.ObtenerInscritosAsistenciaAsync(IdSesion);
+            if (res.EsError)
+            {
+                if (res.CodigoError == "403" || res.MensajeError?.Contains("403") == true || res.MensajeError?.Contains("pertenencia") == true)
+                {
+                    _es403 = true;
+                }
+                else
+                {
+                    _errorCarga = res.MensajeError;
+                }
+            }
+            else
+            {
+                _inscritos = (res.Valor ?? new List<InscritoAsistenciaManualDto>()).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorCarga = $"Error al cargar lista de asistencia: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private async Task MarcarAsistencia(Guid reservaId)
+    {
+        _procesandoReservaId = reservaId;
+        _mensajeAlerta = null;
+
+        var res = await AsistenciaManualService.MarcarAsistenciaManualAsync(IdSesion, reservaId);
+        _procesandoReservaId = null;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Asistencia registrada con éxito.";
+            await CargarInscritos();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible registrar la asistencia.";
+        }
+    }
+
+    private void IniciarDesmarcado(InscritoAsistenciaManualDto inscrito)
+    {
+        _inscritoParaDesmarcar = inscrito;
+        _motivoDesmarcado = null;
+    }
+
+    private void CancelarDesmarcado()
+    {
+        _inscritoParaDesmarcar = null;
+        _motivoDesmarcado = null;
+    }
+
+    private async Task ConfirmarDesmarcado()
+    {
+        if (_inscritoParaDesmarcar == null) return;
+
+        var reservaId = _inscritoParaDesmarcar.ReservaId;
+        var motivo = _motivoDesmarcado;
+        _inscritoParaDesmarcar = null;
+        _procesandoReservaId = reservaId;
+        _mensajeAlerta = null;
+
+        var res = await AsistenciaManualService.DesmarcarAsistenciaManualAsync(IdSesion, reservaId, motivo);
+        _procesandoReservaId = null;
+
+        if (res.EsExitoso)
+        {
+            _alertaEsExito = true;
+            _mensajeAlerta = res.Mensaje ?? "Asistencia desmarcada correctamente.";
+            await CargarInscritos();
+        }
+        else
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.Mensaje ?? "No fue posible desmarcar la asistencia.";
+        }
+    }
+}

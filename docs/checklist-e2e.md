@@ -54,10 +54,10 @@
 | F2 / RF-036 | Descarga de archivo `.ics` desde Mis reservas confirmadas | ✅ probado (ProgramacionYCalendarioF2Tests.Prueba1, MisReservas) |
 | F2 / RF-037 | Contador de lista de espera visible sin revelar posición personal (RN-020) | ✅ probado (ProgramacionYCalendarioF2Tests.Prueba4, AusenciaPriorizacionRN020Tests) |
 | F2 / RF-038 | Sección `/ayuda` visible con preguntas frecuentes y enlaces de pie | ✅ probado (/ayuda) |
-| F3 / RF-027 | Entrenador marca/desmarca asistencia manual; desmarcar pide confirmación | ⬜ pendiente F3 |
-| F3 / RF-034 | Notas e incidencias de sesión guardadas como texto plano | ⬜ pendiente F3 |
-| F3 / RF-029 | Anuncios visibles en Mis reservas y detalle de sesión | ⬜ pendiente F3 |
-| F3 / RF-028 | Reserva en sesión cancelada muestra insignia "Sesión cancelada" sin botón cancelar | ⬜ pendiente F3 |
+| F3 / RF-027 | Entrenador marca/desmarca asistencia manual; desmarcar pide confirmación | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba1, Prueba2) |
+| F3 / RF-034 | Notas e incidencias de sesión guardadas como texto plano | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba3, Prueba5) |
+| F3 / RF-029 | Anuncios visibles en Mis reservas y detalle de sesión | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba3, MisReservas) |
+| F3 / RF-028 | Reserva en sesión cancelada muestra insignia "Sesión cancelada" sin botón cancelar | ✅ probado (EntrenadorYSesionCanceladaF3Tests.Prueba4, AusenciaPriorizacionRN020Tests) |
 | F4 / RF-028 | Cancelar sesión exige motivo y confirma indicando número de reservas afectadas | ⬜ pendiente F4 |
 | F4 / RF-030 | Inscribir a usuario de terceros respeta cupo y motivo | ⬜ pendiente F4 |
 | F4 / RF-031 | Bloqueos de calendario impiden reservas dentro del rango | ⬜ pendiente F4 |

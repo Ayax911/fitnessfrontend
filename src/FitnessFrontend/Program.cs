@@ -67,5 +67,7 @@ builder.Services.AddScoped<FitnessFrontend.Servicios.Priorizacion.IPriorizacionC
 builder.Services.AddScoped<FitnessFrontend.Servicios.Usuarios.IUsuariosClienteService, FitnessFrontend.Servicios.Usuarios.UsuariosClienteService>();
 builder.Services.AddScoped<FitnessFrontend.Servicios.Asistencia.IPuntosAccesoClienteService, FitnessFrontend.Servicios.Asistencia.PuntosAccesoClienteService>();
 builder.Services.AddScoped<FitnessFrontend.Servicios.Bloqueos.IBloqueosClienteService, FitnessFrontend.Servicios.Bloqueos.BloqueosClienteService>();
+builder.Services.AddScoped<FitnessFrontend.Servicios.Asistencia.IAsistenciaManualClienteService, FitnessFrontend.Servicios.Asistencia.AsistenciaManualClienteService>();
+builder.Services.AddScoped<FitnessFrontend.Servicios.Eventos.INotasYAnunciosClienteService, FitnessFrontend.Servicios.Eventos.NotasYAnunciosClienteService>();
 
 await builder.Build().RunAsync();

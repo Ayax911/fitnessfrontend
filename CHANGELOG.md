@@ -2,6 +2,14 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F3 · Entrenador y sesión cancelada para el usuario (RF-027, RF-028, RF-029, RF-034)
+- Creada página `AsistenciaManual.razor` (/entrenador/sesiones/{id}/asistencia) con listado de inscritos, marcado manual directo, confirmación modal con consecuencia explícita para desmarcar ("revertirá el estado a No asistió y registrará auditoría"), y manejo de rechazo 403 por pertenencia.
+- Creada página `NotasDeSesion.razor` (/entrenador/sesiones/{id}/notas) con bitácora interna de notas/incidencias (RF-034) y publicación de anuncios a inscritos (RF-029), ambos con contadores de caracteres en vivo (1000 y 500) y escape estricto de HTML / scripts.
+- Actualizada `MisActividades.razor` con botones directos para Asistencia manual y Notas/Avisos en cada sesión.
+- Actualizada `MisReservas.razor` para soportar sesión cancelada por la organización (RF-028): muestra insignia "Sesión cancelada", motivo del sistema, inhabilita botón cancelar y respeta confidencialidad RN-020; e incorpora visualización de anuncios vigentes de sesión (RF-029) en tarjeta informativa accesible.
+- Implementados servicios de fachada `IAsistenciaManualClienteService` y `INotasYAnunciosClienteService`, registrados en el contenedor de dependencias.
+- Implementadas las 5 pruebas obligatorias de F3 en `EntrenadorYSesionCanceladaF3Tests.cs` y ampliado `AusenciaPriorizacionRN020Tests.cs` con los nuevos DTOs (109 pruebas en verde).
+
 ## F2 · Programación, calendario ics y ayuda (RF-035, RF-036, RF-037, RF-038)
 - Creada página `Programacion.razor` (/programacion) con selector [Lista | Semana], navegación semanal con botones táctiles de 48 px, conversión horaria a `America/Bogota`, visualización de franjas de bloqueo de calendario (RF-031) ("Cerrado · motivo") sin botones de reserva, y estado de lista de espera agregado sin posición personal (RN-020, AMB-D04).
 - Creado `GeneradorIcs.cs` (RFC 5545 función pura) con escape de caracteres (`,`, `;`, `\`, saltos de línea) y plegado de líneas a <= 75 octetos.

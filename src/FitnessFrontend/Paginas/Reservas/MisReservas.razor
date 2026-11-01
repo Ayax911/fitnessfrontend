@@ -1,14 +1,18 @@
 @* RF-004: Cancelar una reserva activa *@
 @* RF-020: Consultar sus propias reservas *@
+@* RF-028: Notificación dentro de la app de sesión cancelada con motivo de la organización *@
+@* RF-029: Anuncios a inscritos en la app *@
 @* RF-036: Agregar una reserva al calendario personal (.ics) *@
 @page "/reservas"
 @attribute [Authorize]
 @using FitnessFrontend.ApiCliente.Models
 @using FitnessFrontend.Servicios.Reservas
 @using FitnessFrontend.Servicios.Calendario
+@using FitnessFrontend.Servicios.Eventos
 @using FitnessFrontend.Servicios.Infraestructura
 @using FitnessFrontend.Componentes.Compartidos
 @inject IReservasClienteService ReservasService
+@inject INotasYAnunciosClienteService NotasAnunciosService
 @inject IZonaHorariaService ZonaHoraria
 @inject IJSRuntime JS
 
@@ -50,11 +54,14 @@
                     @foreach (var reserva in reservas)
                     {
                         var reservaId = reserva.Id ?? Guid.Empty;
-                        var esCancelable = reserva.Estado == 0 || reserva.Estado == 1; // Confirmada o EnListaEspera
+                        var sesionId = reserva.SesionEventoId ?? Guid.Empty;
+                        var esSesionCancelada = reserva.SesionCancelada == true || reserva.OrigenCancelacion == "SesionCancelada";
+                        // PENDIENTE (RN-011 pendiente): si la sesión fue cancelada por la organización, no se permite cancelar por el usuario
+                        var esCancelable = !esSesionCancelada && (reserva.Estado == 0 || reserva.Estado == 1);
                         var cancelandoEsta = _cancelandoReservaId == reservaId;
 
                         <li @key="reserva.Id">
-                            <div>
+                            <div style="flex: 1 1 300px;">
                                 <p class="itm-lista__hora">
                                     @if (reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
                                     {
@@ -71,12 +78,40 @@
                                 </p>
                                 <p class="itm-lista__nombre">@(reserva.EventoNombre ?? "Actividad de gimnasio")</p>
                                 <p class="itm-lista__aparte">Solicitada: @(reserva.FechaHoraSolicitud.HasValue ? ZonaHoraria.FormatearFechaHora(reserva.FechaHoraSolicitud.Value) : "—")</p>
+
+                                @* RF-028: Motivo de la sesión cancelada por la organización (RN-020: sin nivel ni penalización) *@
+                                @if (esSesionCancelada)
+                                {
+                                    <div class="alert alert-warning py-1 px-2 my-2" role="note" style="font-size: 12px;">
+                                        <strong>Sesión cancelada por la organización:</strong>
+                                        @(string.IsNullOrWhiteSpace(reserva.MotivoCancelacion) ? "Por motivos operativos del centro deportivo." : reserva.MotivoCancelacion)
+                                    </div>
+                                }
+
+                                @* RF-029: Anuncios vigentes de la sesión *@
+                                @if (_anunciosPorSesion.TryGetValue(sesionId, out var avisos) && avisos.Count > 0)
+                                {
+                                    <div class="p-2 my-2 rounded" style="background: #eef5fc; border-left: 3px solid var(--azul-itm); font-size: 12px;">
+                                        <div class="fw-bold text-dark mb-1">
+                                            <svg class="itm-icono me-1" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px;">
+                                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                                                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+                                                <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+                                            </svg>
+                                            Aviso de la sesión:
+                                        </div>
+                                        @foreach (var aviso in avisos)
+                                        {
+                                            <p class="mb-0 text-dark" style="white-space: pre-wrap;">@aviso.Mensaje</p>
+                                        }
+                                    </div>
+                                }
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                                @ObtenerBadgeEstado(reserva.Estado)
+                                @ObtenerBadgeEstado(reserva, esSesionCancelada)
 
                                 @* RF-036: Agregar a mi calendario (.ics) *@
-                                @if (reserva.Estado == 0 && reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
+                                @if (reserva.Estado == 0 && !esSesionCancelada && reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
                                 {
                                     <button type="button"
                                             class="btn btn-itm-secundario btn-sm"
@@ -93,8 +128,6 @@
                                     </button>
                                 }
 
-                                @* PENDIENTE (RN-011 pendiente): la UI mantiene la acción siempre habilitada
-                                   mientras la reserva esté activa, dejando que el backend decida si está en plazo *@
                                 @if (esCancelable)
                                 {
                                     <BotonAccion Tipo="button"
@@ -116,6 +149,7 @@
 
 @code {
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>? _estado;
+    private Dictionary<Guid, List<AnuncioSesionDto>> _anunciosPorSesion = new();
     private Guid? _cancelandoReservaId;
     private string? _mensajeAlerta;
     private bool _alertaEsExito;
@@ -129,6 +163,17 @@
     {
         _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>.Cargando();
         _estado = await ReservasService.ObtenerMisReservasAsync();
+
+        if (_estado.EsExito && _estado.Valor != null)
+        {
+            var resAnuncios = await NotasAnunciosService.ObtenerAnunciosMisReservasAsync();
+            if (resAnuncios.EsExito && resAnuncios.Valor != null)
+            {
+                _anunciosPorSesion = resAnuncios.Valor
+                    .GroupBy(a => a.SesionId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+            }
+        }
     }
 
     private async Task CancelarReserva(Guid reservaId)
@@ -154,10 +199,19 @@
         }
     }
 
-    private RenderFragment ObtenerBadgeEstado(int? estado) => builder =>
+    private RenderFragment ObtenerBadgeEstado(ReservaResumenDto reserva, bool esSesionCancelada) => builder =>
     {
+        if (esSesionCancelada)
+        {
+            builder.OpenComponent<InsigniaEstado>(0);
+            builder.AddAttribute(1, nameof(InsigniaEstado.Tipo), "cancelada");
+            builder.AddAttribute(2, nameof(InsigniaEstado.ChildContent), (RenderFragment)(b => b.AddContent(0, "Sesión cancelada")));
+            builder.CloseComponent();
+            return;
+        }
+
         // 0: Confirmada, 1: EnListaEspera, 2: Cancelada, 3: Asistida, 4: NoAsistida, 5: NoAdjudicada
-        var (tipo, texto) = estado switch
+        var (tipo, texto) = reserva.Estado switch
         {
             0 => ("ok", "Confirmada"),
             1 => ("espera", "En lista de espera"),
