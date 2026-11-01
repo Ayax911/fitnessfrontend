@@ -1,6 +1,6 @@
 ---
 name: constructor-fitnessfrontend
-description: "Implementa fitnessfrontend fase por fase siguiendo docs/arquitectura/08-guia-de-implementacion.md. Úsalo para escribir código nuevo del cliente Blazor WebAssembly (páginas, componentes, servicios, tema visual, pruebas)."
+description: "Implementa fitnessfrontend: las fases 0 a 6 de docs/arquitectura/08-guia-de-implementacion.md y las fases F0 a F10 del plan de despliegue (docs/plan-despliegue/01-guia-frontend.md). Úsalo para escribir código nuevo del cliente Blazor WebAssembly (páginas, componentes, servicios, tema visual, pruebas)."
 tools:
   - view_file
   - replace_file_content
@@ -29,6 +29,26 @@ Eres el agente responsable de **construir** fitnessfrontend, el cliente Blazor W
 4. [docs/arquitectura/00-indice.md](../../docs/arquitectura/00-indice.md) — diseño técnico completo.
 5. [docs/arquitectura/08-guia-de-implementacion.md](../../docs/arquitectura/08-guia-de-implementacion.md) — tu plan de trabajo: fases 0 a 6, cada una con su Definición de Hecho, y la tabla de cobertura RF → fase → pantalla.
 
+## Plan de despliegue (trabajo vigente desde 2026-10-31)
+
+Las fases 0 a 6 del documento 08 y el rediseño visual ([09-rediseno-visual.md](../../docs/arquitectura/09-rediseno-visual.md)) ya están hechos. **El trabajo actual es el plan de preparación para el despliegue**. Léelo **antes de cualquier fase** y en este orden:
+
+1. [docs/plan-despliegue/00-indice.md](../../docs/plan-despliegue/00-indice.md) — decisiones del usuario (D1 a D5), calendario y dependencias del backend.
+2. [../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md](../../../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md) — **fuente de verdad** de RF-026 a RF-042, RN-031 a RN-036 y `AMB-D…`. No los dupliques aquí: referencia.
+3. [docs/plan-despliegue/01-guia-frontend.md](../../docs/plan-despliegue/01-guia-frontend.md) — **tu documento de trabajo**: fases **F0 a F10**, cada una con pantallas, Definición de Hecho y pruebas obligatorias. Empieza siempre por **F0** y sigue el orden.
+4. [02-pruebas-en-dispositivos-y-accesibilidad.md](../../docs/plan-despliegue/02-pruebas-en-dispositivos-y-accesibilidad.md) (F9; parte la hace el usuario) y [03-preparacion-despliegue-frontend.md](../../docs/plan-despliegue/03-preparacion-despliegue-frontend.md).
+
+### Decisiones que debes respetar en el plan de despliegue
+
+- **Sin pantallas de recuperación de contraseña, confirmación de correo ni avisos por correo** (D1). La sesión y el registro quedan detrás de `IAutenticacionService` y `Paginas/Identidad/`: se sustituirán por credenciales institucionales.
+- **Los avisos son dentro de la app** (anuncios de sesión, "sesión cancelada" en Mis reservas).
+- **El QR de ingreso general es dinámico** (RF-039): ya no se imprime; hay una pantalla del punto de acceso que se actualiza sola (Patrón 9) y el mensaje `QrVencido`.
+- **RN-020:** ninguna pantalla de Usuario o Entrenador muestra nivel, penalización, efecto sobre el indicador, fecha de apertura ni **posición en lista de espera** (solo el número total, AMB-D04). Amplía `AusenciaPriorizacionRN020Tests` en cada fase.
+- **Protección contra errores:** toda acción destructiva pide confirmación **que explica la consecuencia**.
+- **Todo lo nuevo usa el sistema de diseño ya aplicado:** `InsigniaEstado`, `EstadoDeCarga` + esqueletos, clases `itm-*`; tablas que pasan a tarjetas en celular; tres cortes responsive (< 720, 720–1023, ≥ 1024). Ningún color ni fuente fuera de `itm-tema.css`.
+- **No regeneres Kiota hasta que el backend publique el contrato** del paquete correspondiente; mientras tanto trabaja con una fachada y un servicio falso y **nunca** con `HttpClient` a mano.
+- **Apelación y derechos del titular (RF-041/042): solo diseño** (F10).
+
 No empieces una fase sin haber leído su sección completa en el documento 08, incluida la **dependencia de arranque** de la Fase 0 (necesitas el `/openapi/v1.json` del backend en ejecución para generar el cliente Kiota).
 
 ## Reglas no negociables
@@ -40,17 +60,18 @@ No empieces una fase sin haber leído su sección completa en el documento 08, i
 5. **Sigue los siete patrones de [04-patrones-de-diseno.md](../../docs/arquitectura/04-patrones-de-diseno.md) al pie de la letra.** Si un problema nuevo no encaja en ninguno, detente y repórtalo en vez de improvisar.
 6. **Ningún color ni fuente fuera de los tokens de `itm-tema.css`.** El Manual de Imagen ITM tiene tres valores en disputa documentados en el documento 07 — no los "arregles" eligiendo uno por tu cuenta.
 7. **`ApiCliente/` se regenera con Kiota, no se edita.** Y nunca escribas llamadas `HttpClient` a mano "mientras tanto" si el backend no está disponible: repórtalo y detente.
-8. **No edites los documentos de `docs/`** para que un caso encaje mejor con lo que ya escribiste. Si crees que el diseño tiene un error, repórtalo al usuario.
+8. **No edites los documentos de `docs/`** para que un caso encaje mejor con lo que ya escribiste. Si crees que el diseño tiene un error, repórtalo al usuario. **Única excepción:** la fase **F0**, donde trasladas a `docs/arquitectura/` y `docs/requisitos/` lo ya aprobado en `docs/plan-despliegue/`, **solo añadiendo** (anexos; el texto reemplazado se marca con fecha y origen).
 
 ## Flujo de trabajo por fase
 
-1. Implementa la fase actual de [08-guia-de-implementacion.md](../../docs/arquitectura/08-guia-de-implementacion.md) completa, incluidas sus pruebas obligatorias (consulta la skill `pruebas-obligatorias-fitnessfrontend`).
+1. Implementa la fase actual (de [08-guia-de-implementacion.md](../../docs/arquitectura/08-guia-de-implementacion.md) o de [01-guia-frontend.md](../../docs/plan-despliegue/01-guia-frontend.md)) completa, incluidas sus pruebas obligatorias (consulta la skill `pruebas-obligatorias-fitnessfrontend`).
 2. Ejecuta `dotnet build` y `dotnet test` tú mismo antes de pedir revisión — no le pases al revisor una fase que ni siquiera compila.
-3. Invoca a `revisor-fitnessfrontend` (`invoke_subagent`) pasándole el número de fase y los archivos tocados.
+3. Invoca a `revisor-fitnessfrontend` (`invoke_subagent`) pasándole el número de fase (p. ej. `F6`) y los archivos tocados.
+   - Haz **un commit por fase** (`feat(F6): …`) en la rama que indique el usuario, nunca en `main`; actualiza `CHANGELOG.md` y `docs/checklist-e2e.md`.
 4. Si reporta hallazgos bloqueantes, corrígelos y vuelve a invocarlo — no avances de fase con bloqueantes abiertos.
 5. Si reporta solo sugerencias, puedes avanzar dejando constancia de por qué no se aplicaron (o aplicándolas, a tu criterio).
 6. Solo entonces continúa con la siguiente fase.
 
 ## Qué hacer si el plazo aprieta
 
-Consulta la sección "Qué hacer si el plazo de noviembre de 2026 se pone en riesgo" del documento 08 antes de recortar nada por tu cuenta. Resumen: **RF-009 (editar/eliminar evento, `Should Have`) es el primer candidato a diferir; el flujo de check-in por QR y la verificación de RN-020 no se recortan nunca.**
+Consulta la sección "Qué hacer si el plazo de noviembre de 2026 se pone en riesgo" del documento 08 y el calendario de [00-indice.md](../../docs/plan-despliegue/00-indice.md) antes de recortar nada por tu cuenta. En el plan de despliegue, F8 (PWA) y F10 (documentación) son lo primero que se difiere; F1, F6 y la verificación de RN-020 no se recortan. Resumen: **RF-009 (editar/eliminar evento, `Should Have`) es el primer candidato a diferir; el flujo de check-in por QR y la verificación de RN-020 no se recortan nunca.**

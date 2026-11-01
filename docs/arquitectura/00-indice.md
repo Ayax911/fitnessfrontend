@@ -42,3 +42,7 @@ Se ejecutó sobre estos documentos la misma verificación bidireccional que la s
 | **El hex del celeste de acento estaba inventado** (`#29ABE2` no aparece en el manual), y el manual tiene dos inconsistencias propias (hex del azul malformado, hex del gris contradice su RGB) | Documentadas las tres en el documento 07 como preguntas abiertas para la Dirección de Comunicaciones; los tokens quedan centralizados para que corregirlas sea cambiar tres líneas |
 | **El contraste WCAG se afirmaba sin calcular** | Calculado: el azul primario da 15.6:1 (✅ AAA); el celeste de acento da 2.5:1 sobre blanco (❌ **no cumple AA como texto**) — de ahí una regla dura nueva sobre dónde puede y no puede usarse |
 | Faltaba el vínculo con los casos de uso | Añadida al índice de requisitos la tabla CU-01…CU-08 indicando cuáles se ejecutan por esta interfaz (seis) y cuáles son procesos internos del backend (dos) |
+
+## Plan de preparación para el despliegue (2026-10-31)
+
+Ver [../plan-despliegue/00-indice.md](../plan-despliegue/00-indice.md): guía de fases F0–F10, pruebas en dispositivos reales y accesibilidad, y preparación de publicación.

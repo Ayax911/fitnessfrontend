@@ -58,3 +58,20 @@ Estas pruebas están marcadas como obligatorias en [08-guia-de-implementacion.md
 ## Regla general para cualquier fase no listada aquí
 
 Antes de dar una fase por cerrada, pregúntate: **"¿qué regla de esta fase puede romperse sin que el build falle, sin que se lance una excepción, y sin que nadie lo note hasta que un usuario real lo sufra?"** — esa es la prueba obligatoria de la fase. En este repositorio esa categoría está dominada por tres cosas: campos que se filtran (RN-020), fechas mal convertidas (zona horaria), y flujos de navegación que se rompen solo en el caso sin sesión.
+
+## Plan de despliegue (fases F1 a F9)
+
+Detalle en [docs/plan-despliegue/01-guia-frontend.md](../../../docs/plan-despliegue/01-guia-frontend.md). La prueba que **no puede faltar** en cada fase (bUnit con servicios falsos y reloj falso):
+
+| Fase | Prueba obligatoria | Señal de falso positivo |
+|---|---|---|
+| **F1 Renovación de sesión (RF-026)** | **5 peticiones simultáneas con token vencido provocan exactamente 1 refresh** y las 5 terminan bien; refresh inválido cierra sesión con `returnUrl`; sin bucle | Las peticiones se lanzan en secuencia, o el refresh falso responde antes de que las demás lleguen |
+| **F2 Programación (RF-035/036/037)** | Una sesión a las 23:30 locales cae en el día correcto aunque su UTC sea el siguiente; el `.ics` generado se parsea de vuelta con escape y plegado correctos; **ninguna pantalla muestra posición en lista de espera** | Fechas de prueba al mediodía (no cruzan medianoche UTC) |
+| **F3 Entrenador (RF-027/029/034)** | Un entrenador ajeno no ve datos; desmarcar asistencia pide confirmación; notas y anuncios con `<script>` se renderizan como texto; la reserva de una sesión cancelada no muestra botón de cancelar ni texto de priorización | Un solo entrenador sembrado; contenido sin caracteres especiales |
+| **F4 Administración (RF-028/030/031/032)** | La confirmación de cancelar incluye el **número de reservas** y exige motivo; los menús administrativos no aparecen para Usuario/Entrenador; la auditoría no ofrece acciones de edición | Confirmación sin consecuencia; solo se prueba el rol Administrador |
+| **F5 Reportes (RF-033)** | Los números renderizados coinciden con el DTO; la descarga usa `formato=csv`; ningún texto de priorización | Datos con un solo registro |
+| **F6 Punto de acceso (RF-039)** | La siguiente petición se programa **antes de `validoHasta`** (reloj falso); con fallo de red el QR vigente se mantiene hasta vencer y luego aparece "sin conexión"; sin temporizadores tras `Dispose`; `QrVencido` sin bucle | Reloj real en vez de falso; no se prueba el fallo de red |
+| **F7 Retroalimentación (RF-038)** | Texto plano; 429 con mensaje del sistema; aislamiento por usuario | Un solo usuario |
+| **F8 PWA** | El *service worker* no intercepta `/api/`; hay estrategia de actualización | Solo se prueba la instalación |
+| **F9 Cierre** | `AusenciaPriorizacionRN020Tests` cubre todas las pantallas de Usuario/Entrenador nuevas y las de F2–F7; no hay desbordes a 390 px (verificación visual registrada) | La prueba enumera pantallas a mano y olvida las nuevas: recorrer por reflexión las páginas con `@page` |
+

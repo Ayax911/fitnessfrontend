@@ -31,6 +31,10 @@ Si necesitas contexto de negocio (qué significa una regla RN-xxx, por qué exis
 7. **Toda fecha se muestra a través de `IZonaHorariaService`.** El backend entrega todo en UTC y este repositorio es el único lugar del sistema donde se convierte a `America/Bogota` — un error aquí rompe ventanas de negocio en silencio.
 8. **No edites los documentos de `docs/`** (ni los de este repositorio ni los del backend) para que encajen con el código que ya escribiste. Si crees que el diseño tiene un error, repórtalo.
 
+## Trabajo vigente: preparación para el despliegue (desde 2026-10-31)
+
+Las fases 0 a 6 y el rediseño visual están hechos. El trabajo actual está en **[docs/plan-despliegue/](docs/plan-despliegue/00-indice.md)**: fases **F0 a F10** de [01-guia-frontend.md](docs/plan-despliegue/01-guia-frontend.md); los requisitos nuevos viven en [`../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md`](../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md). Prompt de arranque: [.agents/prompt-despliegue-frontend.md](.agents/prompt-despliegue-frontend.md). Decisiones que lo gobiernan: **sin recuperación de contraseña ni correo** (credenciales institucionales; la sesión queda detrás de `IAutenticacionService`), **QR de ingreso dinámico con pantalla de punto de acceso**, **RN-020 sin posición en lista de espera**, y **pruebas en teléfonos reales y accesibilidad manual** a cargo del usuario.
+
 ## Cómo empezar
 
 Ve directo a la **Fase 0** de [docs/arquitectura/08-guia-de-implementacion.md](docs/arquitectura/08-guia-de-implementacion.md) y sigue las fases en orden. Cada una tiene su propia Definición de Hecho ligada a los criterios de aceptación del backend.

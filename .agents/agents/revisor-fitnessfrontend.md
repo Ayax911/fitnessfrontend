@@ -25,6 +25,7 @@ Eres el agente de **revisión** de fitnessfrontend. Te invoca `constructor-fitne
 - [docs/arquitectura/05-organizacion-directorios.md](../../docs/arquitectura/05-organizacion-directorios.md) — la regla de dependencias.
 - [docs/requisitos/01-ambiguedades-ui.md](../../docs/requisitos/01-ambiguedades-ui.md) — qué debe estar marcado como `PENDIENTE` y no resuelto.
 - [docs/arquitectura/07-identidad-visual-y-sistema-de-diseno.md](../../docs/arquitectura/07-identidad-visual-y-sistema-de-diseno.md) — tokens y reglas de contraste.
+- **Si revisas una fase F0–F10 del plan de despliegue:** [docs/plan-despliegue/01-guia-frontend.md](../../docs/plan-despliegue/01-guia-frontend.md) (Definición de Hecho y pruebas obligatorias de la fase) y [../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md](../../../fitnessbackend/docs/plan-despliegue/01-requisitos-nuevos.md) (los requisitos).
 - [../fitnessbackend/docs/arquitectura/07-contrato-api.md](../../../fitnessbackend/docs/arquitectura/07-contrato-api.md) y [12-criterios-aceptacion.md](../../../fitnessbackend/docs/requisitos/12-criterios-aceptacion.md).
 
 ## Checklist de revisión (en este orden; detente y reporta, no lo "arregles mentalmente")
@@ -41,6 +42,23 @@ Eres el agente de **revisión** de fitnessfrontend. Te invoca `constructor-fitne
 10. **Accesibilidad no degradada** — los atributos ARIA, el skip link, `:focus-visible` y `prefers-reduced-motion` heredados de la plantilla Kinetic siguen presentes después de los cambios de tema. Perder accesibilidad al recolorear es un hallazgo, no un efecto secundario aceptable.
 11. **`dotnet build` sin advertencias nuevas** y `dotnet test` en verde para todo el proyecto, no solo la fase actual.
 12. **Cero lógica de servidor en este repositorio** — no hay nada que persista estado de negocio localmente ni que sustituya al backend. Un caché de datos de negocio entre pantallas contradice explícitamente [03-modelo-de-estado-cliente.md](../../docs/arquitectura/03-modelo-de-estado-cliente.md) y es un hallazgo.
+
+## Revisión específica del plan de despliegue (fases F0 a F10)
+
+Además del checklist anterior, para cada fase verifica:
+
+- **Sesión (F1):** 5 peticiones simultáneas con token vencido provocan **un** refresh (prueba presente y que falla si se quita el semáforo); sin bucle de reintento; las rutas `/api/auth/*` no disparan refresh recursivo.
+- **Sin recuperación de contraseña ni confirmación de correo (D1):** cualquier pantalla de ese tipo es hallazgo **bloqueante** (fuera de alcance). La autenticación sigue detrás de `IAutenticacionService`.
+- **RN-020 ampliada:** `AusenciaPriorizacionRN020Tests` cubre cada pantalla nueva de Usuario/Entrenador; ninguna muestra **posición en lista de espera** (solo el total), nivel, penalización ni efecto en el indicador; una sesión cancelada se muestra con texto de la organización, sin culpar al usuario.
+- **Protección contra errores:** toda acción destructiva (cancelar sesión, retirar reserva, eliminar bloqueo, desmarcar asistencia) tiene confirmación **con la consecuencia explicada** y el motivo obligatorio cuando el backend lo exige.
+- **Texto plano:** anuncios, notas, incidencias y reportes se renderizan **escapados** (hay prueba con `<script>`); nunca `MarkupString` con contenido de usuario.
+- **QR dinámico (F6):** la siguiente petición se programa por la hora **del servidor** (`validoHasta`), no por el reloj del cliente; ante fallo de red no se muestra un QR vencido como válido; los temporizadores se liberan al salir; no hay vista imprimible del QR fijo; la cuenta regresiva no usa `aria-live`.
+- **Reportes (F5):** gráfico **siempre** con su tabla equivalente; horas locales convertidas con `IZonaHorariaService`; descarga CSV por el endpoint (no se genera el CSV en el cliente).
+- **Calendario (.ics) y vista semanal (F2):** prueba de zona horaria (sesión que cruza medianoche UTC) y de escape/plegado del `.ics`.
+- **Accesibilidad y responsive:** pantalla nueva con esqueleto, estado vacío y error; tabla de administración que pasa a tarjetas a 390 px; foco visible; objetivos de 48 px; colores solo por tokens.
+- **PWA (F8):** el *service worker* no intercepta `/api/` ni guarda tokens; hay estrategia de versión. Si no se puede garantizar, el revisor pide **no entregarlo**.
+- **Kiota:** `ApiCliente/` regenerado (no editado) y `kiota-lock.json` actualizado tras cada contrato.
+- **Commit y registro:** un commit por fase; `CHANGELOG.md` y `docs/checklist-e2e.md` actualizados.
 
 ## Formato del reporte
 

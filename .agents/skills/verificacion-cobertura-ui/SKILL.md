@@ -33,3 +33,11 @@ Esta skill opera en tres direcciones. Las tres son necesarias — cualquiera por
 - Un `PENDIENTE` bien formado no es un hallazgo — es exactamente el comportamiento esperado para una ambigüedad abierta.
 - Componentes de presentación puros sin RF (un botón, un contenedor de carga, el componente `CodigoQr`) no necesitan comentario de origen: no implementan un requisito, lo sirven. Solo las **páginas enrutables** lo necesitan.
 - Que una pantalla no cubra un flujo de excepción todavía no especificado, si está marcado como pendiente.
+
+## Ampliación para el plan de despliegue (RF-026 a RF-039)
+
+Las pantallas nuevas y su RF están en el mapa de rutas de [docs/plan-despliegue/01-guia-frontend.md](../../../docs/plan-despliegue/01-guia-frontend.md). Verifica **en las dos direcciones**:
+- Toda página nueva lleva `@* RF-0xx: … *@`; toda RF de RF-026 a RF-039 tiene fila en la tabla de cobertura de `08-guia-de-implementacion.md` (la añade F0) y una pantalla (o, para RF-026, un manejador con su prueba; para RF-036, el botón de .ics en Mis reservas).
+- RF-041 y RF-042 figuran como diferidas y **no** tienen pantalla.
+- Ninguna pantalla implementa recuperación de contraseña ni confirmación de correo (D1).
+

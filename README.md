@@ -21,6 +21,8 @@ La UI adapta la plantilla base [`../kinetic/`](../kinetic/) a la paleta y tipogr
 
 El rediseño (logo oficial, navegación responsive, insignias, esqueletos de carga) está en [`docs/arquitectura/09-rediseno-visual.md`](docs/arquitectura/09-rediseno-visual.md). El historial de cambios está en [`CHANGELOG.md`](CHANGELOG.md).
 
+El plan de preparación para el despliegue (fases F0–F10, pruebas en dispositivos y accesibilidad, publicación) está en [`docs/plan-despliegue/`](docs/plan-despliegue/00-indice.md).
+
 ## Ejecutar en desarrollo
 
 Requisitos: .NET 10 SDK y el backend corriendo (`../fitnessbackend`, ver su README).

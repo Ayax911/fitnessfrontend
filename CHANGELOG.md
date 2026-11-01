@@ -2,6 +2,9 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## Plan de despliegue (2026-10-31)
+- Plan de preparación para el despliegue en `docs/plan-despliegue/` (fases F0–F10), agentes y prompt actualizados (`.agents/prompt-despliegue-frontend.md`). Solo planificación: sin cambios de código.
+
 ## Rediseño visual (8f0c4ad)
 - Sistema de diseño ITM aplicado en `itm-tema.css`; logo oficial; navegación responsive (barra superior, menú desplegable, barra inferior del Usuario en celular).
 - `InsigniaEstado` (tinta suave, seis estados), esqueletos de carga, selector de día y cupo sin puntos en Eventos.
