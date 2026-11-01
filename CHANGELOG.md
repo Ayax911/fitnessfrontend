@@ -2,6 +2,13 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F8 · PWA instalable
+- Creado `manifest.webmanifest` con nombre oficial institucional, `display: standalone`, colores de marca `#011C5B` e íconos maskable (192 y 512 px).
+- Vinculado `manifest.webmanifest` en `index.html`.
+- Incorporado módulo en `descarga.js` para gestionar el prompt de instalación segura (`beforeinstallprompt` diferido) sin interceptar llamadas de API ni almacenar en caché tokens de autenticación.
+- Añadida sección e interacción accesible en `Ayuda.razor` para instalación en pantallas principales de dispositivos.
+- Agregadas pruebas de validación de manifiesto y vinculación web en `PwaF8Tests.cs` (141 pruebas en verde).
+
 ## F7 · Retroalimentación y reporte de problemas (RF-038)
 - Creada página `Reportar.razor` (/ayuda/reportar y /reportar): formulario para Problema, Sugerencia o Pregunta con contador en vivo (≤ 1000 caracteres), ruta de origen precargada por query string sin agentes de usuario ni datos invasivos, y manejo respetuoso de 429 ("Ha enviado varios reportes recientemente; por favor intente más tarde.") sin culpar al usuario.
 - Creada página `MisReportes.razor` (/mis-reportes): consulta y seguimiento de reportes propios con insignias accesibles, conversión de fechas a `America/Bogota` mediante `IZonaHorariaService` y renderizado de texto plano estricto contra inyección HTML/scripts.

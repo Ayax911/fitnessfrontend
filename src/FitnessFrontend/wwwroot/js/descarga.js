@@ -32,3 +32,21 @@ window.itmPantalla = {
         }
     }
 };
+
+let itmDeferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    itmDeferredPrompt = e;
+});
+
+window.itmInstalarPwa = async function () {
+    if (itmDeferredPrompt) {
+        itmDeferredPrompt.prompt();
+        try {
+            await itmDeferredPrompt.userChoice;
+        } catch (e) {}
+        itmDeferredPrompt = null;
+    } else {
+        alert('Para instalar la aplicación, abre el menú de opciones de tu navegador (los tres puntos o el botón Compartir) y selecciona «Instalar aplicación» o «Agregar a la pantalla principal».');
+    }
+};
