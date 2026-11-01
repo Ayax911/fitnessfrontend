@@ -21,7 +21,20 @@ La UI adapta la plantilla base [`../kinetic/`](../kinetic/) a la paleta y tipogr
 
 El rediseño (logo oficial, navegación responsive, insignias, esqueletos de carga) está en [`docs/arquitectura/09-rediseno-visual.md`](docs/arquitectura/09-rediseno-visual.md). El historial de cambios está en [`CHANGELOG.md`](CHANGELOG.md).
 
-El plan de preparación para el despliegue (fases F0–F10, pruebas en dispositivos y accesibilidad, publicación) está en [`docs/plan-despliegue/`](docs/plan-despliegue/00-indice.md).
+## Plan de preparación para el despliegue (2026-10-31)
+
+El plan para llevar el frontend a producción con los nuevos requisitos (RF-026 a RF-042) se detalla en:
+- [Plan de despliegue — Índice y decisiones](docs/plan-despliegue/00-indice.md)
+- [Guía de implementación frontend (Fases F0 a F10)](docs/plan-despliegue/01-guia-frontend.md)
+- [Pruebas en dispositivos reales y accesibilidad](docs/plan-despliegue/02-pruebas-en-dispositivos-y-accesibilidad.md)
+- [Preparación de despliegue y auditoría de cliente](docs/plan-despliegue/03-preparacion-despliegue-frontend.md)
+
+### Cambio a credenciales institucionales (D1)
+Por decisión institucional, el sistema no utiliza pantallas de recuperación de contraseña ni confirmación de correo. En su lugar:
+- Toda la lógica de inicio, cierre de sesión y registro queda encapsulada detrás de `IAutenticacionService` y en `Paginas/Identidad/`.
+- El perfil y roles se derivan de `GET /api/usuarios/yo`.
+- Cuando se conecte con el SSO institucional, la sustitución será estrictamente local en la implementación del servicio y en esas pantallas.
+
 
 ## Ejecutar en desarrollo
 

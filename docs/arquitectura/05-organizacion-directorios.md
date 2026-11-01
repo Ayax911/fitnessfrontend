@@ -108,3 +108,56 @@ Espeja la regla del backend, adaptada al sentido único cliente → servidor:
 | Servicio de módulo (fachada) | `I<Modulo>ClienteService` / `<Modulo>ClienteService` | `IReservasClienteService` |
 | Componente de presentación puro | Sin sufijo de "Service" ni lógica de red — solo `[Parameter]` de entrada | `CodigoQr.razor` |
 | Tipo de resultado de UI | `EstadoDeCarga<T>` | — |
+
+---
+
+## Anexo: Ampliación de estructura para el plan de preparación para el despliegue (2026-10-31)
+
+Conforme a las fases F1 a F7 de [docs/plan-despliegue/01-guia-frontend.md](../plan-despliegue/01-guia-frontend.md), se incorporan las siguientes rutas, páginas y servicios:
+
+```
+src/FitnessFrontend/
+├── Paginas/
+│   ├── Ayuda/                                  ← RF-038 (parte estática)
+│   │   └── Ayuda.razor                         (/ayuda)
+│   ├── Retroalimentacion/                      ← RF-038
+│   │   ├── Reportar.razor                      (/ayuda/reportar)
+│   │   ├── MisReportes.razor                   (/mis-reportes)
+│   │   └── BandejaAdministrador.razor          (/admin/retroalimentacion)
+│   ├── Auditoria/                              ← RF-032
+│   │   └── RegistroAuditoria.razor             (/admin/auditoria)
+│   ├── Reportes/                               ← RF-033
+│   │   └── Reportes.razor                      (/admin/reportes)
+│   ├── Eventos/
+│   │   ├── Programacion.razor                  (/programacion — RF-035)
+│   │   ├── NotasDeSesion.razor                 (/entrenador/sesiones/{id}/notas — RF-034)
+│   │   └── Administrar/
+│   │       ├── AdministrarSesion.razor         (/admin/sesiones/{id} — RF-028, RF-029, RF-030)
+│   │       └── BloqueosCalendario.razor        (/admin/calendario — RF-031)
+│   └── Asistencia/
+│       ├── AsistenciaManual.razor              (/entrenador/sesiones/{id}/asistencia — RF-027)
+│       └── Administrar/
+│           └── PantallaPuntoAcceso.razor       (/admin/puntos-acceso/{id}/pantalla — RF-039)
+│
+├── Componentes/
+│   └── Compartidos/
+│       ├── ConfirmacionConsecuencia.razor      (diálogo accesible de confirmación con explicación de impacto)
+│       ├── TablaAdaptable.razor                (tabla de datos con transformación automática a tarjetas en < 720 px)
+│       └── AnilloCuentaRegresiva.razor         (indicador circular SVG para rotación de QR dinámico)
+│
+└── Servicios/
+    ├── Calendario/
+    │   ├── IGeneradorIcs.cs
+    │   └── GeneradorIcs.cs                     (función pura para RF-036)
+    ├── SesionesAdmin/
+    │   └── ISesionesAdminClienteService.cs     (fachada RF-028, RF-029, RF-030)
+    ├── Bloqueos/
+    │   └── IBloqueosClienteService.cs          (fachada RF-031)
+    ├── Auditoria/
+    │   └── IAuditoriaClienteService.cs         (fachada RF-032)
+    ├── Reportes/
+    │   └── IReportesClienteService.cs          (fachada RF-033)
+    └── Retroalimentacion/
+        └── IRetroalimentacionClienteService.cs (fachada RF-038)
+```
+

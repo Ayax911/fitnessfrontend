@@ -31,3 +31,29 @@ RN-020 y AMB-014: ninguna pantalla de Usuario o Entrenador muestra priorización
 - **Barra de cupo**: su ancho sale de `CupoMaximo` y `CuposOcupados` que informa el backend; el cliente no decide si hay cupo.
 - La insignia de una reserva confirmada dice "Confirmada".
 - Pendiente de revisión visual: Registro y pantallas de administración a ancho de celular, y Check-in/Ingreso en pantalla.
+
+---
+
+## Anexo: Componentes nuevos para el plan de despliegue (2026-10-31)
+
+### 1. `ConfirmacionConsecuencia.razor` (Protección contra errores — ISO/IEC 25010)
+- **Propósito:** diálogo modal accesible para acciones destructivas o masivas (cancelar sesión, retirar reserva de tercero, desmarcar asistencia manual, eliminar bloqueo de calendario).
+- **Diseño y comportamiento:**
+  - Explica en lenguaje del usuario la **consecuencia concreta** (p. ej., *"Se cancelarán N reservas y se liberará el cupo. Los usuarios verán que la sesión fue cancelada. No se les penalizará."*).
+  - El botón de acción destructiva usa clase de peligro (`btn-itm-peligro`) y el botón secundario y por defecto de escape es *"Volver"* (`btn-itm-secundario`).
+  - No permite confirmación con tecla Enter accidental sobre el formulario. Soporta cierre con tecla Esc y gestión accesible de foco con `aria-modal="true"` y `role="dialog"`.
+
+### 2. `TablaAdaptable.razor` (Responsive en tres cortes)
+- **Propósito:** presentación de colecciones tabulares administrativas (bloqueos de calendario, reservas de sesión, reportes, auditoría).
+- **Diseño y comportamiento:**
+  - En anchos de tablet y escritorio (≥ 720 px), se presenta como tabla HTML semántica con cabeceras claras (`<th>`, `aria-label`).
+  - En celulares (< 720 px), conmuta automáticamente mediante CSS a una disposición de **tarjetas apiladas**, donde cada celda incluye su etiqueta descriptiva visible sin producir desbordamiento ni scroll horizontal.
+
+### 3. `AnilloCuentaRegresiva.razor` (Indicador visual de rotación QR)
+- **Propósito:** cuenta regresiva visual para el ciclo de vida del token dinámico de ingreso en `PantallaPuntoAcceso.razor`.
+- **Diseño y comportamiento:**
+  - Anillo circular trazado en SVG con cálculo dinámico del `stroke-dashoffset`.
+  - Color azul institucional sobre fondo neutro, visible a distancia en pantallas de acceso físico.
+  - **Accesibilidad y movimiento reducido:** si el usuario tiene habilitado `prefers-reduced-motion`, la animación continua se sustituye por actualización discreta de progreso.
+  - **Lector de pantalla:** el atributo `aria-live` se mantiene **desactivado** para no saturar al lector de pantalla verbalizando cada segundo transcurrido.
+

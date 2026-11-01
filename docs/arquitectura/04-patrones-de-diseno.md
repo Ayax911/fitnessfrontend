@@ -53,3 +53,32 @@
 **Decisión:** un `DelegatingHandler` único registrado en el `HttpClient` que usa el cliente Kiota, que añade el header y intercepta `401` en un solo lugar. Ningún servicio de módulo (Patrón 1) maneja tokens por su cuenta.
 
 **Alternativa descartada:** pasar el token como parámetro a cada método de cada servicio de módulo. Se descarta por la misma razón que el backend prefiere `IOptions<T>` sobre pasar configuración a mano por todos lados: centraliza un mecanismo transversal en un único punto de cambio.
+
+---
+
+## Patrón 8 — Renovación de sesión de un solo vuelo (RF-026, Plan de despliegue)
+
+**Problema:** cuando el token de acceso expira (típicamente tras una hora), múltiples peticiones en paralelo de la UI pueden recibir `401 Unauthorized` al mismo tiempo. Si cada una intentara renovar por su cuenta llamando a `POST /api/auth/refresh`, se generarían condiciones de carrera, rotación múltiple concurrente del refresh token y rechazos espurios que cerrarían la sesión del usuario injustificadamente.
+
+**Decisión:** renovación coordinada mediante un cerrojo asíncrono (`SemaphoreSlim` o `Task<bool>` en vuelo) en el interceptor HTTP (`ManejadorDeAutenticacionHttp`). Ante un `401` en una petición (excluyendo `/api/auth/*` para prevenir recursión):
+1. La primera petición bloquea el semáforo y lanza **exactamente una llamada** a `POST /api/auth/refresh` con el refresh token vigente.
+2. Las peticiones concurrentes esperan el resultado de esa única tarea sin disparar renovaciones adicionales.
+3. Si la renovación es exitosa, se guardan los nuevos tokens y **todas las peticiones pausadas se reintentan una sola vez** con el nuevo token bearer.
+4. Si la renovación falla (código 400/401 o falla de red), se cancela la sesión, se limpia el almacenamiento y se navega a `/login?returnUrl=<ruta actual>`.
+5. Si una petición repetida vuelve a fallar con `401`, **no se reintenta nuevamente**, evitando bucles infinitos.
+
+**Alternativa descartada:** esperar pasivamente a que el usuario recargue o cerrar sesión de inmediato ante cualquier 401. Se descartó porque causaba la pérdida de flujos activos (como check-in de pie frente al entrenador).
+
+---
+
+## Patrón 9 — Pantalla de actualización periódica (RF-039, Plan de despliegue)
+
+**Problema:** pantallas públicas de actualización continua (como la pantalla de visualización del código QR dinámico de acceso en un monitor o tableta, `/admin/puntos-acceso/{id}/pantalla`) requieren refrescar su contenido antes de su vencimiento sin depender de la hora local del dispositivo (que puede estar desfasada respecto al reloj del servidor) y sin fugar temporizadores o memoria.
+
+**Decisión:** actualización periódica orientada al servidor:
+1. El backend entrega el recurso junto con su tiempo de expiración UTC (`validoHasta`) y la duración del periodo (`periodoSegundos`).
+2. El cliente programa la siguiente petición para ejecutarse un intervalo prudente antes del vencimiento (p. ej. **2 segundos antes de `validoHasta`**), usando la diferencia temporal calculada contra la respuesta del servidor y no contra el reloj local del cliente.
+3. **Resiliencia ante fallas de red:** si la llamada de renovación falla transitoriamente, el contenido actual se mantiene en pantalla hasta su vencimiento real. Una vez vencido sin conexión, no se muestra el contenido caducado; se pasa a un estado degradado claro (*"Sin conexión con el servidor. Reintentando..."*) con reintentos progresivos.
+4. **Ciclo de vida:** el componente implementa `IDisposable` o `IAsyncDisposable` para asegurar la cancelación de todos los temporizadores (`CancellationTokenSource` / `Timer`) al navegar fuera de la pantalla.
+5. **Screen Wake Lock:** se solicita a través de JSInterop la API del navegador para evitar que la pantalla se apague, manejando de forma segura entornos donde la API no esté disponible o no tenga permisos.
+

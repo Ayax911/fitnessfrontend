@@ -44,6 +44,30 @@
 | CU-07 | Promoción desde lista de espera | ⬜ solo pruebas de integración con PostgreSQL real |
 | CU-08 / RF-022 | Consolidación al cerrar la ventana | ⬜ solo pruebas de integración (incluida la atomicidad) |
 
+## Plan de despliegue (Fases F1 a F7)
+
+| Fase / RF | Flujo de verificación | Estado |
+|---|---|---|
+| F1 / RF-026 | Sesión vencida durante un check-in (`/checkin/{token}`): renueva en silencio y completa sin redirigir a login | ⬜ pendiente F1 |
+| F1 / RF-026 | 5 peticiones simultáneas con token vencido generan exactamente 1 llamada a refresh | ⬜ pendiente F1 |
+| F2 / RF-035 | Vista semanal `/programacion` convierte a `America/Bogota` y muestra franjas de bloqueo | ⬜ pendiente F2 |
+| F2 / RF-036 | Descarga de archivo `.ics` desde Mis reservas confirmadas | ⬜ pendiente F2 |
+| F2 / RF-037 | Contador de lista de espera visible sin revelar posición personal (RN-020) | ⬜ pendiente F2 |
+| F2 / RF-038 | Sección `/ayuda` visible con preguntas frecuentes y enlaces de pie | ⬜ pendiente F2 |
+| F3 / RF-027 | Entrenador marca/desmarca asistencia manual; desmarcar pide confirmación | ⬜ pendiente F3 |
+| F3 / RF-034 | Notas e incidencias de sesión guardadas como texto plano | ⬜ pendiente F3 |
+| F3 / RF-029 | Anuncios visibles en Mis reservas y detalle de sesión | ⬜ pendiente F3 |
+| F3 / RF-028 | Reserva en sesión cancelada muestra insignia "Sesión cancelada" sin botón cancelar | ⬜ pendiente F3 |
+| F4 / RF-028 | Cancelar sesión exige motivo y confirma indicando número de reservas afectadas | ⬜ pendiente F4 |
+| F4 / RF-030 | Inscribir a usuario de terceros respeta cupo y motivo | ⬜ pendiente F4 |
+| F4 / RF-031 | Bloqueos de calendario impiden reservas dentro del rango | ⬜ pendiente F4 |
+| F4 / RF-032 | Registro de auditoría administrativo consultable y paginado | ⬜ pendiente F4 |
+| F5 / RF-033 | Reportes administrativos con exportación CSV | ⬜ pendiente F5 |
+| F6 / RF-039 | Pantalla de punto de acceso actualiza QR 2s antes de expirar | ⬜ pendiente F6 |
+| F6 / RF-039 | Escaneo de QR vencido muestra mensaje `QrVencido` sin bucle de reintento | ⬜ pendiente F6 |
+| F7 / RF-038 | Reportar problema/sugerencia enviado y consultado en bandeja admin | ⬜ pendiente F7 |
+
+
 ## Pendiente que requiere a una persona
 
 - [ ] **Check-in por QR probado en un teléfono real** (cámara nativa, HTTPS): el flujo se verificó en el navegador de escritorio.

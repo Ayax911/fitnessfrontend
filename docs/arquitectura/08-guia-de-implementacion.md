@@ -53,6 +53,20 @@ Esta tabla existe porque la revisión del backend del 2026-09-26 descubrió que 
 | RF-024 | Must | Administrador | **Fase 4** (ampliación 2026-10-31) | `Paginas/Asistencia/Administrar/PuntosAcceso.razor` (lista, alta, activar/desactivar, QR imprimible) |
 | RF-016 | Must | Administrador | **Fase 5** | `IndicadorUsuario.razor` |
 | RF-018 | Must | Administrador | **Fase 5** | `ConfiguracionSistema.razor` |
+| RF-026 | Must | Todos | **F1** | `ManejadorDeAutenticacionHttp.cs`, `AutenticacionService` (renovación de sesión de un solo vuelo) |
+| RF-027 | Must | Entrenador, Administrador | **F3** | `Paginas/Asistencia/AsistenciaManual.razor` |
+| RF-028 | Must | Administrador | **F4** | `Paginas/Eventos/Administrar/AdministrarSesion.razor` (cancelar/reprogramar) y `MisReservas.razor` (lado usuario) |
+| RF-029 | Should | Entrenador, Administrador | **F3** (lado usuario) / **F4** (admin/entrenador) | Anuncios en `AdministrarSesion.razor` y consulta en `MisReservas.razor`/detalle |
+| RF-030 | Should | Administrador | **F4** | `Paginas/Eventos/Administrar/AdministrarSesion.razor` (reservas de terceros) |
+| RF-031 | Should | Administrador / Todos | **F4** (gestión) / **F2** (consulta) | `Paginas/Eventos/Administrar/BloqueosCalendario.razor` y franjas en `Programacion.razor` |
+| RF-032 | Must | Administrador | **F4** | `Paginas/Auditoria/RegistroAuditoria.razor` |
+| RF-033 | Must | Administrador | **F5** | `Paginas/Reportes/Reportes.razor` |
+| RF-034 | Could | Entrenador, Administrador | **F3** | `Paginas/Eventos/NotasDeSesion.razor` |
+| RF-035 | Should | Autenticados | **F2** | `Paginas/Eventos/Programacion.razor` |
+| RF-036 | Could | Usuario | **F2** | Botón .ics en `MisReservas.razor` (`Servicios/Calendario/GeneradorIcs.cs`) |
+| RF-037 | Could | Usuario | **F2** | Contador agregado en `ListaEventos.razor` y `Programacion.razor` (sin posición personal) |
+| RF-038 | Should | Todos / Administrador | **F2** (ayuda) / **F7** (reportar) | `Paginas/Ayuda/Ayuda.razor`, `Paginas/Retroalimentacion/Reportar.razor`, `MisReportes.razor`, `BandejaAdministrador.razor` |
+| RF-039 | Must | Administrador (pantalla), Usuario (escaneo) | **F6** | `Paginas/Asistencia/Administrar/PantallaPuntoAcceso.razor`, `Ingreso.razor` (QrVencido), `PuntosAcceso.razor` |
 
 ### RF que deliberadamente NO tienen interfaz en este repositorio
 
@@ -65,6 +79,8 @@ Verificar que estén ausentes es tan parte de la cobertura como verificar que lo
 | RF-017 | Aplicación de la ventana escalonada — es una **validación del backend**; la UI solo refleja su rechazo (y ahí entra AMB-014) |
 | RF-019 | Promoción automática desde lista de espera — proceso del backend (CU-07); la UI solo muestra el estado ya cambiado |
 | RF-022 | Consolidación de la sesión — `BackgroundService` del backend (CU-08) |
+| RF-041 | Solicitud de revisión de priorización — diferido a diseño en F10; sin pantallas en este prototipo |
+| RF-042 | Derechos del titular de datos (Ley 1581) — diferido a diseño en F10; sin pantallas en este prototipo |
 
 ---
 
@@ -176,6 +192,23 @@ Orden de recorte, alineado con la priorización MoSCoW del backend ([16-prioriza
 - [ ] Tabla de cobertura de RF recorrida completa: cada `Must Have` con pantalla, cada "sin interfaz" ausente.
 - [ ] Fase 6 ejecutada sobre el sistema completo, no pantalla por pantalla.
 - [ ] CU-01 a CU-06 verificados manualmente contra el backend desplegado.
-- [ ] Check-in por QR probado en un teléfono real.
-- [ ] Todo `PENDIENTE` de ambigüedad abierta presente y correctamente referenciado; ninguno resuelto en silencio.
 - [ ] `docs/` de este repositorio sigue reflejando el sistema real — cualquier desviación tomada durante la implementación quedó documentada aquí.
+
+---
+
+## Anexo: Plan de preparación para el despliegue (F0 a F10, 2026-10-31)
+
+Con las fases 0 a 6 y el rediseño visual concluidos, el trabajo vigente pasa a regirse por [docs/plan-despliegue/00-indice.md](../plan-despliegue/00-indice.md) y [docs/plan-despliegue/01-guia-frontend.md](../plan-despliegue/01-guia-frontend.md).
+Las nuevas fases F0 a F10 cubren:
+- **F0**: Documentación previa y actualización de coberturas (este anexo).
+- **F1**: Renovación de sesión de un solo vuelo (`ManejadorDeAutenticacionHttp.cs`, RF-026).
+- **F2**: Programación semanal, `.ics`, lista de espera agregada y ayuda (`RF-035`, `RF-036`, `RF-037`, `RF-038`).
+- **F3**: Entrenador (asistencia manual, notas, anuncios) y visualización de sesión cancelada en el usuario (`RF-027`, `RF-029`, `RF-034`, `RF-028`).
+- **F4**: Administración de sesiones, bloqueos de calendario, reservas de terceros y registro de auditoría (`RF-028`, `RF-029`, `RF-030`, `RF-031`, `RF-032`).
+- **F5**: Reportes administrativos y exportación CSV (`RF-033`).
+- **F6**: Pantalla del punto de acceso con QR dinámico (`RF-039`).
+- **F7**: Retroalimentación y reporte de problemas (`RF-038`).
+- **F8**: PWA instalable (opcional).
+- **F9**: Cierre visual, accesibilidad WCAG 2.1 AA y E2E.
+- **F10**: Diseños diferidos en documentación (`RF-041`, `RF-042`).
+

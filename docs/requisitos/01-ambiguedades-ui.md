@@ -36,3 +36,32 @@
 
 - **Cualquier regla de negocio.** Si la duda es "¿debería permitirse X?", la respuesta no se decide en la UI: se consulta al backend y se muestra su resultado. Ver la regla de comportamiento 1 de [../arquitectura/08-guia-de-implementacion.md](../arquitectura/08-guia-de-implementacion.md).
 - **Los textos de error de negocio.** El backend devuelve `{ codigoError, mensaje }`; el frontend muestra ese `mensaje`. Solo se redacta un texto propio cuando el mensaje del backend sea genuinamente insuficiente para el usuario final, y en ese caso se documenta en el componente por qué se sustituyó.
+
+---
+
+## Anexo: Ambigüedades del plan de despliegue (2026-10-31)
+
+### AMB-D04 — Posición personal en lista de espera (RF-037 / RN-020)
+
+| Campo | Contenido |
+|---|---|
+| **Origen** | RF-037 — mostrar cuántas personas hay en lista de espera |
+| **El conflicto** | Como el orden de la lista de espera depende del nivel de priorización (RN-024), mostrar la posición personal (p. ej. "Estás en el puesto 1 de 5") permitiría deducir el nivel de priorización propio o ajeno, violando la confidencialidad exigida por RN-020. |
+| **Comportamiento adoptado** | **No se muestra la posición personal.** La UI únicamente renderiza el total agregado de personas en espera (p. ej. "5 personas en lista de espera") en `ListaEventos.razor` y `Programacion.razor`. |
+| **Marcador en código** | `@* PENDIENTE (AMB-D04): solo se muestra el total agregado de personas en lista de espera; nunca la posición personal para no filtrar el nivel (RN-020). *@` |
+
+### AMB-D07 — Cancelación de sesiones (RF-028)
+
+| Campo | Contenido |
+|---|---|
+| **Origen** | RF-028 — cancelar y reprogramar sesiones |
+| **El conflicto** | Definir si el Entrenador dueño de la sesión puede cancelarla o únicamente el Administrador. |
+| **Comportamiento adoptado** | **Solo el Administrador** tiene acceso a la pantalla de cancelación de sesiones (`/admin/sesiones/{id}`). El Entrenador no ve enlaces de cancelación ni puede ejecutarla. |
+| **Marcador en código** | `@* PENDIENTE (AMB-D07): cancelación de sesión reservada exclusivamente al Administrador. *@` |
+
+### Nota de compatibilidad de AMB-014 con "sesión cancelada" (RF-028 / RN-031)
+
+Cuando una sesión es cancelada por la administración, las reservas asociadas pasan a estado cancelado con origen `SesionCancelada`.
+En `MisReservas.razor`, el usuario ve una insignia `InsigniaEstado tipo="cancelada"` con el texto "Sesión cancelada" y el motivo institucional registrado por el administrador.
+**Compatibilidad con RN-020 y AMB-014:** el mensaje de cancelación proviene de una decisión de la organización sobre la sesión y **no** revela nivel, indicador de confiabilidad ni penalización del usuario. La reserva no ofrece botón de cancelación y se informa con total neutralidad.
+
