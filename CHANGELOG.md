@@ -2,6 +2,11 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## F9 · Cierre visual, accesibilidad y verificación de navegación por rol
+- Ampliada `EditarEvento.razor` con tarjeta de gestión operativa conectando a la administración de sesiones y programación del evento.
+- Ampliadas las pruebas de navegación `NavegacionPorRolTests.cs` para validar que todas las rutas administrativas nuevas (`admin/auditoria`, `admin/reportes`, `admin/retroalimentacion`, `admin/calendario`) no sean visibles para roles de Usuario ni Entrenador.
+- Creada suite de accesibilidad y verificación de estándares en `AccesibilidadF9Tests.cs`: comprobación de que el 100% de las pantallas Razor contengan el ID de su RF de origen en el encabezado, presencia de skip-link accesible para teclado en `index.html`, y ausencia de colores arbitrarios fuera de los tokens de `itm-tema.css` (144 pruebas en verde).
+
 ## F8 · PWA instalable
 - Creado `manifest.webmanifest` con nombre oficial institucional, `display: standalone`, colores de marca `#011C5B` e íconos maskable (192 y 512 px).
 - Vinculado `manifest.webmanifest` en `index.html`.
