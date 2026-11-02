@@ -279,17 +279,18 @@ public class ReportesClienteService : IReportesClienteService
                 return EstadoDeCarga<ReporteUsoPlataformaDto>.Correcto(new ReporteUsoPlataformaDto(0, 0, 0, 0));
             }
 
-            var dto = JsonSerializer.Deserialize<ReporteUsoPlataformaBackend>(json, _jsonOptions);
-            if (dto == null)
-            {
-                return EstadoDeCarga<ReporteUsoPlataformaDto>.Correcto(new ReporteUsoPlataformaDto(0, 0, 0, 0));
-            }
+            // El backend devuelve UNA FILA POR DÍA (lista), no un objeto: se suman los totales y se conserva el detalle diario
+            var filas = JsonSerializer.Deserialize<List<ReporteUsoPlataformaBackend>>(json, _jsonOptions) ?? new();
+            var diario = filas.OrderBy(f => f.Fecha)
+                .Select(f => new UsoPlataformaDiarioDto(f.Fecha.ToDateTime(TimeOnly.MinValue), f.RegistrosNuevos, f.UsuariosActivos, f.ReservasCreadas, f.Cancelaciones))
+                .ToList();
 
             var resultado = new ReporteUsoPlataformaDto(
-                dto.RegistrosNuevos,
-                dto.UsuariosActivos,
-                dto.ReservasCreadas,
-                dto.Cancelaciones
+                filas.Sum(f => f.RegistrosNuevos),
+                filas.Count == 0 ? 0 : filas.Max(f => f.UsuariosActivos),
+                filas.Sum(f => f.ReservasCreadas),
+                filas.Sum(f => f.Cancelaciones),
+                diario
             );
 
             return EstadoDeCarga<ReporteUsoPlataformaDto>.Correcto(resultado);

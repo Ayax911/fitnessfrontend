@@ -1,0 +1,68 @@
+@* Confirmación antes de una acción que no se puede deshacer (diseño del artifact "Confirmar cancelación"):
+   hoja inferior en celular y ventana centrada en pantallas anchas. Esc o tocar el fondo = no hacer nada. *@
+@using FitnessFrontend.Servicios.Infraestructura
+
+@if (Abierto)
+{
+    <div class="itm-modal itm-modal--hoja" @onkeydown="AlTeclear">
+        <div class="itm-modal__fondo" aria-hidden="true" @onclick="Cancelar"></div>
+        <section class="itm-modal__caja" role="alertdialog" aria-modal="true" aria-labelledby="@(IdBase)-titulo" aria-describedby="@(IdBase)-texto" tabindex="-1" @ref="_caja">
+            <h2 id="@(IdBase)-titulo">@Titulo</h2>
+            @if (Datos is { Count: > 0 })
+            {
+                <dl class="itm-datos">
+                    @foreach (var dato in Datos)
+                    {
+                        <dt>@dato.Etiqueta</dt>
+                        <dd>@dato.Valor</dd>
+                    }
+                </dl>
+            }
+            @if (!string.IsNullOrWhiteSpace(Mensaje))
+            {
+                <p id="@(IdBase)-texto">@Mensaje</p>
+            }
+            <div class="itm-modal__acciones">
+                <button type="button" class="btn @(Peligro ? "btn-danger" : "btn-itm-primario") itm-btn-bloque" disabled="@Procesando" @onclick="Confirmar">
+                    @(Procesando ? TextoProcesando : TextoConfirmar)
+                </button>
+                <button type="button" class="btn btn-itm-secundario itm-btn-bloque" disabled="@Procesando" @onclick="Cancelar">@TextoCancelar</button>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Abierto { get; set; }
+    [Parameter] public string IdBase { get; set; } = "confirmar";
+    [Parameter] public string Titulo { get; set; } = "¿Confirmar?";
+    [Parameter] public string? Mensaje { get; set; }
+    [Parameter] public IReadOnlyList<DatoAviso>? Datos { get; set; }
+    [Parameter] public string TextoConfirmar { get; set; } = "Sí, continuar";
+    [Parameter] public string TextoCancelar { get; set; } = "No, volver";
+    [Parameter] public string TextoProcesando { get; set; } = "Procesando...";
+    [Parameter] public bool Peligro { get; set; }
+    [Parameter] public bool Procesando { get; set; }
+    [Parameter] public EventCallback OnConfirmar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private ElementReference _caja;
+    private bool _enfocado;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Abierto && !_enfocado)
+        {
+            _enfocado = true;
+            await _caja.FocusAsync();
+        }
+        else if (!Abierto)
+        {
+            _enfocado = false;
+        }
+    }
+
+    private Task Confirmar() => Procesando ? Task.CompletedTask : OnConfirmar.InvokeAsync();
+    private Task Cancelar() => Procesando ? Task.CompletedTask : OnCancelar.InvokeAsync();
+    private Task AlTeclear(KeyboardEventArgs e) => e.Key == "Escape" ? Cancelar() : Task.CompletedTask;
+}

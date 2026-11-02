@@ -29,6 +29,11 @@ public class Amb014VentanaNoAbiertaTests : BunitContext
         public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default) =>
             ObtenerEventosDisponiblesAsync(ct);
 
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
+
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Correcto(new List<ActividadAsignadaDto>()));
 
@@ -116,7 +121,7 @@ public class Amb014VentanaNoAbiertaTests : BunitContext
 
         // ASERCIÓN POSITIVA OBLIGATORIA (comportamiento menos comprometedor AMB-014):
         // Muestra texto genérico y neutro
-        Assert.Contains("Reservas aún no disponibles para esta sesión", markup);
+        Assert.Contains("Reservas aún no disponibles", markup);
 
         // La acción queda deshabilitada para esa sesión
         var botonDeshabilitado = cut.Find("button.btn-itm-primario");

@@ -14,6 +14,14 @@ namespace FitnessFrontend.ApiCliente.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
+        /// <summary>The entrenadorNombre property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? EntrenadorNombre { get; set; }
+#nullable restore
+#else
+        public string EntrenadorNombre { get; set; }
+#endif
         /// <summary>The estado property</summary>
         public int? Estado { get; set; }
         /// <summary>The eventoNombre property</summary>
@@ -23,6 +31,14 @@ namespace FitnessFrontend.ApiCliente.Models
 #nullable restore
 #else
         public string EventoNombre { get; set; }
+#endif
+        /// <summary>The eventoUbicacion property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? EventoUbicacion { get; set; }
+#nullable restore
+#else
+        public string EventoUbicacion { get; set; }
 #endif
         /// <summary>The fechaHoraCambioEstado property</summary>
         public DateTimeOffset? FechaHoraCambioEstado { get; set; }
@@ -74,8 +90,10 @@ namespace FitnessFrontend.ApiCliente.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "entrenadorNombre", n => { EntrenadorNombre = n.GetStringValue(); } },
                 { "estado", n => { Estado = n.GetIntValue(); } },
                 { "eventoNombre", n => { EventoNombre = n.GetStringValue(); } },
+                { "eventoUbicacion", n => { EventoUbicacion = n.GetStringValue(); } },
                 { "fechaHoraCambioEstado", n => { FechaHoraCambioEstado = n.GetDateTimeOffsetValue(); } },
                 { "fechaHoraFin", n => { FechaHoraFin = n.GetDateTimeOffsetValue(); } },
                 { "fechaHoraInicio", n => { FechaHoraInicio = n.GetDateTimeOffsetValue(); } },
@@ -94,8 +112,10 @@ namespace FitnessFrontend.ApiCliente.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteStringValue("entrenadorNombre", EntrenadorNombre);
             writer.WriteIntValue("estado", Estado);
             writer.WriteStringValue("eventoNombre", EventoNombre);
+            writer.WriteStringValue("eventoUbicacion", EventoUbicacion);
             writer.WriteDateTimeOffsetValue("fechaHoraCambioEstado", FechaHoraCambioEstado);
             writer.WriteDateTimeOffsetValue("fechaHoraFin", FechaHoraFin);
             writer.WriteDateTimeOffsetValue("fechaHoraInicio", FechaHoraInicio);

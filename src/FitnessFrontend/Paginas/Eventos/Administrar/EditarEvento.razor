@@ -53,6 +53,11 @@
                                 <InputTextArea id="descripcionEvento" class="form-control" rows="3" @bind-Value="_request.Descripcion" />
                             </div>
 
+                            <div class="col-12">
+                                <label for="ubicacionEvento" class="form-label fw-semibold">Ubicación (opcional)</label>
+                                <CampoUbicacion Id="ubicacionEvento" @bind-Value="_request.Ubicacion" />
+                            </div>
+
                             <div class="col-12 col-md-6">
                                 <label for="entrenadorId" class="form-label fw-semibold">Entrenador responsable</label>
                                 <SelectorEntrenador Id="entrenadorId" @bind-Value="_entrenadorId" />
@@ -169,9 +174,31 @@
     private string? _mensajeAlerta;
     private bool _alertaEsExito;
 
-    protected override void OnInitialized()
+    // Se precarga el evento: antes el formulario abría vacío y obligaba a reescribir todos los datos
+    protected override async Task OnInitializedAsync()
     {
         _request.Activo = _activoValor;
+
+        var res = await EventosService.ObtenerEventoAsync(IdEvento);
+        if (!res.EsExito || res.Valor == null)
+        {
+            _alertaEsExito = false;
+            _mensajeAlerta = res.MensajeError ?? "No fue posible cargar el evento.";
+            return;
+        }
+
+        var evento = res.Valor;
+        _request.Nombre = evento.Nombre ?? string.Empty;
+        _request.Descripcion = evento.Descripcion;
+        _request.Ubicacion = evento.Ubicacion;
+        _request.CupoMaximoPorDefecto = evento.CupoMaximoPorDefecto ?? 20;
+        _entrenadorId = evento.EntrenadorId;
+        _activoValor = evento.Activo ?? true;
+        _request.Activo = _activoValor;
+        if (evento.FechaAperturaReservas.HasValue)
+        {
+            _fechaAperturaLocal = ZonaHoraria.AHoraLocal(evento.FechaAperturaReservas.Value).DateTime;
+        }
     }
 
     private async Task GuardarCambios()

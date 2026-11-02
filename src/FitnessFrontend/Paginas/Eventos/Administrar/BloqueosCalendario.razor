@@ -33,9 +33,10 @@
                 <div class="mb-3">
                     <label for="bloqueoTipo" class="form-label small fw-bold">Tipo de cierre:</label>
                     <select id="bloqueoTipo" class="form-select form-select-sm" @bind="_nuevoTipo">
-                        <option value="Festivo">Festivo institucional / Nacional</option>
-                        <option value="Mantenimiento">Mantenimiento general o caldera</option>
-                        <option value="Cierre">Cierre extraordinario / Evento institucional</option>
+                        @foreach (var tipo in TiposBloqueoUi.Todos)
+                        {
+                            <option value="@tipo.Valor">@tipo.Etiqueta</option>
+                        }
                     </select>
                 </div>
 
@@ -97,8 +98,8 @@
                             <div class="list-group-item px-0 py-3 border-bottom d-flex justify-content-between align-items-center" @key="bloqueo.Id">
                                 <div>
                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                        <span class="badge @(bloqueo.Tipo == "Festivo" ? "bg-info text-dark" : bloqueo.Tipo == "Mantenimiento" ? "bg-warning text-dark" : "bg-secondary")">
-                                            @bloqueo.Tipo
+                                        <span class="badge @TiposBloqueoUi.ClaseInsignia(bloqueo.Tipo)">
+                                            @TiposBloqueoUi.Etiqueta(bloqueo.Tipo)
                                         </span>
                                         <span class="fw-bold text-dark">@bloqueo.Motivo</span>
                                     </div>

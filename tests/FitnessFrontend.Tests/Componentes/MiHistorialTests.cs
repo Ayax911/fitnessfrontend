@@ -89,9 +89,11 @@ public class MiHistorialTests : BunitContext
         var markup = cut.Markup;
 
         Assert.Contains("Spinning Matutino", markup);
-        Assert.Contains("Sesión Deportiva", markup);
-        Assert.Contains("Ingreso General", markup);
-        Assert.Contains("08:30", markup);
+        Assert.Contains("Sesión", markup);
+        Assert.Contains("Ingreso general", markup);
+        Assert.Contains("Asistida", markup);
+        Assert.Contains("Ingreso registrado", markup);
+        Assert.Contains("8:30", markup);
     }
 
     [Fact]

@@ -38,6 +38,14 @@ namespace FitnessFrontend.ApiCliente.Models
 #else
         public string Nombre { get; set; }
 #endif
+        /// <summary>The ubicacion property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? Ubicacion { get; set; }
+#nullable restore
+#else
+        public string Ubicacion { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::FitnessFrontend.ApiCliente.Models.ActualizarEventoRequest"/> and sets the default values.
         /// </summary>
@@ -69,6 +77,7 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "entrenadorId", n => { EntrenadorId = n.GetGuidValue(); } },
                 { "fechaAperturaReservas", n => { FechaAperturaReservas = n.GetDateTimeOffsetValue(); } },
                 { "nombre", n => { Nombre = n.GetStringValue(); } },
+                { "ubicacion", n => { Ubicacion = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -84,6 +93,7 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteGuidValue("entrenadorId", EntrenadorId);
             writer.WriteDateTimeOffsetValue("fechaAperturaReservas", FechaAperturaReservas);
             writer.WriteStringValue("nombre", Nombre);
+            writer.WriteStringValue("ubicacion", Ubicacion);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

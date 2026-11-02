@@ -40,11 +40,19 @@ public record ReporteHorasPicoDto(
     int TotalIngresosYCheckins
 );
 
+/// <summary>Una fila por día del rango consultado.</summary>
+public record UsoPlataformaDiarioDto(DateTime Fecha, int RegistrosNuevos, int UsuariosActivos, int ReservasCreadas, int Cancelaciones);
+
+/// <summary>
+/// Totales del rango (registros, reservas y cancelaciones suman los días; UsuariosActivos es el MÁXIMO de un día,
+/// porque el backend informa personas activas por día y sumarlas contaría varias veces a la misma persona) y el detalle diario.
+/// </summary>
 public record ReporteUsoPlataformaDto(
     int RegistrosNuevos,
     int UsuariosActivos,
     int ReservasCreadas,
-    int Cancelaciones
+    int Cancelaciones,
+    IReadOnlyList<UsoPlataformaDiarioDto>? Diario = null
 );
 
 public interface IReportesClienteService

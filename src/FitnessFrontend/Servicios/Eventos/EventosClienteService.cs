@@ -114,6 +114,32 @@ public class EventosClienteService : IEventosClienteService
         }
     }
 
+    // RF-009: Un evento por id
+    public async Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default)
+    {
+        try
+        {
+            var evento = await _apiClient.Api.Eventos[id].GetAsync(cancellationToken: ct);
+            return evento == null
+                ? EstadoDeCarga<EventoResumenDto>.Fallo("No se encontró el evento.", "EventoNoEncontrado")
+                : EstadoDeCarga<EventoResumenDto>.Correcto(evento);
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return EstadoDeCarga<EventoResumenDto>.Fallo(errorEx.Mensaje ?? "No fue posible cargar el evento.", errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            return EstadoDeCarga<EventoResumenDto>.Fallo(
+                apiEx.ResponseStatusCode == 404 ? "No se encontró el evento." : $"No fue posible cargar el evento ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return EstadoDeCarga<EventoResumenDto>.Fallo($"Error de red al cargar el evento: {ex.Message}", "ErrorRed");
+        }
+    }
+
     // RF-007, RF-008: Crear un nuevo evento (Administrador)
     public async Task<EstadoDeCarga<Guid>> CrearEventoAsync(CrearEventoRequest request, CancellationToken ct = default)
     {

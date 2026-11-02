@@ -40,8 +40,9 @@
             <div class="itm-resultado">
                 <span class="itm-resultado__sello itm-resultado__sello--error"><svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>
                 <h1>No fue posible registrar la asistencia</h1>
-                <div class="alert alert-danger w-100 text-start" role="alert">@_estado.MensajeError</div>
+                <p role="alert">@_estado.MensajeError</p>
                 <a href="/eventos" class="btn btn-itm-secundario itm-btn-bloque">Ver actividades disponibles</a>
+                <a href="/reservas" class="itm-enlace-secundario">Ir a mis reservas</a>
             </div>
         }
         else if (_estado.EsExito && _estado.Valor != null)
@@ -54,11 +55,11 @@
 
                 @if (!string.IsNullOrWhiteSpace(checkin.Detalle))
                 {
-                    <dl class="itm-datos"><dt>Sesión</dt><dd>@checkin.Detalle</dd></dl>
+                    <dl class="itm-datos"><dt>Actividad</dt><dd>@checkin.Detalle</dd></dl>
                 }
 
                 <a href="/reservas" class="btn btn-itm-primario itm-btn-bloque">Ver mis reservas</a>
-                <a href="/eventos" class="btn btn-itm-secundario itm-btn-bloque">Ir al inicio</a>
+                <a href="/eventos" class="itm-enlace-secundario">Ir a actividades</a>
             </div>
         }
     }

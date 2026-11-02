@@ -59,6 +59,11 @@ public class AdministrarEventosTests : BunitContext
             CancellationToken ct = default) =>
             throw new NotImplementedException();
 
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
+
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             throw new NotImplementedException();
 

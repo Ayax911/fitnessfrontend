@@ -66,6 +66,14 @@ namespace FitnessFrontend.ApiCliente.Models
 #else
         public List<global::FitnessFrontend.ApiCliente.Models.SesionResumenDto> Sesiones { get; set; }
 #endif
+        /// <summary>The ubicacion property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? Ubicacion { get; set; }
+#nullable restore
+#else
+        public string Ubicacion { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::FitnessFrontend.ApiCliente.Models.EventoResumenDto"/> and sets the default values.
         /// </summary>
@@ -102,6 +110,7 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "nombre", n => { Nombre = n.GetStringValue(); } },
                 { "patronRecurrencia", n => { PatronRecurrencia = n.GetObjectValue<global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia>(global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia.CreateFromDiscriminatorValue); } },
                 { "sesiones", n => { Sesiones = n.GetCollectionOfObjectValues<global::FitnessFrontend.ApiCliente.Models.SesionResumenDto>(global::FitnessFrontend.ApiCliente.Models.SesionResumenDto.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "ubicacion", n => { Ubicacion = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -122,6 +131,7 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteStringValue("nombre", Nombre);
             writer.WriteObjectValue<global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia>("patronRecurrencia", PatronRecurrencia);
             writer.WriteCollectionOfObjectValues<global::FitnessFrontend.ApiCliente.Models.SesionResumenDto>("sesiones", Sesiones);
+            writer.WriteStringValue("ubicacion", Ubicacion);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

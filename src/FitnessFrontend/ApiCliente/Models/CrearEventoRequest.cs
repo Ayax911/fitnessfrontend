@@ -50,6 +50,14 @@ namespace FitnessFrontend.ApiCliente.Models
 #else
         public global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia PatronRecurrencia { get; set; }
 #endif
+        /// <summary>The ubicacion property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? Ubicacion { get; set; }
+#nullable restore
+#else
+        public string Ubicacion { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::FitnessFrontend.ApiCliente.Models.CrearEventoRequest"/> and sets the default values.
         /// </summary>
@@ -84,6 +92,7 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "fechaHoraInicioUnica", n => { FechaHoraInicioUnica = n.GetDateTimeOffsetValue(); } },
                 { "nombre", n => { Nombre = n.GetStringValue(); } },
                 { "patronRecurrencia", n => { PatronRecurrencia = n.GetObjectValue<global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia>(global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia.CreateFromDiscriminatorValue); } },
+                { "ubicacion", n => { Ubicacion = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -102,6 +111,7 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteDateTimeOffsetValue("fechaHoraInicioUnica", FechaHoraInicioUnica);
             writer.WriteStringValue("nombre", Nombre);
             writer.WriteObjectValue<global::FitnessFrontend.ApiCliente.Models.PatronRecurrencia>("patronRecurrencia", PatronRecurrencia);
+            writer.WriteStringValue("ubicacion", Ubicacion);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

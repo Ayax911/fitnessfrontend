@@ -61,6 +61,11 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
             return Task.FromResult(EstadoDeCarga<IReadOnlyList<EventoResumenDto>>.Correcto(res.ToList()));
         }
 
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
+
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Correcto(new List<ActividadAsignadaDto>()));
 
@@ -359,6 +364,9 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
 
         public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(
             DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default) => _tarea;
+
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
 
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Correcto(new List<ActividadAsignadaDto>()));

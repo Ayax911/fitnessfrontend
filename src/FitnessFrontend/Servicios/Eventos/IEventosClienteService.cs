@@ -19,6 +19,9 @@ public interface IEventosClienteService
     // RF-035: Programación por rango de fechas y paginación
     Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default);
 
+    // RF-009: Un evento por id (para precargar el formulario de edición)
+    Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default);
+
     // RF-010: Consultar actividades asignadas al entrenador autenticado
     Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default);
 

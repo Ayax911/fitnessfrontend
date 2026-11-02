@@ -1,0 +1,33 @@
+@* Panel azul de las pantallas de acceso (diseño del artifact "Inicio de sesión" y "Registro"): logo, título grande,
+   texto breve de lo que se hace en la pantalla y círculos concéntricos de decoración. *@
+<section class="itm-panel-azul itm-panel-azul--portada" aria-label="Bienvenida">
+    <div class="itm-portada__arriba">
+        @if (!string.IsNullOrWhiteSpace(VolverHref))
+        {
+            <a class="itm-portada__volver" href="@VolverHref">
+                <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                @VolverTexto
+            </a>
+        }
+        else
+        {
+            <img class="itm-portada__logo" src="img/itm-horizontal-blanco.png" alt="ITM, Institución Universitaria" />
+        }
+    </div>
+    <svg class="itm-portada__circulos" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="var(--celeste-itm)" stroke-width="1.6" opacity=".55">
+            <circle cx="200" cy="200" r="54" /><circle cx="200" cy="200" r="100" /><circle cx="200" cy="200" r="146" /><circle cx="200" cy="200" r="192" />
+        </g>
+    </svg>
+    <div class="itm-portada__abajo">
+        <h1>@Titulo</h1>
+        <p>@Texto</p>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Titulo { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Texto { get; set; } = string.Empty;
+    [Parameter] public string? VolverHref { get; set; }
+    [Parameter] public string VolverTexto { get; set; } = "Volver al inicio de sesión";
+}

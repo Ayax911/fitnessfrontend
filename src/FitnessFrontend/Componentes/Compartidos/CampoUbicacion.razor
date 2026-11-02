@@ -1,0 +1,26 @@
+@* Ubicación del evento (opcional): texto libre con sugerencias de sedes y espacios.
+   PENDIENTE (Bienestar Universitario): catálogo oficial de sedes y espacios; mientras tanto se aceptan sugerencias y texto libre. *@
+<input id="@Id" class="form-control" type="text" maxlength="150" list="@(Id)-sugerencias" autocomplete="off"
+       placeholder="Ej. Campus Fraternidad: Gimnasio" value="@Value" @oninput="AlCambiar" aria-describedby="@(Id)-ayuda" />
+<datalist id="@(Id)-sugerencias">
+    @foreach (var sugerencia in Sugerencias)
+    {
+        <option value="@sugerencia"></option>
+    }
+</datalist>
+<div id="@(Id)-ayuda" class="form-text small">Dónde se realiza: campus y espacio (opcional).</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "ubicacionEvento";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    private static readonly string[] Sugerencias =
+    {
+        "Campus Fraternidad: Gimnasio",
+        "Campus Floresta: Auditorio mayor",
+        "Campus Robledo: Cancha múltiple"
+    };
+
+    private Task AlCambiar(ChangeEventArgs e) => ValueChanged.InvokeAsync(e.Value?.ToString());
+}

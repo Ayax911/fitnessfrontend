@@ -34,6 +34,11 @@ public class ListaEventosTests : BunitContext
         public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default) =>
             ObtenerEventosDisponiblesAsync(ct);
 
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
+
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default)
         {
             return Task.FromResult(EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Correcto(new List<ActividadAsignadaDto>()));
@@ -110,11 +115,12 @@ public class ListaEventosTests : BunitContext
         // Verifica nombre y entrenador
         Assert.Contains("Crossfit Funcional", markup);
         Assert.Contains("Profe Andrea", markup);
-        Assert.Contains("10 cupos", markup);
+        Assert.Contains("cupos libres", markup);
 
         // Verifica que la hora renderizada es la de Bogotá (09:00 a. m.), no 14:00 UTC
-        Assert.Contains("09:00", markup);
+        Assert.Contains("9:00 a. m.", markup);
         Assert.DoesNotContain("14:00", markup);
+        Assert.DoesNotContain("2:00 p. m.", markup);
     }
 
     [Fact]

@@ -6,16 +6,12 @@
 @inject IAutenticacionService AutenticacionService
 @inject NavigationManager NavigationManager
 
-<div class="itm-acceso">
-    <section class="itm-panel-azul" aria-label="Bienvenida">
-        <p style="font: 700 22px/28px var(--font-sans); margin-bottom: var(--space-3);">Gimnasio universitario</p>
-        <p>Reserva tu cupo, registra tu asistencia con el código QR y consulta tu historial, todo en un solo lugar.</p>
-    </section>
+<div class="itm-acceso itm-acceso--registro">
+    <PanelBienvenida Titulo="Crea tu cuenta" Texto="Con ella reservas cupo y registras tu asistencia. Tarda un minuto." VolverHref="@ObtenerUrlLogin()" VolverTexto="Volver al inicio de sesión" />
     <div class="itm-acceso__formulario">
         <div>
 
-                    <h1 class="mb-2">Crear cuenta</h1>
-                    <p class="mb-4">Crea tu cuenta para reservar cupo en las actividades del gimnasio y registrar tu asistencia.</p>
+                    <h2 class="itm-acceso__titulo">Crear cuenta</h2>
 
                     @if (!string.IsNullOrWhiteSpace(_mensajeError))
                     {
@@ -34,6 +30,7 @@
                     <EditForm Model="@_modelo" OnValidSubmit="ManejarRegistro">
                         <DataAnnotationsValidator />
 
+                        <div class="itm-campos-fila">
                         <div class="mb-3">
                             <label for="regNombreInput" class="form-label fw-semibold">Nombre completo</label>
                             <InputText id="regNombreInput" class="form-control" @bind-Value="_modelo.NombreCompleto" placeholder="Nombre y apellidos" autocomplete="name" />
@@ -51,13 +48,16 @@
                             </InputSelect>
                             <ValidationMessage For="@(() => _modelo.TipoUsuario)" class="validation-message" />
                         </div>
+                        </div>
 
                         <div class="mb-3">
                             <label for="regEmailInput" class="form-label fw-semibold">Correo Institucional</label>
                             <InputText id="regEmailInput" class="form-control" @bind-Value="_modelo.Email" placeholder="usuario@correo.itm.edu.co" />
+                            <div class="form-text small">Estudiantes y profesores usan el correo institucional.</div>
                             <ValidationMessage For="@(() => _modelo.Email)" class="validation-message" />
                         </div>
 
+                        <div class="itm-campos-fila">
                         <div class="mb-3">
                             <label for="regPasswordInput" class="form-label fw-semibold">Contraseña</label>
                             <InputText id="regPasswordInput" type="password" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" />
@@ -69,6 +69,7 @@
                             <label for="regConfirmPasswordInput" class="form-label fw-semibold">Confirmar Contraseña</label>
                             <InputText id="regConfirmPasswordInput" type="password" class="form-control" @bind-Value="_modelo.ConfirmPassword" placeholder="••••••••" />
                             <ValidationMessage For="@(() => _modelo.ConfirmPassword)" class="validation-message" />
+                        </div>
                         </div>
 
                         @* PENDIENTE (RNF-011, validación jurídica): el texto y el enlace oficial del aviso de privacidad
@@ -86,15 +87,12 @@
                                         Clase="btn-itm-primario" 
                                         EstaProcesando="@_procesando" 
                                         TextoProcesando="Creando cuenta...">
-                                Registrarme
+                                Crear cuenta
                             </BotonAccion>
                         </div>
                     </EditForm>
 
-                    <div class="text-center mt-3 pt-3 border-top">
-                        <span class="text-muted small">¿Ya tienes cuenta registrada?</span>
-                        <a href="@ObtenerUrlLogin()" class="fw-semibold ms-1">Iniciar Sesión</a>
-                    </div>
+                    <p class="itm-acceso__pie">¿Ya tienes cuenta? <a href="@ObtenerUrlLogin()">Inicia sesión</a></p>
         </div>
     </div>
 </div>

@@ -72,6 +72,11 @@
                             <InputTextArea id="descripcionEvento" class="form-control" rows="3" @bind-Value="_modelo.Descripcion" placeholder="Detalles de la disciplina, intensidad o requerimientos..." />
                         </div>
 
+                        <div class="col-12">
+                            <label for="ubicacionEvento" class="form-label fw-semibold">Ubicación (opcional)</label>
+                            <CampoUbicacion Id="ubicacionEvento" @bind-Value="_ubicacion" />
+                        </div>
+
                         <div class="col-12 col-md-6">
                             <label for="entrenadorId" class="form-label fw-semibold">Entrenador responsable (opcional)</label>
                             <SelectorEntrenador Id="entrenadorId" @bind-Value="_entrenadorId" />
@@ -260,6 +265,7 @@
         {
             Nombre = _modelo.Nombre,
             Descripcion = _modelo.Descripcion,
+            Ubicacion = string.IsNullOrWhiteSpace(_ubicacion) ? null : _ubicacion.Trim(),
             CupoMaximoPorDefecto = _modelo.CupoMaximoPorDefecto,
             EntrenadorId = _entrenadorId,
             FechaAperturaReservas = fechaAperturaUtc,
@@ -316,10 +322,13 @@
         }
     }
 
+    private string? _ubicacion;
+
     private void ReiniciarFormulario()
     {
         _modelo.Nombre = string.Empty;
         _modelo.Descripcion = string.Empty;
+        _ubicacion = null;
         _creadoExitosamente = false;
         _mensajeError = null;
     }

@@ -68,8 +68,9 @@ public class MisReservasTests : BunitContext
     public async Task MisReservas_DebeMostrarListadoYPermitirCancelar()
     {
         var reservaId = Guid.NewGuid();
-        var inicioUtc = new DateTimeOffset(2026, 10, 5, 14, 0, 0, TimeSpan.Zero); // 09:00 Bogotá
-        var finUtc = new DateTimeOffset(2026, 10, 5, 15, 0, 0, TimeSpan.Zero);
+        // Una reserva futura (aparece en "Próximas" y se puede cancelar): 14:00 UTC = 9:00 a. m. en Bogotá
+        var inicioUtc = new DateTimeOffset(DateTime.UtcNow.Date.AddDays(2).AddHours(14), TimeSpan.Zero);
+        var finUtc = inicioUtc.AddHours(1);
 
         var reservas = new List<ReservaResumenDto>
         {
@@ -96,12 +97,15 @@ public class MisReservasTests : BunitContext
 
         // Verifica renderizado de datos
         Assert.Contains("Natación Libre", markup);
-        Assert.Contains("Confirmada", markup);
-        Assert.Contains("09:00", markup);
+        Assert.Contains("Reserva confirmada", markup);
+        Assert.Contains("9:00", markup);
+        Assert.Contains("Próximas", markup);
 
-        // Hace clic en el botón de cancelar
-        var botonCancelar = cut.Find("button.btn-outline-danger");
-        await cut.InvokeAsync(() => botonCancelar.Click());
+        // "Cancelar reserva" pide confirmación antes de cancelar (diseño "Confirmar cancelación")
+        await cut.InvokeAsync(() => cut.Find("button.itm-cancelar").Click());
+        Assert.False(fakeService.CancelarFueLlamado);
+        Assert.Contains("¿Cancelar tu reserva?", cut.Markup);
+        await cut.InvokeAsync(() => cut.Find(".itm-modal__acciones button.btn-danger").Click());
 
         Assert.True(fakeService.CancelarFueLlamado);
         Assert.Equal(reservaId, fakeService.ReservaCanceladaId);

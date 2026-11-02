@@ -144,6 +144,9 @@ public class AvisosYMenuQA3Tests : BunitContext
             Task.FromResult(EstadoDeCarga<IReadOnlyList<EventoResumenDto>>.Correcto(_eventos));
         public Task<EstadoDeCarga<IReadOnlyList<EventoResumenDto>>> ObtenerEventosDisponiblesAsync(DateTimeOffset? desde, DateTimeOffset? hasta, int? pagina = null, int? tamano = null, CancellationToken ct = default) =>
             ObtenerEventosDisponiblesAsync(ct);
+        public Task<EstadoDeCarga<EventoResumenDto>> ObtenerEventoAsync(Guid id, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<EventoResumenDto>.Fallo("No implementado en la prueba"));
+
         public Task<EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>> ObtenerMisActividadesAsync(CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Correcto(new List<ActividadAsignadaDto>()));
         public Task<EstadoDeCarga<Guid>> CrearEventoAsync(CrearEventoRequest request, CancellationToken ct = default) => Task.FromResult(EstadoDeCarga<Guid>.Correcto(Guid.NewGuid()));
@@ -195,7 +198,7 @@ public class AvisosYMenuQA3Tests : BunitContext
             // Datos de la actividad: nombre y horario en Bogotá (nunca nivel ni posición)
             Assert.Equal("Spinning", aviso.Datos!.Single(d => d.Etiqueta == "Actividad").Valor);
             // 14:00 UTC = 09:00 en Bogotá
-            Assert.Contains("09:00", aviso.Datos!.Single(d => d.Etiqueta == "Cuándo").Valor);
+            Assert.Contains("9:00 a. m.", aviso.Datos!.Single(d => d.Etiqueta == "Cuándo").Valor);
         });
         // Ya no se pinta una alerta dentro de la página (obligaba a desplazarse para verla)
         Assert.DoesNotContain("alert-success", cut.Markup);

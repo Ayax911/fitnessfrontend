@@ -8,6 +8,7 @@
 @using FitnessFrontend.Servicios.Reservas
 @using FitnessFrontend.Servicios.Infraestructura
 @using FitnessFrontend.Componentes.Compartidos
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IEventosClienteService EventosService
 @inject IReservasClienteService ReservasService
 @inject IZonaHorariaService ZonaHoraria
@@ -38,6 +39,7 @@
         </CargandoTemplate>
         <ExitoTemplate Context="eventos">
             @{
+                var hoy = ZonaHoraria.ObtenerFechaHoyLocal().Date;
                 var sesiones = ObtenerSesiones(eventos);
                 var dias = sesiones.Select(x => ZonaHoraria.AHoraLocal(x.Sesion.FechaHoraInicio!.Value).Date).Distinct().OrderBy(d => d).Take(7).ToList();
                 var visibles = _diaSeleccionado == null ? sesiones : sesiones.Where(x => ZonaHoraria.AHoraLocal(x.Sesion.FechaHoraInicio!.Value).Date == _diaSeleccionado).ToList();
@@ -58,7 +60,8 @@
                         @foreach (var dia in dias)
                         {
                             var d = dia;
-                            <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == d ? "true" : "false")" @onclick="() => SeleccionarDia(d)">@EtiquetaDia(d)</button>
+                            var chip = PresentacionFechas.Chip(d, hoy);
+                            <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == d ? "true" : "false")" @onclick="() => SeleccionarDia(d)">@chip.Etiqueta<small>@chip.Sub</small></button>
                         }
                     </div>
                 }
@@ -66,8 +69,8 @@
                 @if (visibles.Count == 0)
                 {
                     <div class="itm-vacio">
-                        <h2>No hay sesiones programadas</h2>
-                        <p>Este día no tiene sesiones activas. Elige otro día.</p>
+                        <h2>No hay actividades este día</h2>
+                        <p>Prueba con otro día de la fila de arriba.</p>
                     </div>
                 }
                 else
@@ -78,72 +81,98 @@
                             var evento = item.Evento;
                             var sesion = item.Sesion;
                             var sesionId = sesion.Id ?? Guid.Empty;
+                            var inicio = ZonaHoraria.AHoraLocal(sesion.FechaHoraInicio!.Value).DateTime;
+                            var fin = sesion.FechaHoraFin.HasValue ? ZonaHoraria.AHoraLocal(sesion.FechaHoraFin.Value).DateTime : (DateTime?)null;
                             var estaBloqueadaPorVentana = _sesionesVentanaCerrada.Contains(sesionId);
                             var estaProcesandoEsta = _sesionEnProcesoId == sesionId;
-                            var hayCupo = sesion.CuposDisponibles.HasValue && sesion.CuposDisponibles.Value > 0;
+                            var libres = Math.Max(0, sesion.CuposDisponibles ?? 0);
+                            var hayCupo = libres > 0;
+                            var miEstado = _misReservas.TryGetValue(sesionId, out var estadoPropio) ? estadoPropio : (int?)null;
 
                             <article class="itm-tarjeta" @key="sesionId">
-                                <div>
-                                    <p class="itm-tarjeta__hora">
-                                        @if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
-                                        {
-                                            <span class="itm-nobr">@ZonaHoraria.FormatearHora(sesion.FechaHoraInicio.Value)</span> <span class="itm-nobr">– @ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)</span>
-                                        }
-                                        else if (sesion.FechaHoraInicio.HasValue)
-                                        {
-                                            @ZonaHoraria.FormatearHora(sesion.FechaHoraInicio.Value)
-                                        }
-                                    </p>
-                                    @if (sesion.FechaHoraInicio.HasValue)
+                                <div class="itm-tarjeta__cab">
+                                    <div>
+                                        <p class="itm-tarjeta__hora"><span class="itm-nobr">@PresentacionFechas.HoraCompleta(inicio)</span></p>
+                                        <p class="itm-tarjeta__fecha">
+                                            @if (fin.HasValue)
+                                            {
+                                                <span>hasta @PresentacionFechas.HoraCompleta(fin.Value)</span>
+                                            }
+                                            @if (_diaSeleccionado == null)
+                                            {
+                                                <span> · @PresentacionFechas.DiaCorto(inicio, hoy)@(evento.EsRecurrente == true ? " · Recurrente" : "")</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    @if (miEstado == 0)
                                     {
-                                        <p class="itm-tarjeta__fecha">@ZonaHoraria.FormatearFecha(sesion.FechaHoraInicio.Value)@(evento.EsRecurrente == true ? " · Recurrente" : "")</p>
+                                        <InsigniaEstado Tipo="ok">Reserva confirmada</InsigniaEstado>
+                                    }
+                                    else if (miEstado == 1)
+                                    {
+                                        <InsigniaEstado Tipo="espera">En lista de espera</InsigniaEstado>
                                     }
                                 </div>
                                 <div>
-                                    <h2 class="itm-tarjeta__titulo" title="@evento.Nombre">@evento.Nombre</h2>
-                                    <p class="itm-meta">Entrenador: @(evento.EntrenadorNombre ?? "Por asignar")</p>
-                                    @if (!string.IsNullOrWhiteSpace(evento.Descripcion))
+                                    <h2 class="itm-tarjeta__titulo" title="@evento.Nombre" style="margin-bottom: 4px;">@evento.Nombre</h2>
+                                    <p class="itm-meta itm-meta--icono">
+                                        <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2" /><path d="M4 21c0-4.5 3.5-7 8-7s8 2.5 8 7" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                                        <span>@(evento.EntrenadorNombre ?? "Por asignar")</span>
+                                    </p>
+                                    @if (!string.IsNullOrWhiteSpace(evento.Ubicacion))
                                     {
-                                        <p class="itm-meta texto-extenso">@evento.Descripcion</p>
+                                        <p class="itm-meta itm-meta--icono">
+                                            <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                                            <span>@evento.Ubicacion</span>
+                                        </p>
                                     }
                                     @* I-08 / RN-020 / AMB-014: No se muestra la fecha base de apertura de reservas públicamente
                                        para evitar que usuarios con ventana desplazada deduzcan su condición personal. *@
                                 </div>
 
                                 <div class="itm-tarjeta__pie">
-                                    @* Cupo: el número va siempre en texto; la barra solo refuerza. Sin puntos por cupo (los eventos suelen superar 30 personas). *@
-                                    @if (hayCupo)
+                                    @* Cupo: el número va siempre en texto; la barra solo refuerza. Lo informa el backend (no se reimplementa ninguna regla de cupo). *@
+                                    <div class="itm-cupo">
+                                        <div class="itm-cupo__barra" aria-hidden="true"><span style="width: @PorcentajeOcupado(sesion)%"></span></div>
+                                        <span class="itm-cupo__texto"><strong>@libres</strong> de @(sesion.CupoMaximo ?? libres) cupos libres</span>
+                                    </div>
+
+                                    @if (miEstado is 0 or 1)
                                     {
-                                        <div class="itm-cupo">
-                                            <span class="itm-cupo__texto">@sesion.CuposDisponibles cupos</span>
-                                            @if (sesion.CupoMaximo is > 0)
-                                            {
-                                                <div class="itm-cupo__barra" aria-hidden="true"><span style="width: @PorcentajeOcupado(sesion)%"></span></div>
-                                            }
-                                        </div>
+                                        <a class="btn btn-itm-secundario itm-btn-bloque" href="/reservas">Ver en mis reservas</a>
+                                    }
+                                    else if (estaBloqueadaPorVentana)
+                                    {
+                                        @* PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
+                                           si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
+                                           No añadir motivo, nivel ni fecha estimada — violaría RN-020. *@
+                                        <button type="button" class="btn btn-itm-primario itm-btn-bloque" disabled>Reservas aún no disponibles</button>
                                     }
                                     else
                                     {
-                                        <div><InsigniaEstado Tipo="espera">Agotado (Espera)</InsigniaEstado></div>
+                                        <BotonAccion Tipo="button"
+                                                     Clase="btn-itm-primario itm-btn-bloque"
+                                                     Deshabilitado="@_sesionEnProcesoId.HasValue"
+                                                     EstaProcesando="@estaProcesandoEsta"
+                                                     TextoProcesando="Reservando..."
+                                                     OnClick="@(() => RealizarReserva(sesionId, evento.Nombre ?? string.Empty, CuandoTexto(sesion)))">
+                                            Reservar cupo
+                                        </BotonAccion>
+                                        @if (!hayCupo)
+                                        {
+                                            <p class="itm-ayuda">Si no hay cupo, quedas en la lista de espera.</p>
+                                        }
                                     }
-
-                                    @* PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
-                                       si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
-                                       No añadir motivo, nivel ni fecha estimada — violaría RN-020. *@
-                                    @if (estaBloqueadaPorVentana)
-                                    {
-                                        <p class="itm-nota" role="note">Reservas aún no disponibles para esta sesión</p>
-                                    }
-
-                                    <BotonAccion Tipo="button"
-                                                 Clase="btn-itm-primario itm-btn-bloque"
-                                                 Deshabilitado="@(estaBloqueadaPorVentana || _sesionEnProcesoId.HasValue)"
-                                                 EstaProcesando="@estaProcesandoEsta"
-                                                 TextoProcesando="Reservando..."
-                                                 OnClick="@(() => RealizarReserva(sesionId, evento.Nombre ?? string.Empty, CuandoTexto(sesion)))">
-                                        Reservar cupo
-                                    </BotonAccion>
                                 </div>
+
+                                @* El Administrador puede gestionar cualquier sesión y evento desde aquí *@
+                                @if (_esAdministrador)
+                                {
+                                    <div class="itm-tarjeta__admin">
+                                        <a href="/admin/sesiones/@sesionId">Administrar sesión</a>
+                                        <a href="/admin/eventos/@evento.Id/editar">Editar evento</a>
+                                    </div>
+                                }
                             </article>
                         }
                     </div>
@@ -160,10 +189,15 @@
 </div>
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? EstadoAutenticacion { get; set; }
+
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<EventoResumenDto>>? _estado;
     private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
+    // Estado de las reservas activas del propio usuario por sesión (0 = Confirmada, 1 = En lista de espera). Solo presentación.
+    private Dictionary<Guid, int> _misReservas = new();
     private Guid? _sesionEnProcesoId;
     private DateTime? _diaSeleccionado;
+    private bool _esAdministrador;
     private const int TamanoPagina = 12;
     private int _limite = TamanoPagina;
 
@@ -179,20 +213,18 @@
         eventos.SelectMany(e => (e.Sesiones ?? new()).Where(s => s.FechaHoraInicio.HasValue).Select(s => (Evento: e, Sesion: s)))
                .OrderBy(x => x.Sesion.FechaHoraInicio).ToList();
 
-    private string EtiquetaDia(DateTime dia)
-    {
-        var hoy = ZonaHoraria.ObtenerFechaHoyLocal().Date;
-        if (dia == hoy) return "Hoy";
-        if (dia == hoy.AddDays(1)) return "Mañana";
-        return dia.ToString("dd/MM/yyyy"); // ya es fecha local (AHoraLocal); no se vuelve a convertir
-    }
-
     // Solo presentación: ancho de la barra según lo que informa el backend (no se reimplementa ninguna regla de cupo)
     private static int PorcentajeOcupado(SesionResumenDto s) =>
         s.CupoMaximo is > 0 ? Math.Clamp((int)Math.Round((s.CuposOcupados ?? 0) * 100.0 / s.CupoMaximo.Value), 0, 100) : 0;
 
     protected override async Task OnInitializedAsync()
     {
+        if (EstadoAutenticacion != null)
+        {
+            var estado = await EstadoAutenticacion;
+            _esAdministrador = estado.User.IsInRole("Administrador");
+        }
+
         await CargarEventos();
     }
 
@@ -200,15 +232,27 @@
     {
         _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<EventoResumenDto>>.Cargando();
         _estado = await EventosService.ObtenerEventosDisponiblesAsync();
+
+        // Marca en cada tarjeta lo que ya reservé (RF-020); si falla, la lista de actividades sigue funcionando
+        var mias = await ReservasService.ObtenerMisReservasAsync();
+        if (mias.EsExito && mias.Valor != null)
+        {
+            _misReservas = mias.Valor
+                .Where(r => r.SesionEventoId.HasValue && r.Estado is 0 or 1 && r.SesionCancelada != true)
+                .GroupBy(r => r.SesionEventoId!.Value)
+                .ToDictionary(g => g.Key, g => g.First().Estado ?? 0);
+        }
     }
 
     // Cuándo: fecha y horario en America/Bogotá (la conversión solo se hace aquí, IZonaHorariaService)
     private string CuandoTexto(SesionResumenDto sesion)
     {
         if (!sesion.FechaHoraInicio.HasValue) return string.Empty;
-        var inicio = sesion.FechaHoraInicio.Value;
-        var fecha = $"{ZonaHoraria.FormatearFecha(inicio)}, {ZonaHoraria.FormatearHora(inicio)}";
-        return sesion.FechaHoraFin.HasValue ? $"{fecha} – {ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)}" : fecha;
+        var inicio = ZonaHoraria.AHoraLocal(sesion.FechaHoraInicio.Value).DateTime;
+        var texto = $"{PresentacionFechas.FechaCorta(inicio)}, {PresentacionFechas.HoraCompleta(inicio)}";
+        if (sesion.FechaHoraFin.HasValue)
+            texto += $" – {PresentacionFechas.HoraCompleta(ZonaHoraria.AHoraLocal(sesion.FechaHoraFin.Value).DateTime)}";
+        return texto;
     }
 
     private async Task RealizarReserva(Guid sesionId, string actividad, string cuando)
@@ -241,9 +285,6 @@
         }
         else
         {
-            // PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
-            // si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
-            // No añadir motivo, nivel ni fecha estimada — violaría RN-020.
             if (resultado.CodigoError == "VentanaNoAbierta")
             {
                 _sesionesVentanaCerrada.Add(sesionId);

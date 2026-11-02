@@ -43,102 +43,135 @@
             }
             else
             {
-                <ul class="itm-lista">
-                    @foreach (var reserva in reservas)
-                    {
-                        var reservaId = reserva.Id ?? Guid.Empty;
+                var hoy = ZonaHoraria.ObtenerFechaHoyLocal().Date;
+                var ahora = DateTimeOffset.UtcNow;
+                // Próximas: activas (confirmada o en espera), sin cancelar por la organización y que aún no terminan
+                var proximas = reservas
+                    .Where(r => EsProxima(r, ahora))
+                    .OrderBy(r => r.FechaHoraInicio).ToList();
+                var anteriores = reservas
+                    .Where(r => !EsProxima(r, ahora))
+                    .OrderByDescending(r => r.FechaHoraInicio).ToList();
+
+                // Una reserva: hora a la izquierda; actividad, entrenador y ubicación; estado; y la acción de cancelar (diseño del artifact)
+                RenderFragment<(ReservaResumenDto Reserva, bool ConAcciones)> fila = dato => @<li class="itm-fila" @key="dato.Reserva.Id">
+                    @{
+                        var reserva = dato.Reserva;
                         var sesionId = reserva.SesionEventoId ?? Guid.Empty;
                         var esSesionCancelada = reserva.SesionCancelada == true || reserva.OrigenCancelacion == "SesionCancelada";
                         // PENDIENTE (RN-011 pendiente): si la sesión fue cancelada por la organización, no se permite cancelar por el usuario
-                        var esCancelable = !esSesionCancelada && (reserva.Estado == 0 || reserva.Estado == 1);
-                        var cancelandoEsta = _cancelandoReservaId == reservaId;
-
-                        <li @key="reserva.Id">
-                            <div style="flex: 1 1 300px;">
-                                <p class="itm-lista__hora">
-                                    @if (reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
-                                    {
-                                        @ZonaHoraria.FormatearRango(reserva.FechaHoraInicio.Value, reserva.FechaHoraFin.Value)
-                                    }
-                                    else if (reserva.FechaHoraInicio.HasValue)
-                                    {
-                                        @ZonaHoraria.FormatearFechaHora(reserva.FechaHoraInicio.Value)
-                                    }
-                                    else
-                                    {
-                                        <span>—</span>
-                                    }
-                                </p>
-                                <p class="itm-lista__nombre">@(reserva.EventoNombre ?? "Actividad de gimnasio")</p>
-                                <p class="itm-lista__aparte">Solicitada: @(reserva.FechaHoraSolicitud.HasValue ? ZonaHoraria.FormatearFechaHora(reserva.FechaHoraSolicitud.Value) : "—")</p>
-
-                                @* RF-028: Motivo de la sesión cancelada por la organización (RN-020: sin nivel ni penalización) *@
-                                @if (esSesionCancelada)
-                                {
-                                    <div class="alert alert-warning py-1 px-2 my-2" role="note" style="font-size: 12px;">
-                                        <strong>Sesión cancelada por la organización:</strong>
-                                        @(string.IsNullOrWhiteSpace(reserva.MotivoCancelacion) ? "Por motivos operativos del centro deportivo." : reserva.MotivoCancelacion)
-                                    </div>
-                                }
-
-                                @* RF-029: Anuncios vigentes de la sesión *@
-                                @if (_anunciosPorSesion.TryGetValue(sesionId, out var avisos) && avisos.Count > 0)
-                                {
-                                    <div class="p-2 my-2 rounded" style="background: #eef5fc; border-left: 3px solid var(--azul-itm); font-size: 12px;">
-                                        <div class="fw-bold text-dark mb-1">
-                                            <svg class="itm-icono me-1" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px;">
-                                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-                                                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
-                                                <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
-                                            </svg>
-                                            Aviso de la sesión:
-                                        </div>
-                                        @foreach (var aviso in avisos)
-                                        {
-                                            <p class="mb-0 text-dark" style="white-space: pre-wrap;">@aviso.Mensaje</p>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                                @ObtenerBadgeEstado(reserva, esSesionCancelada)
-
-                                @* RF-036: Agregar a mi calendario (.ics) *@
-                                @if (reserva.Estado == 0 && !esSesionCancelada && reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
-                                {
-                                    <button type="button"
-                                            class="btn btn-itm-secundario btn-sm"
-                                            style="min-height: 48px; display: inline-flex; align-items: center; gap: 6px;"
-                                            @onclick="@(() => DescargarIcs(reserva))"
-                                            aria-label="Agregar a mi calendario">
-                                        <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px;">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                                            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"/>
-                                            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/>
-                                            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
-                                        </svg>
-                                        <span>Agregar a mi calendario</span>
-                                    </button>
-                                }
-
-                                @if (esCancelable)
-                                {
-                                    <BotonAccion Tipo="button"
-                                                 Clase="btn-outline-danger btn-sm"
-                                                 EstaProcesando="@cancelandoEsta"
-                                                 TextoProcesando="Cancelando..."
-                                                 OnClick="@(() => CancelarReserva(reservaId, reserva.EventoNombre ?? string.Empty, CuandoTexto(reserva)))">
-                                        Cancelar
-                                    </BotonAccion>
-                                }
-                            </div>
-                        </li>
+                        var esCancelable = dato.ConAcciones && !esSesionCancelada && (reserva.Estado == 0 || reserva.Estado == 1);
+                        var cancelandoEsta = _cancelandoReservaId == reserva.Id;
+                        var inicioLocal = reserva.FechaHoraInicio.HasValue ? ZonaHoraria.AHoraLocal(reserva.FechaHoraInicio.Value).DateTime : (DateTime?)null;
                     }
-                </ul>
+                    <div class="itm-fila__cuando">
+                        @if (inicioLocal.HasValue)
+                        {
+                            <p class="itm-fila__dia">@PresentacionFechas.DiaCorto(inicioLocal.Value, hoy)</p>
+                            <p class="itm-fila__hora">@PresentacionFechas.Hora(inicioLocal.Value)<span class="itm-fila__ampm">@PresentacionFechas.Meridiano(inicioLocal.Value)</span></p>
+                        }
+                        else
+                        {
+                            <p class="itm-fila__hora">—</p>
+                        }
+                    </div>
+                    <div class="itm-fila__cuerpo">
+                        <div>
+                            <p class="itm-fila__nombre">@(reserva.EventoNombre ?? "Actividad de gimnasio")</p>
+                            @if (!string.IsNullOrWhiteSpace(reserva.EntrenadorNombre))
+                            {
+                                <p class="itm-fila__quien">@reserva.EntrenadorNombre</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(reserva.EventoUbicacion))
+                            {
+                                <p class="itm-fila__quien">@reserva.EventoUbicacion</p>
+                            }
+
+                            @* RF-028: Motivo de la sesión cancelada por la organización (RN-020: sin nivel ni penalización) *@
+                            @if (esSesionCancelada)
+                            {
+                                <div class="alert alert-warning py-1 px-2 my-2" role="note" style="font-size: 12px;">
+                                    <strong>Sesión cancelada por la organización:</strong>
+                                    @(string.IsNullOrWhiteSpace(reserva.MotivoCancelacion) ? "Por motivos operativos del centro deportivo." : reserva.MotivoCancelacion)
+                                </div>
+                            }
+
+                            @* RF-029: Anuncios vigentes de la sesión *@
+                            @if (_anunciosPorSesion.TryGetValue(sesionId, out var avisos) && avisos.Count > 0)
+                            {
+                                <div class="p-2 my-2 rounded" style="background: #eef5fc; border-left: 3px solid var(--azul-itm); font-size: 12px;">
+                                    <div class="fw-bold text-dark mb-1">Aviso de la sesión:</div>
+                                    @foreach (var aviso in avisos)
+                                    {
+                                        <p class="mb-0 text-dark" style="white-space: pre-wrap;">@aviso.Mensaje</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="itm-fila__estado">@ObtenerBadgeEstado(reserva, esSesionCancelada)</div>
+                        <div class="itm-fila__accion">
+                            @* RF-036: Agregar a mi calendario (.ics) *@
+                            @if (reserva.Estado == 0 && !esSesionCancelada && dato.ConAcciones && reserva.FechaHoraInicio.HasValue && reserva.FechaHoraFin.HasValue)
+                            {
+                                <button type="button" class="itm-enlace-secundario" @onclick="@(() => DescargarIcs(reserva))" aria-label="Agregar a mi calendario">Agregar a mi calendario</button>
+                            }
+                            @if (esCancelable)
+                            {
+                                <button type="button" class="itm-cancelar" disabled="@cancelandoEsta" @onclick="@(() => PedirCancelacion(reserva))">Cancelar reserva</button>
+                            }
+                        </div>
+                    </div>
+                </li>;
+
+                <h2 class="itm-seccion">Próximas</h2>
+                @if (proximas.Count == 0)
+                {
+                    <div class="itm-vacio" style="margin-bottom: var(--space-5);">
+                        <h2>No tienes reservas próximas</h2>
+                        <p>Reserva tu cupo en una actividad.</p>
+                        <a href="/eventos" class="btn btn-itm-primario mt-2">Ver actividades</a>
+                    </div>
+                }
+                else
+                {
+                    <ul class="itm-filas itm-filas--reservas">
+                        <li class="itm-filas__cab" aria-hidden="true" style="grid-template-columns: 140px minmax(0, 1fr) 210px 170px;"><span>Cuándo</span><span>Actividad</span><span>Estado</span><span>Acción</span></li>
+                        @foreach (var reserva in proximas)
+                        {
+                            @fila((reserva, true))
+                        }
+                    </ul>
+                }
+
+                @if (anteriores.Count > 0)
+                {
+                    <h2 class="itm-seccion">Anteriores</h2>
+                    <ul class="itm-filas itm-filas--reservas">
+                        <li class="itm-filas__cab" aria-hidden="true" style="grid-template-columns: 140px minmax(0, 1fr) 210px 170px;"><span>Cuándo</span><span>Actividad</span><span>Estado</span><span></span></li>
+                        @foreach (var reserva in anteriores)
+                        {
+                            @fila((reserva, false))
+                        }
+                    </ul>
+                }
             }
         </ExitoTemplate>
     </EstadoDeCarga>
 </div>
+
+@* Confirmación antes de cancelar (diseño del artifact "Confirmar cancelación") *@
+<DialogoConfirmacion Abierto="@(_pendiente != null)"
+                     IdBase="cancelar-reserva"
+                     Titulo="¿Cancelar tu reserva?"
+                     Datos="@(_pendiente == null ? null : new List<DatoAviso> { new("Actividad", _pendiente.Actividad), new("Cuándo", _pendiente.Cuando) })"
+                     Mensaje="@(_pendiente?.EnEspera == true ? "Si cancelas, saldrás de la lista de espera." : "Si cancelas, tu cupo queda libre para otra persona.")"
+                     TextoConfirmar="Sí, cancelar reserva"
+                     TextoCancelar="No, mantener mi reserva"
+                     TextoProcesando="Cancelando..."
+                     Peligro="true"
+                     Procesando="@(_cancelandoReservaId.HasValue)"
+                     OnConfirmar="ConfirmarCancelacion"
+                     OnCancelar="DescartarCancelacion" />
 
 @code {
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>? _estado;
@@ -170,9 +203,36 @@
     private string CuandoTexto(ReservaResumenDto reserva)
     {
         if (!reserva.FechaHoraInicio.HasValue) return string.Empty;
-        var inicio = reserva.FechaHoraInicio.Value;
-        var fecha = $"{ZonaHoraria.FormatearFecha(inicio)}, {ZonaHoraria.FormatearHora(inicio)}";
-        return reserva.FechaHoraFin.HasValue ? $"{fecha} – {ZonaHoraria.FormatearHora(reserva.FechaHoraFin.Value)}" : fecha;
+        var inicio = ZonaHoraria.AHoraLocal(reserva.FechaHoraInicio.Value).DateTime;
+        var texto = $"{PresentacionFechas.FechaCorta(inicio)}, {PresentacionFechas.HoraCompleta(inicio)}";
+        if (reserva.FechaHoraFin.HasValue)
+            texto += $" – {PresentacionFechas.HoraCompleta(ZonaHoraria.AHoraLocal(reserva.FechaHoraFin.Value).DateTime)}";
+        return texto;
+    }
+
+    private sealed record CancelacionPendiente(Guid ReservaId, string Actividad, string Cuando, bool EnEspera);
+    private CancelacionPendiente? _pendiente;
+
+    // Próxima = activa (confirmada o en espera), no cancelada por la organización y todavía no terminó
+    private static bool EsProxima(ReservaResumenDto r, DateTimeOffset ahora)
+    {
+        var activa = r.Estado is 0 or 1;
+        var cancelada = r.SesionCancelada == true || r.OrigenCancelacion == "SesionCancelada";
+        var fin = r.FechaHoraFin ?? r.FechaHoraInicio ?? DateTimeOffset.MinValue;
+        return activa && !cancelada && fin >= ahora;
+    }
+
+    private void PedirCancelacion(ReservaResumenDto reserva) =>
+        _pendiente = new CancelacionPendiente(reserva.Id ?? Guid.Empty, reserva.EventoNombre ?? string.Empty, CuandoTexto(reserva), reserva.Estado == 1);
+
+    private void DescartarCancelacion() => _pendiente = null;
+
+    private async Task ConfirmarCancelacion()
+    {
+        if (_pendiente == null) return;
+        var p = _pendiente;
+        await CancelarReserva(p.ReservaId, p.Actividad, p.Cuando);
+        _pendiente = null;
     }
 
     private async Task CancelarReserva(Guid reservaId, string actividad, string cuando)
@@ -209,7 +269,7 @@
         // 0: Confirmada, 1: EnListaEspera, 2: Cancelada, 3: Asistida, 4: NoAsistida, 5: NoAdjudicada
         var (tipo, texto) = reserva.Estado switch
         {
-            0 => ("ok", "Confirmada"),
+            0 => ("ok", "Reserva confirmada"),
             1 => ("espera", "En lista de espera"),
             2 => ("cancelada", "Cancelada"),
             3 => ("asistida", "Asistida"),

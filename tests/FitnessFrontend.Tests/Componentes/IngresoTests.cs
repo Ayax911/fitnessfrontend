@@ -79,7 +79,7 @@ public class IngresoTests : BunitContext
             .Add(p => p.IdPuntoAcceso, "Torniquete-Norte"));
 
         var markup = cut.Markup;
-        Assert.Contains("¡Ingreso Autorizado!", markup);
+        Assert.Contains("¡Ingreso autorizado!", markup);
         Assert.Contains("Acceso concedido al gimnasio.", markup);
         // Se muestra el NOMBRE que devuelve el backend; el identificador de la URL es el token del QR y no se expone
         Assert.Contains("Torniquete Principal", markup);

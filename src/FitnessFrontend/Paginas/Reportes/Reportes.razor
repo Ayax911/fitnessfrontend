@@ -326,7 +326,7 @@
                     </div>
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="p-3 border rounded text-center bg-light">
-                            <div class="text-muted small">Usuarios activos</div>
+                            <div class="text-muted small">Usuarios activos (máximo en un día)</div>
                             <div class="h3 fw-bold text-success mb-0 mt-1">@_reporteUso.UsuariosActivos</div>
                         </div>
                     </div>
@@ -343,6 +343,24 @@
                         </div>
                     </div>
                 </div>
+
+                @if (_reporteUso.Diario is { Count: > 0 })
+                {
+                    <div class="table-responsive mt-4">
+                        <table class="table table-sm align-middle mb-0">
+                            <caption class="visually-hidden">Uso de la plataforma por día</caption>
+                            <thead>
+                                <tr><th scope="col">Día</th><th scope="col" class="text-end">Registros nuevos</th><th scope="col" class="text-end">Usuarios activos</th><th scope="col" class="text-end">Reservas creadas</th><th scope="col" class="text-end">Cancelaciones</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var dia in _reporteUso.Diario)
+                                {
+                                    <tr><td>@dia.Fecha.ToString("dd/MM/yyyy")</td><td class="text-end">@dia.RegistrosNuevos</td><td class="text-end">@dia.UsuariosActivos</td><td class="text-end">@dia.ReservasCreadas</td><td class="text-end">@dia.Cancelaciones</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         }
     }
@@ -367,10 +385,11 @@
         await CargarReporteActual();
     }
 
-    private void CambiarPestana(string pestana)
+    // Se espera la carga (async Task): con "fire and forget" Blazor no volvía a pintar al terminar y la pestaña se quedaba cargando
+    private async Task CambiarPestana(string pestana)
     {
         _pestañaActiva = pestana;
-        _ = CargarReporteActual();
+        await CargarReporteActual();
     }
 
     private async Task CargarReporteActual()
@@ -423,29 +442,29 @@
         }
     }
 
-    private void AtajoUltimos7Dias()
+    private async Task AtajoUltimos7Dias()
     {
         _fechaDesdeLocal = DateTime.Today.AddDays(-7);
         _fechaHastaLocal = DateTime.Today;
-        _ = CargarReporteActual();
+        await CargarReporteActual();
     }
 
-    private void AtajoEsteMes()
+    private async Task AtajoEsteMes()
     {
         var hoy = DateTime.Today;
         _fechaDesdeLocal = new DateTime(hoy.Year, hoy.Month, 1);
         _fechaHastaLocal = hoy;
-        _ = CargarReporteActual();
+        await CargarReporteActual();
     }
 
-    private void AtajoMesAnterior()
+    private async Task AtajoMesAnterior()
     {
         var hoy = DateTime.Today;
         var primerDiaMesActual = new DateTime(hoy.Year, hoy.Month, 1);
         var ultimoDiaMesAnterior = primerDiaMesActual.AddDays(-1);
         _fechaDesdeLocal = new DateTime(ultimoDiaMesAnterior.Year, ultimoDiaMesAnterior.Month, 1);
         _fechaHastaLocal = ultimoDiaMesAnterior;
-        _ = CargarReporteActual();
+        await CargarReporteActual();
     }
 
     private (DateTimeOffset DesdeUtc, DateTimeOffset HastaUtc) ObtenerRangoFechasUtc()

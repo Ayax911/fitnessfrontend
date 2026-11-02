@@ -227,7 +227,7 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 .itm-panel-azul { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--azul-itm-2), var(--azul-itm)); color: var(--on-azul-itm); padding: var(--space-6) var(--space-4); border-right: 8px solid var(--celeste-itm); }
 .itm-panel-azul h1 { color: var(--on-azul-itm); margin: 0 0 var(--space-3); }
 .itm-panel-azul p { margin: 0; font: 400 16px/24px var(--font-texto); max-width: 38ch; }
-.itm-acceso { display: grid; grid-template-columns: minmax(0, 1fr); min-height: calc(100vh - 56px); }
+.itm-acceso { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
 .itm-acceso__formulario { padding: var(--space-5) var(--space-4) var(--space-6); background: var(--superficie); display: flex; justify-content: center; align-items: flex-start; }
 .itm-acceso__formulario > div { width: 100%; max-width: 440px; }
 @media (min-width: 720px) { .itm-acceso { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); } .itm-panel-azul { padding: var(--space-7) var(--space-6); } .itm-acceso__formulario { align-items: center; padding: var(--space-7) var(--space-6); } }
@@ -329,6 +329,94 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 .itm-resultado__sello--exito { background: var(--modulo-reservas); color: var(--negro-itm); }
 @keyframes itm-modal-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .itm-modal__caja { animation: none; } }
+
+/* ------------------------------------------------------------------ Pantallas del estudiante (diseño del artifact) */
+/* Tarjeta de sesión: hora grande, "hasta", título, entrenador/ubicación con icono, barra y "N de M cupos libres" */
+.itm-tarjeta__cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-2) var(--space-3); }
+.itm-tarjeta__hora { font: 800 24px/28px var(--font-sans); }
+.itm-tarjeta__fecha { margin: 0; font: 400 13px/18px var(--font-texto); color: var(--texto-suave); }
+.itm-meta--icono { display: flex; gap: var(--space-2); align-items: center; }
+.itm-meta--icono .itm-icono { color: var(--azul-itm); width: 18px; height: 18px; }
+.itm-cupo__texto { font: 400 14px/20px var(--font-texto); color: var(--negro-itm); }
+.itm-cupo__texto strong { font: 800 22px/24px var(--font-sans); font-variant-numeric: tabular-nums; color: var(--azul-itm); margin-right: 2px; }
+.itm-ayuda { margin: 0; font: 400 13px/18px var(--font-texto); color: var(--texto-suave); }
+.itm-tarjeta__admin { display: flex; flex-wrap: wrap; gap: var(--space-3); padding-top: var(--space-2); border-top: 1px dashed var(--gris-itm); font: 600 13px/18px var(--font-sans); }
+.itm-tarjeta__admin a { color: var(--azul-itm); text-underline-offset: 3px; }
+.itm-chip small { font: 400 12px/14px var(--font-texto); }
+
+/* Listas de "Mis reservas" y "Mi asistencia": móvil = fila con la hora a la izquierda; escritorio = tabla */
+.itm-seccion { margin: 0 0 var(--space-3); font: 700 13px/16px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--azul-itm); }
+.itm-filas { margin: 0 0 var(--space-5); padding: 0; list-style: none; background: var(--superficie); border: 1px solid var(--gris-itm); border-radius: var(--radius-md); overflow: hidden; }
+.itm-filas__cab { display: none; }
+.itm-fila { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--space-4); padding: var(--space-4); border-bottom: 1px solid var(--gris-itm); align-items: start; }
+.itm-fila:last-child { border-bottom: 0; }
+.itm-fila__cuerpo { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.itm-fila__dia { margin: 0; font: 600 12px/16px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--texto-suave); }
+.itm-fila__hora { margin: 0; font: 800 20px/24px var(--font-sans); color: var(--azul-itm); font-variant-numeric: tabular-nums; }
+.itm-fila__ampm { display: block; font: 600 12px/16px var(--font-sans); color: var(--texto-suave); }
+.itm-fila__nombre { margin: 0; font: 700 17px/22px var(--font-sans); color: var(--negro-itm); }
+.itm-fila__quien { margin: 0; font: 400 14px/20px var(--font-texto); color: var(--texto-suave); }
+.itm-fila__tipo { margin: 0; font: 600 12px/16px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--texto-suave); }
+.itm-fila__accion { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.itm-fila__accion:empty { display: none; }
+.itm-cancelar { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--space-2); margin-left: calc(var(--space-2) * -1); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--peligro); font: 600 14px/16px var(--font-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.itm-cancelar:hover { color: var(--peligro-hover); background: var(--superficie-panel); }
+.itm-cancelar:active { color: var(--peligro-pulsado); background: var(--superficie-pulsada); }
+.itm-cancelar:disabled { color: var(--texto-suave); cursor: not-allowed; background: transparent; }
+.itm-enlace-secundario { display: inline-flex; align-items: center; min-height: var(--tap); gap: var(--space-2); padding: 0; border: 0; background: transparent; color: var(--azul-itm); font: 600 14px/16px var(--font-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@media (min-width: 720px) {
+  .itm-filas__cab, .itm-filas--reservas .itm-fila, .itm-filas--asistencia .itm-fila { grid-template-columns: 140px minmax(0, 1fr) 210px 170px; align-items: center; }
+  .itm-filas--asistencia .itm-fila { grid-template-columns: 140px 170px minmax(0, 1fr) 190px; }
+  .itm-filas__cab { display: grid; gap: var(--space-4); padding: var(--space-3) var(--space-5); background: var(--superficie-panel); border-bottom: 1px solid var(--gris-itm); font: 600 12px/16px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--texto-suave); list-style: none; }
+  .itm-fila { gap: var(--space-4); padding: var(--space-4) var(--space-5); }
+  .itm-fila__cuerpo { display: contents; }
+  .itm-fila__ampm { display: inline; margin-left: 2px; }
+  .itm-fila__hora { font-size: 20px; }
+}
+
+/* Pantallas de resultado (check-in, ingreso): alineadas a la izquierda, sello grande y título de 32 px, como en el artifact */
+.itm-resultado { align-items: flex-start; text-align: left; gap: var(--space-4); padding: var(--space-5) var(--space-4); }
+.itm-resultado__sello { width: 88px; height: 88px; }
+.itm-resultado__sello .itm-icono { width: 48px; height: 48px; }
+.itm-resultado h1 { font: 800 32px/38px var(--font-sans); color: var(--azul-itm); }
+.itm-resultado p { max-width: none; font: 400 17px/26px var(--font-texto); }
+.itm-resultado .itm-btn-bloque { align-self: stretch; }
+.itm-resultado .itm-enlace-secundario { align-self: center; }
+
+/* Portada de las pantallas de acceso (diseño del artifact): panel azul con logo, título grande y círculos */
+.itm-panel-azul--portada { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-6); min-height: 280px; padding: var(--space-5) var(--space-4) var(--space-6); }
+.itm-portada__arriba { position: relative; z-index: 1; }
+.itm-portada__logo { display: block; height: 40px; width: auto; }
+.itm-portada__volver { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--tap); color: var(--on-azul-itm); font: 600 14px/16px var(--font-sans); text-decoration: none; }
+.itm-portada__volver:hover { text-decoration: underline; }
+.itm-portada__circulos { position: absolute; right: -120px; bottom: -130px; width: 420px; height: 420px; pointer-events: none; }
+.itm-portada__abajo { position: relative; z-index: 1; }
+.itm-panel-azul--portada h1 { margin: 0 0 var(--space-3); font: 800 34px/40px var(--font-sans); color: var(--on-azul-itm); }
+.itm-panel-azul--portada p { max-width: 34ch; font: 400 16px/24px var(--font-texto); }
+.itm-acceso__titulo { margin: 0 0 var(--space-4); font: 700 24px/30px var(--font-sans); color: var(--azul-itm); }
+.itm-acceso__pie { margin: var(--space-4) 0 0; text-align: center; font: 400 14px/20px var(--font-texto); color: var(--texto-suave); }
+.itm-acceso__pie a { color: var(--azul-itm); font-weight: 700; text-underline-offset: 3px; }
+.itm-campo__cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1); }
+.itm-campo__cab .itm-enlace-secundario { min-height: 32px; }
+.itm-campos-fila { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: var(--space-4); }
+@media (min-width: 720px) {
+  .itm-panel-azul--portada { min-height: 100vh; padding: var(--space-6); }
+  .itm-panel-azul--portada h1 { font-size: 52px; line-height: 58px; }
+  .itm-portada__logo { height: 48px; }
+  .itm-portada__circulos { right: -90px; bottom: -90px; width: 520px; height: 520px; }
+  .itm-acceso--registro .itm-acceso__formulario > div { max-width: 640px; }
+  .itm-campos-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Modal de confirmación (hoja inferior en celular, ventana centrada en pantallas anchas) */
+.itm-modal--hoja { align-items: end; }
+.itm-modal--hoja .itm-modal__caja { border-radius: var(--radius-lg) var(--radius-lg) 0 0; align-items: stretch; text-align: left; padding-bottom: var(--space-6); }
+.itm-modal--hoja .itm-modal__caja h2 { font: 800 24px/30px var(--font-sans); }
+.itm-modal--hoja .itm-modal__caja p { max-width: none; }
+@media (min-width: 720px) {
+  .itm-modal--hoja { align-items: center; }
+  .itm-modal--hoja .itm-modal__caja { border-radius: var(--radius-lg); padding-bottom: var(--space-5); }
+}
 
 /* Clases utilitarias de dimensiones (M-08) */
 .spinner-dim-md {

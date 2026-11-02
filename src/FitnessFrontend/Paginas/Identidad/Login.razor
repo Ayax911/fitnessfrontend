@@ -6,15 +6,11 @@
 @inject NavigationManager NavigationManager
 
 <div class="itm-acceso">
-    <section class="itm-panel-azul" aria-label="Bienvenida">
-        <p style="font: 700 22px/28px var(--font-sans); margin-bottom: var(--space-3);">Gimnasio universitario</p>
-        <p>Reserva tu cupo, registra tu asistencia con el código QR y consulta tu historial, todo en un solo lugar.</p>
-    </section>
+    <PanelBienvenida Titulo="Reserva tu cupo en el gimnasio" Texto="Mira las actividades, reserva y registra tu asistencia con el QR." />
     <div class="itm-acceso__formulario">
         <div>
 
-                    <h1 class="mb-2">Iniciar sesión</h1>
-                    <p class="mb-4">Ingresa con tu correo y tu contraseña para reservar actividades y registrar tu asistencia.</p>
+                    <h2 class="itm-acceso__titulo">Iniciar sesión</h2>
 
                     @if (!string.IsNullOrWhiteSpace(_mensajeError))
                     {
@@ -40,8 +36,11 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="passwordInput" class="form-label fw-semibold">Contraseña</label>
-                            <InputText id="passwordInput" type="password" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" />
+                            <div class="itm-campo__cab">
+                                <label for="passwordInput" class="form-label fw-semibold mb-0">Contraseña</label>
+                                <button type="button" class="itm-enlace-secundario" aria-controls="passwordInput" aria-pressed="@(_verClave ? "true" : "false")" @onclick="() => _verClave = !_verClave">@(_verClave ? "Ocultar" : "Mostrar")</button>
+                            </div>
+                            <InputText id="passwordInput" type="@(_verClave ? "text" : "password")" class="form-control" @bind-Value="_modelo.Password" placeholder="••••••••" autocomplete="current-password" />
                             <ValidationMessage For="@(() => _modelo.Password)" class="validation-message" />
                         </div>
 
@@ -50,15 +49,12 @@
                                         Clase="btn-itm-primario" 
                                         EstaProcesando="@_procesando" 
                                         TextoProcesando="Validando credenciales...">
-                                Ingresar
+                                Iniciar sesión
                             </BotonAccion>
                         </div>
                     </EditForm>
 
-                    <div class="text-center mt-3 pt-3 border-top">
-                        <span class="text-muted small">¿No tienes cuenta activa?</span>
-                        <a href="@ObtenerUrlRegistro()" class="fw-semibold ms-1">Registrarse</a>
-                    </div>
+                    <p class="itm-acceso__pie">¿Aún no tienes cuenta? <a href="@ObtenerUrlRegistro()">Regístrate</a></p>
         </div>
     </div>
 </div>
@@ -72,6 +68,7 @@
 
     private readonly LoginDto _modelo = new();
     private bool _procesando;
+    private bool _verClave;
     private string? _mensajeError;
     private string? _mensajeExito;
 

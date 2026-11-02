@@ -13,7 +13,7 @@
     <div class="itm-pagina__cabecera">
         <div>
             <h1>Mi asistencia</h1>
-            <p>Registro de ingresos al gimnasio y participación en sesiones.</p>
+            <p>Tus ingresos al gimnasio y tu asistencia a las actividades.</p>
         </div>
     </div>
 
@@ -32,21 +32,34 @@
             }
             else
             {
-                <p class="itm-lista__aparte mb-2">Total de registros: @historial.Count</p>
-                <ul class="itm-lista">
-                    @foreach (var item in historial)
-                    {
-                        var esSesion = string.Equals(item.Tipo, "Sesion", StringComparison.OrdinalIgnoreCase);
-                        <li @key="item.Id">
-                            <div>
-                                <p class="itm-lista__hora">@(item.FechaHora.HasValue ? ZonaHoraria.FormatearFechaHora(item.FechaHora.Value) : "—")</p>
-                                <p class="itm-lista__nombre">@(string.IsNullOrWhiteSpace(item.NombreEvento) ? "Ingreso Gimnasio" : item.NombreEvento)</p>
-                                <p class="itm-lista__aparte">@(esSesion ? "Sesión Deportiva" : "Ingreso General")</p>
-                            </div>
-                            <InsigniaEstado Tipo="@(esSesion ? "asistida" : "ingreso")">@(item.Estado ?? "Registrado")</InsigniaEstado>
-                        </li>
-                    }
-                </ul>
+                // Agrupado por día (más reciente primero), como en el diseño "Mi asistencia"
+                var grupos = historial
+                    .Where(h => h.FechaHora.HasValue)
+                    .Select(h => (Item: h, Local: ZonaHoraria.AHoraLocal(h.FechaHora!.Value).DateTime))
+                    .GroupBy(x => x.Local.Date)
+                    .OrderByDescending(g => g.Key);
+
+                @foreach (var grupo in grupos)
+                {
+                    <h2 class="itm-seccion">@PresentacionFechas.FechaLarga(grupo.Key)</h2>
+                    <ul class="itm-filas itm-filas--asistencia">
+                        @foreach (var (item, local) in grupo.OrderByDescending(x => x.Local))
+                        {
+                            var esSesion = string.Equals(item.Tipo, "Sesion", StringComparison.OrdinalIgnoreCase);
+                            var (tipoInsignia, textoInsignia) = Insignia(item, esSesion);
+                            <li class="itm-fila" @key="item.Id">
+                                <div class="itm-fila__cuando">
+                                    <p class="itm-fila__hora">@PresentacionFechas.Hora(local)<span class="itm-fila__ampm">@PresentacionFechas.Meridiano(local)</span></p>
+                                </div>
+                                <div class="itm-fila__cuerpo">
+                                    <p class="itm-fila__tipo">@(esSesion ? "Sesión" : "Ingreso general")</p>
+                                    <p class="itm-fila__nombre">@(string.IsNullOrWhiteSpace(item.NombreEvento) ? (esSesion ? "Sesión" : "Ingreso al gimnasio") : item.NombreEvento)</p>
+                                    <div class="itm-fila__estado"><InsigniaEstado Tipo="@tipoInsignia">@textoInsignia</InsigniaEstado></div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
             }
         </ExitoTemplate>
     </EstadoDeCarga>
@@ -58,6 +71,14 @@
     protected override async Task OnInitializedAsync()
     {
         await CargarHistorial();
+    }
+
+    // Estado del registro tal como lo informa el backend; solo se elige cómo mostrarlo
+    private static (string Tipo, string Texto) Insignia(HistorialAsistenciaDto item, bool esSesion)
+    {
+        if (!esSesion) return ("ingreso", "Ingreso registrado");
+        var estado = item.Estado ?? string.Empty;
+        return estado.Contains("No", StringComparison.OrdinalIgnoreCase) ? ("no", "No asistida") : ("asistida", "Asistida");
     }
 
     private async Task CargarHistorial()
