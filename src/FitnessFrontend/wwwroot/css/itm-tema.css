@@ -164,10 +164,21 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
   mask: var(--alerta-icono) center / contain no-repeat;
 }
 .alert-heading { font-family: var(--font-sans); font-weight: 700; color: inherit; }
-.alert-success { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background: var(--modulo-reservas); color: var(--negro-itm); }
-.alert-warning { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 7.5v5.5M12 16.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--modulo-asistencia); color: var(--negro-itm); }
-.alert-info { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 11v6M12 7.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--modulo-eventos); color: var(--negro-itm); }
-.alert-danger { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M18 6L6 18' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--peligro); color: var(--on-peligro); }
+/* Patrón A · Tinta suave (diseño "Insignias de estado"): tinte claro, texto oscuro del mismo color, icono y esquinas de 8 px */
+.alert { border-radius: var(--radius-md); }
+.alert-success { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background: var(--estado-ok-fondo); color: var(--estado-ok-texto); }
+.alert-warning { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 7.5v5.5M12 16.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--estado-espera-fondo); color: var(--estado-espera-texto); }
+.alert-info { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 11v6M12 7.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--estado-asistida-fondo); color: var(--estado-asistida-texto); }
+.alert-danger { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M18 6L6 18' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--estado-no-fondo); color: var(--estado-no-texto); }
+
+/* Insignias de Bootstrap con el mismo patrón A: esquinas de 8 px y tintes de estado (los utilitarios de Bootstrap usan !important) */
+.badge { border-radius: var(--radius-md) !important; padding: 4px 10px !important; font: 600 13px/16px var(--font-sans); }
+.badge.bg-success, .badge.text-bg-success { background: var(--estado-ok-fondo) !important; color: var(--estado-ok-texto) !important; }
+.badge.bg-warning, .badge.text-bg-warning { background: var(--estado-espera-fondo) !important; color: var(--estado-espera-texto) !important; }
+.badge.bg-danger, .badge.text-bg-danger { background: var(--estado-no-fondo) !important; color: var(--estado-no-texto) !important; }
+.badge.bg-info, .badge.text-bg-info { background: var(--estado-ingreso-fondo) !important; color: var(--estado-ingreso-texto) !important; }
+.badge.bg-primary, .badge.bg-primary-subtle, .badge.text-bg-primary { background: var(--estado-asistida-fondo) !important; color: var(--estado-asistida-texto) !important; }
+.badge.bg-secondary, .badge.text-bg-secondary, .badge.bg-light, .badge.text-bg-light { background: var(--estado-cancelada-fondo) !important; color: var(--estado-cancelada-texto) !important; }
 .alert-danger hr { border-color: currentColor; opacity: .4; }
 .alert-danger .btn-outline-danger { background: transparent; border-color: var(--on-peligro); color: var(--on-peligro) !important; }
 .alert-danger .btn-outline-danger:hover { background: var(--on-peligro); color: var(--peligro) !important; }
