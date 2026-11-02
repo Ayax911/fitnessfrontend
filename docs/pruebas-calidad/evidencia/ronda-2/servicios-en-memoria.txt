@@ -1,0 +1,7 @@
+MEMORIA  Eventos/NotasYAnunciosClienteService.cs
+MEMORIA  Sesiones/AdministracionSesionesClienteService.cs
+MEMORIA  Retroalimentacion/RetroalimentacionClienteService.cs
+MEMORIA  Bloqueos/BloqueosClienteService.cs
+MEMORIA  Reportes/ReportesClienteService.cs
+MEMORIA  Asistencia/AsistenciaManualClienteService.cs
+MEMORIA  Auditoria/AuditoriaClienteService.cs

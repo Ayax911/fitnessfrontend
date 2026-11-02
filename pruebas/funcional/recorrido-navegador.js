@@ -9,6 +9,8 @@ import { Trend } from 'k6/metrics';
 
 const WEB = __ENV.WEB || 'http://localhost:5081';
 const CLAVE = __ENV.CLAVE; const USUARIO = __ENV.USUARIO; const ADMIN = __ENV.ADMIN || 'qa.admin@itm.test';
+// Ronda 2: pantallas F2–F7. PUNTO = id de un punto de acceso; SESION = id de una sesión de ENTRENADOR; ENTRENADOR = correo de su dueño.
+const PUNTO = __ENV.PUNTO; const SESION = __ENV.SESION; const ENTRENADOR = __ENV.ENTRENADOR || 'qa.entrenador1@itm.test';
 const arranqueFrio = new Trend('cliente_arranque_frio_ms', true);
 const arranqueRed = new Trend('cliente_arranque_4g_lento_ms', true);
 const cargaEventos = new Trend('cliente_lista_eventos_ms', true);
@@ -67,7 +69,8 @@ export default async function () {
     await p.waitForTimeout(2500);
     const exito = await p.evaluate(() => document.querySelector('[role="alert"]') ? document.querySelector('[role="alert"]').className + ' :: ' + document.querySelector('[role="alert"]').innerText : '');
     console.log(`RESERVA_MANANA: ${exito}`);
-    check(exito, { 'CU-01: reservar una sesión de mañana muestra éxito': (x) => /alert-success/.test(x) });
+    // El primer clic de arriba ya reservó la primera sesión reservable; si es la misma de 'mañana', el aviso correcto es 'Ya tienes una reserva'.
+    check(exito, { 'CU-01: reservar una sesión de mañana muestra éxito (o aviso de reserva ya existente)': (x) => /alert-success|Ya tienes una reserva/.test(x) });
     await captura(p, '03-reserva-hecha');
     await p.goto(`${WEB}/reservas`); await p.waitForTimeout(3000); await captura(p, '04-mis-reservas');
     const txtRes = await p.evaluate(() => document.body.innerText);
@@ -94,5 +97,49 @@ export default async function () {
     await a.goto(`${WEB}/admin/auditoria`); await a.waitForTimeout(4000); await captura(a, '09-admin-auditoria');
     check(await a.evaluate(() => document.body.innerText), { 'RF-032: auditoría muestra acciones reales (Eventos.Crear)': (x) => /Eventos\.Crear|QA Volumen|Usuarios\./.test(x) });
   } finally { await a.close(); await ctxA.close(); }
+  // 4) Ronda 2 · pantallas F2–F7: ¿muestran datos reales del backend o datos simulados? (H-01, H-02, H-19)
+  const ctxB = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const b = await ctxB.newPage();
+  b.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+  const texto = () => b.evaluate(() => document.body.innerText);
+  try {
+    await iniciar(b, ADMIN);
+    await b.goto(`${WEB}/admin/reportes`); await b.waitForTimeout(5000); await captura(b, '10-r2-reportes');
+    const rep2 = await texto();
+    console.log(`REPORTES_FICTICIOS=${/Spinning Matutino|Crossfit Intenso|Natación Libre/.test(rep2)}`);
+    check(rep2, { 'H-01 · Reportes: sin actividades ficticias (Spinning/Crossfit/Natación)': (x) => !/Spinning Matutino|Crossfit Intenso|Natación Libre/.test(x) });
+    await b.goto(`${WEB}/admin/auditoria`); await b.waitForTimeout(5000); await captura(b, '11-r2-auditoria');
+    const aud = await texto();
+    console.log(`AUDITORIA_FICTICIA=${/Admin Sistema|pedro\.entrenador/.test(aud)}`);
+    check(aud, { 'H-01 · Auditoría: sin actores ficticios (Admin Sistema / pedro.entrenador)': (x) => !/Admin Sistema|pedro\.entrenador/.test(x) });
+    const pag = await b.evaluate(() => [...document.querySelectorAll('button')].filter((x) => /Anterior|Siguiente/.test(x.innerText)).map((x) => /<svg|bi-|icon/i.test(x.innerHTML) ? 'icono' : 'sin-icono'));
+    console.log(`PAGINACION_AUDITORIA=${pag.join(',')}`);
+    await b.goto(`${WEB}/admin/calendario`); await b.waitForTimeout(4000); await captura(b, '12-r2-calendario');
+    check(await texto(), { 'H-01 · Calendario de bloqueos muestra los bloqueos reales del backend ("Festivo probe" / "Mantenimiento QA2")': (x) => /Festivo probe|Mantenimiento QA2/.test(x) });
+    await b.goto(`${WEB}/admin/retroalimentacion`); await b.waitForTimeout(4000); await captura(b, '13-r2-bandeja');
+    check(await texto(), { 'H-01 · Bandeja de retroalimentación muestra reportes reales del backend (prueba de limite / No carga la lista)': (x) => /prueba de limite|No carga la lista|script/.test(x) });
+    if (SESION) {
+      await b.goto(`${WEB}/admin/sesiones/${SESION}`); await b.waitForTimeout(4000); await captura(b, '14-r2-admin-sesion');
+      check(await texto(), { 'H-01 · Administrar sesión carga la sesión real (sin error)': (x) => !/no encontrada|error inesperado|no se pudo/i.test(x) });
+    }
+    if (PUNTO) {
+      await b.goto(`${WEB}/admin/puntos-acceso/${PUNTO}/pantalla`); await b.waitForTimeout(4000); await captura(b, '15-r2-pantalla-punto');
+      const qr = await b.evaluate(() => document.documentElement.innerHTML);
+      const pideApi = qr.includes('dyn_');
+      console.log(`QR_PANTALLA_TOKEN_SIMULADO_EN_DOM=${pideApi}`);
+      check(qr, { 'H-02 · La pantalla del punto muestra el punto real del backend ("QA Torniquete"), no un nombre fijo': (x) => x.includes('QA Torniquete') });
+    }
+  } finally { await b.close(); await ctxB.close(); }
+  if (SESION) {
+    const ctxE = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const e = await ctxE.newPage();
+    try {
+      await iniciar(e, ENTRENADOR);
+      await e.goto(`${WEB}/entrenador/sesiones/${SESION}/notas`); await e.waitForTimeout(4000); await captura(e, '16-r2-notas');
+      check(await e.evaluate(() => document.body.innerText), { 'H-01 · Notas de sesión muestran las notas reales (Nota privada QA2)': (x) => /Nota privada QA2/.test(x) });
+      await e.goto(`${WEB}/entrenador/sesiones/${SESION}/asistencia`); await e.waitForTimeout(4000); await captura(e, '17-r2-asistencia-manual');
+      check(await e.evaluate(() => document.body.innerText), { 'H-01 · Asistencia manual lista a inscritos reales (qa.usuario0030)': (x) => /QA Usuario 0030|qa\.usuario0030/.test(x) });
+    } finally { await e.close(); await ctxE.close(); }
+  }
   console.log(`ERRORES_CONSOLA=${errores.length} ${errores.slice(0, 5).join(' | ')}`);
 }

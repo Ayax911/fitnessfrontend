@@ -2,6 +2,12 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## Pruebas de calidad ronda 2 (test(qa))
+- Informe del cliente en [docs/pruebas-calidad/02-resultados-ronda-2.md](docs/pruebas-calidad/02-resultados-ronda-2.md): H-01 y H-02 persisten (siete servicios en memoria y QR generado en el cliente); H-07 (cliente) y H-08 corregidos; H-13, H-14 y H-19 persisten.
+- `pruebas/funcional/recorrido-navegador.js` ampliado a las pantallas F2–F7 (18 comprobaciones; 9 cumplen).
+- Prompt de corrección para los agentes: `.agents/prompt-correccion-calidad.md`.
+- Sin cambios en el código de la aplicación.
+
 ## QA-1 · Pruebas de calidad ISO/IEC 25010 del cliente (test(qa))
 - Plan del cliente en `docs/pruebas-calidad/00-plan.md` (el plan conjunto está en el backend).
 - Scripts en `pruebas/`: imagen nginx local, tamaño de descarga, ZAP baseline y recorrido real con Chromium headless (k6 browser) con red móvil simulada. Sin cambios en el código de la aplicación.
