@@ -148,3 +148,18 @@ Lo que depende del entorno desplegado (Lighthouse, `docs/checklist-e2e.md` contr
 - Cualquier diferencia entre el contrato documentado y el OpenAPI real que encontraste al regenerar Kiota (el backend debe corregirla).
 - Servicios que sigan en memoria (debe ser ninguno).
 - Recordatorio para el usuario: ejecutar `../fitnessbackend/.agents/prompt-verificacion-calidad.md` con `verificador-calidad-fitnessbackend` para el veredicto conjunto (ronda 3).
+
+---
+
+## Ronda siguiente (`QA3-F1`): abiertos tras la verificación independiente de la ronda 3
+
+> Fuente: [`docs/pruebas-calidad/04-verificacion-independiente-ronda-3.md`](../docs/pruebas-calidad/04-verificacion-independiente-ronda-3.md) y el informe conjunto del backend (`05-…`), sobre `742526b`. El informe `03-resultados-ronda-3.md` **no es válido** (H-29). Va después de `QA3-R1` del backend si H-27 cambia el contrato (regenerar Kiota).
+
+1. **H-28 (Media) · Tipos de bloqueo invertidos.** `Servicios/Bloqueos/BloqueosClienteService.cs:47` y `:76` usan 1=Festivo, 2="Institucional", 0=Mantenimiento. El backend usa 0=Festivo, 1=Mantenimiento, 2=Cierre. Usa el enum del cliente Kiota y elimina el mapeo manual y la opción "Institucional". **Prueba obligatoria:** bUnit o prueba de servicio para los tres tipos, en ida y vuelta.
+2. **H-27 (Alta) · "Administrar sesión" con 403 para el Administrador.** **Decisión D-E:** el backend crea un endpoint administrativo propio en `QA3-R1`. Regenera Kiota y haz que `/admin/sesiones/{id}` lo use en vez de `GET /api/reservas/sesiones/{id}/inscritos`, que sigue siendo solo del Entrenador. La pantalla no debe quedarse vacía con un error: si un dato secundario falla, el resto de la pantalla sigue funcionando. **Prueba obligatoria:** bUnit con el 403 simulado y con el caso feliz.
+3. **H-13 (Media) · CSP y cabeceras.** Quita `'unsafe-inline'` de `script-src`: lo añadió el verificador en `742526b`, fuera de su rol. Si Blazor necesita un script inline, usa su hash. Limita `connect-src` a `'self'` más `URL_BASE_API`, sustituido en `docker/40-url-api.sh`. Añade `server_tokens off` y `Permissions-Policy`, y repite las cabeceras de seguridad dentro de **cada** `location` que use `add_header`. **Cierre:** `zap-frontend.sh` sin alertas Medias; `curl -I` sin versión en `Server`; 0 errores de CSP en la consola del recorrido.
+4. **H-14 · Aceptado temporalmente (D-F).** Por ahora basta con que el cliente funcione en el despliegue; **no** es obligatorio optimizar en esta ronda. Si haces algo barato y sin riesgo (por ejemplo, servir los `.br` precomprimidos), no rompas el arranque ni la CSP. Se vuelve a medir en el entorno desplegado.
+5. **H-30 (Baja).** "Mis reservas" pide anuncios solo de reservas `Confirmada`.
+6. **H-32 (Baja) · QA2-F5 pendiente.** Ejecuta la ronda 5 de este prompt y haz su commit `chore(QA2-F5): …`.
+
+Commit `fix(QA3-F1): …`, con `dotnet test` y `revisor-fitnessfrontend`. Después: `../fitnessbackend/.agents/prompt-verificacion-calidad.md` sobre los commits nuevos.

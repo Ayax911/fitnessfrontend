@@ -1,0 +1,297 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: /guiones/funcional/recorrido-navegador.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 10m30s max duration (incl. graceful stop):
+              * ui: 1 iterations shared among 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m01.0s/10m0s  0/1 shared iters
+
+running (00m02.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m02.0s/10m0s  0/1 shared iters
+
+running (00m03.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m03.0s/10m0s  0/1 shared iters
+
+running (00m04.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m04.0s/10m0s  0/1 shared iters
+
+running (00m05.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m05.0s/10m0s  0/1 shared iters
+
+running (00m06.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m06.0s/10m0s  0/1 shared iters
+
+running (00m07.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m07.0s/10m0s  0/1 shared iters
+
+running (00m08.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m08.0s/10m0s  0/1 shared iters
+
+running (00m09.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m09.0s/10m0s  0/1 shared iters
+
+running (00m10.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m10.0s/10m0s  0/1 shared iters
+
+running (00m11.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m11.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:07:46Z" level=info msg="EVENTOS_DOM tarjetas=41 alto_px=12133 nodos=730" source=console
+time="2026-11-02T05:07:46Z" level=info msg="PRIMER_BOTON_RESERVAR: ¡Reserva confirmada exitosamente! Puedes consultarla en Mis Reservas.\n            " source=console
+
+running (00m12.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m12.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:07:46Z" level=info msg="CHIP_DIA: Mañana" source=console
+
+running (00m13.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m13.0s/10m0s  0/1 shared iters
+
+running (00m14.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m14.0s/10m0s  0/1 shared iters
+
+running (00m15.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m15.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:07:50Z" level=info msg="RESERVA_MANANA: alert alert-success alert-dismissible fade show mb-4 :: Cupo agotado. Has sido ubicado en la lista de espera para esta sesión." source=console
+
+running (00m16.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m16.0s/10m0s  0/1 shared iters
+
+running (00m17.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m17.0s/10m0s  0/1 shared iters
+
+running (00m18.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m18.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:07:53Z" level=error msg="Failed to load resource: the server responded with a status of 403 (Forbidden)" browser_source=network line_number=0 source=browser stacktrace="<nil>" url="http://127.0.0.1:18080/api/eventos/sesiones/bf8d2185-b6e4-4aa2-a8db-5733564519b0/anuncios"
+
+running (00m19.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m19.0s/10m0s  0/1 shared iters
+
+running (00m20.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m20.0s/10m0s  0/1 shared iters
+
+running (00m21.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m21.0s/10m0s  0/1 shared iters
+
+running (00m22.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m22.0s/10m0s  0/1 shared iters
+
+running (00m23.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m23.0s/10m0s  0/1 shared iters
+
+running (00m24.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m24.0s/10m0s  0/1 shared iters
+
+running (00m25.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m25.0s/10m0s  0/1 shared iters
+
+running (00m26.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m26.0s/10m0s  0/1 shared iters
+
+running (00m27.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m27.0s/10m0s  0/1 shared iters
+
+running (00m28.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m28.0s/10m0s  0/1 shared iters
+
+running (00m29.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m29.0s/10m0s  0/1 shared iters
+
+running (00m30.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m30.0s/10m0s  0/1 shared iters
+
+running (00m31.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m31.0s/10m0s  0/1 shared iters
+
+running (00m32.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m32.0s/10m0s  0/1 shared iters
+
+running (00m33.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m33.0s/10m0s  0/1 shared iters
+
+running (00m34.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m34.0s/10m0s  0/1 shared iters
+
+running (00m35.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m35.0s/10m0s  0/1 shared iters
+
+running (00m36.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m36.0s/10m0s  0/1 shared iters
+
+running (00m37.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m37.0s/10m0s  0/1 shared iters
+
+running (00m38.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m38.0s/10m0s  0/1 shared iters
+
+running (00m39.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m39.0s/10m0s  0/1 shared iters
+
+running (00m40.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m40.0s/10m0s  0/1 shared iters
+
+running (00m41.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m41.0s/10m0s  0/1 shared iters
+
+running (00m42.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m42.0s/10m0s  0/1 shared iters
+
+running (00m43.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m43.0s/10m0s  0/1 shared iters
+
+running (00m44.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m44.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:08:18Z" level=info msg="REPORTES_FICTICIOS=false" source=console
+
+running (00m45.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m45.0s/10m0s  0/1 shared iters
+
+running (00m46.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m46.0s/10m0s  0/1 shared iters
+
+running (00m47.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m47.0s/10m0s  0/1 shared iters
+
+running (00m48.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m48.0s/10m0s  0/1 shared iters
+
+running (00m49.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m49.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:08:24Z" level=info msg="AUDITORIA_FICTICIA=false" source=console
+time="2026-11-02T05:08:24Z" level=info msg="PAGINACION_AUDITORIA=icono,icono" source=console
+
+running (00m50.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m50.0s/10m0s  0/1 shared iters
+
+running (00m51.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m51.0s/10m0s  0/1 shared iters
+
+running (00m52.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m52.0s/10m0s  0/1 shared iters
+
+running (00m53.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m53.0s/10m0s  0/1 shared iters
+
+running (00m54.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m54.0s/10m0s  0/1 shared iters
+
+running (00m55.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m55.0s/10m0s  0/1 shared iters
+
+running (00m56.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m56.0s/10m0s  0/1 shared iters
+
+running (00m57.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m57.0s/10m0s  0/1 shared iters
+
+running (00m58.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m58.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:08:33Z" level=error msg="Failed to load resource: the server responded with a status of 403 (Forbidden)" browser_source=network line_number=0 source=browser stacktrace="<nil>" url="http://127.0.0.1:18080/api/reservas/sesiones/a48e4ba6-6fac-4f69-8763-a81e98f39dac/inscritos"
+
+running (00m59.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  00m59.0s/10m0s  0/1 shared iters
+
+running (01m00.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m00.0s/10m0s  0/1 shared iters
+
+running (01m01.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m01.0s/10m0s  0/1 shared iters
+
+running (01m02.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m02.0s/10m0s  0/1 shared iters
+
+running (01m03.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m03.0s/10m0s  0/1 shared iters
+
+running (01m04.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m04.0s/10m0s  0/1 shared iters
+
+running (01m05.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m05.0s/10m0s  0/1 shared iters
+
+running (01m06.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m06.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:08:40Z" level=info msg="QR_PANTALLA_TOKEN_SIMULADO_EN_DOM=false" source=console
+
+running (01m07.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m07.0s/10m0s  0/1 shared iters
+
+running (01m08.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m08.0s/10m0s  0/1 shared iters
+
+running (01m09.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m09.0s/10m0s  0/1 shared iters
+
+running (01m10.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m10.0s/10m0s  0/1 shared iters
+
+running (01m11.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m11.0s/10m0s  0/1 shared iters
+
+running (01m12.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m12.0s/10m0s  0/1 shared iters
+
+running (01m13.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m13.0s/10m0s  0/1 shared iters
+
+running (01m14.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m14.0s/10m0s  0/1 shared iters
+
+running (01m15.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m15.0s/10m0s  0/1 shared iters
+
+running (01m16.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+ui     [   0% ] 1 VUs  01m16.0s/10m0s  0/1 shared iters
+time="2026-11-02T05:08:50Z" level=info msg="ERRORES_CONSOLA=0 " source=console
+
+     ✓ CU-01: inicio de sesión lleva fuera de /login
+     ✓ RF-001: la lista de eventos muestra sesiones reservables
+     ✓ RF-001/RN-009: el primer "Reservar cupo" de la lista es reservable (no es una sesión pasada)
+     ✓ CU-01: reservar una sesión de mañana muestra éxito (o aviso de reserva ya existente)
+     ✓ RF-020: Mis reservas lista la reserva
+     ✓ RN-020: sin nivel/indicador de priorización en Mis reservas
+     ✓ RF-021: Mi historial carga sin error
+     ✓ RF-023: gestión de usuarios muestra cuentas reales (qa.)
+     ✓ RF-033: reportes reflejan datos reales (eventos "QA ...")
+     ✓ RF-032: auditoría muestra acciones reales (Eventos.Crear)
+     ✓ H-01 · Reportes: sin actividades ficticias (Spinning/Crossfit/Natación)
+     ✓ H-01 · Auditoría: sin actores ficticios (Admin Sistema / pedro.entrenador)
+     ✓ H-01 · Calendario de bloqueos muestra los bloqueos reales del backend ("Festivo probe" / "Mantenimiento QA2")
+     ✓ H-01 · Bandeja de retroalimentación muestra reportes reales del backend (prueba de limite / No carga la lista)
+     ✓ H-01 · Administrar sesión carga la sesión real (sin error)
+     ✓ H-02 · La pantalla del punto muestra el punto real del backend ("QA Torniquete"), no un nombre fijo
+     ✓ H-01 · Notas de sesión muestran las notas reales (Nota privada QA2)
+     ✓ H-01 · Asistencia manual lista a inscritos reales (qa.usuario0030)
+
+     browser_data_received..........: 212 MB  2.8 MB/s
+     browser_data_sent..............: 703 kB  9.2 kB/s
+     browser_http_req_duration......: avg=140.95ms min=35µs     med=26.71ms  max=5.57s    p(95)=156.75ms
+     browser_http_req_failed........: 0.11%   2 out of 1802
+     browser_web_vital_cls..........: avg=0.022108 min=0.000069 med=0.000216 max=0.085346 p(95)=0.076474
+     browser_web_vital_fcp..........: avg=97.1ms   min=24.9ms   med=31.2ms   max=518.9ms  p(95)=258.31ms
+     browser_web_vital_fid..........: avg=333.33µs min=200µs    med=300µs    max=500µs    p(95)=475µs   
+     browser_web_vital_inp..........: avg=56ms     min=56ms     med=56ms     max=56ms     p(95)=56ms    
+     browser_web_vital_lcp..........: avg=1.24s    min=29.2ms   med=622.95ms max=8.09s    p(95)=4.16s   
+     browser_web_vital_ttfb.........: avg=1.42ms   min=1.2ms    med=1.39ms   max=1.7ms    p(95)=1.7ms   
+     checks.........................: 100.00% 18 out of 18
+     cliente_arranque_4g_lento_ms...: avg=8.08s    min=8.08s    med=8.08s    max=8.08s    p(95)=8.08s   
+     cliente_arranque_frio_ms.......: avg=925ms    min=925ms    med=925ms    max=925ms    p(95)=925ms   
+     cliente_lista_eventos_ms.......: avg=762ms    min=762ms    med=762ms    max=762ms    p(95)=762ms   
+     data_received..................: 0 B     0 B/s
+     data_sent......................: 0 B     0 B/s
+     iteration_duration.............: avg=1m15s    min=1m15s    med=1m15s    max=1m15s    p(95)=1m15s   
+     iterations.....................: 1       0.013137/s
+     vus............................: 1       min=1         max=1
+     vus_max........................: 1       min=1         max=1
+
+
+running (01m16.1s), 0/1 VUs, 1 complete and 0 interrupted iterations
+ui   ✓ [ 100% ] 1 VUs  01m16.1s/10m0s  1/1 shared iters

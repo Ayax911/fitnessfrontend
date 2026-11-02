@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored /tmp/claude-1000/-home-akira-Desktop-Repositorios-GitHub-ITM/f99690e9-db4c-44ca-91e2-e963894d5831/scratchpad/r3/fe/src/FitnessFrontend/FitnessFrontend.csproj (in 346 ms).
+  Restored /tmp/claude-1000/-home-akira-Desktop-Repositorios-GitHub-ITM/f99690e9-db4c-44ca-91e2-e963894d5831/scratchpad/r3/fe/tests/FitnessFrontend.Tests/FitnessFrontend.Tests.csproj (in 346 ms).
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `FitnessFrontend` has no vulnerable packages given the current sources.
+The given project `FitnessFrontend.Tests` has no vulnerable packages given the current sources.

@@ -1,0 +1,13 @@
+archivos=83 transferidos=4813 KiB sin_compresion=12706 KiB  [Content-Encoding: gzip en el .wasm principal]
+estimación 3G (1,6 Mbps)=24.6 s · 4G lento (5 Mbps)=7.9 s · 4G (20 Mbps)=2.0 s
+10 archivos más pesados (transferido / sin comprimir, bytes):
+1207856 3001771 _framework/dotnet.native.a6k1euv12n.wasm
+765324 2027285 _framework/System.Private.CoreLib.9lgayrcudl.wasm
+359741 956416 _framework/icudt_CJK.tjcz0u77k5.dat
+347783 1107168 _framework/icudt_no_CJK.lfu7j35m59.dat
+245212 843541 _framework/FitnessFrontend.9frqfqrlfm.wasm
+220093 550832 _framework/icudt_EFIGS.tptq2av103.dat
+170922 549653 _framework/System.Private.Xml.bn1dua24bv.wasm
+155599 387349 _framework/System.Text.Json.hqrilcfwuv.wasm
+138172 357653 _framework/System.Linq.Expressions.iere9zql0y.wasm
+118905 283925 _framework/Microsoft.AspNetCore.Components.2syke3cun6.wasm
