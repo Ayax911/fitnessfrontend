@@ -208,8 +208,8 @@ public class CalidadRonda3QA3F1Tests
         {
             var ruta = req.RequestUri!.AbsolutePath;
 
-            // Simula 403 Forbidden en inscritos (rol exclusivo entrenador)
-            if (ruta.Contains($"/api/reservas/sesiones/{sesionId}/inscritos", StringComparison.OrdinalIgnoreCase))
+            // Simula un fallo (403) del endpoint administrativo de inscritos (D-E): la pantalla debe seguir operativa
+            if (ruta.Contains($"/api/admin/sesiones/{sesionId}/inscritos", StringComparison.OrdinalIgnoreCase))
             {
                 return new HttpResponseMessage(HttpStatusCode.Forbidden)
                 {
@@ -240,5 +240,43 @@ public class CalidadRonda3QA3F1Tests
         Assert.Equal(10, res.Valor.CuposDisponibles);
         // La lista de reservas queda vacía en vez de arrojar excepción
         Assert.Empty(res.Valor.Reservas);
+    }
+
+    // H-27 (D-E), RN-020: el Administrador consulta SU endpoint y se muestran confirmados y lista de espera.
+    [Fact]
+    public async Task AdministrarSesion_UsaEndpointAdministrativo_YMapeaConfirmadosYListaEspera()
+    {
+        var sesionId = Guid.NewGuid();
+        var u1 = Guid.NewGuid();
+        var u2 = Guid.NewGuid();
+        var rutas = new List<string>();
+        var jsonInscritos = $@"{{
+            ""sesionEventoId"": ""{sesionId}"",
+            ""confirmados"": [{{ ""reservaId"": ""{Guid.NewGuid()}"", ""usuarioId"": ""{u1}"", ""nombreCompleto"": ""Ana Pérez"", ""estado"": 0, ""origen"": 0 }}],
+            ""listaEspera"": [{{ ""reservaId"": ""{Guid.NewGuid()}"", ""usuarioId"": ""{u2}"", ""nombreCompleto"": ""Luis Gómez"", ""estado"": 1, ""origen"": 1 }}]
+        }}";
+
+        var client = KiotaTestHelper.CrearCliente(req =>
+        {
+            var ruta = req.RequestUri!.AbsolutePath;
+            rutas.Add(ruta);
+            if (ruta.Equals($"/api/admin/sesiones/{sesionId}/inscritos", StringComparison.OrdinalIgnoreCase))
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(jsonInscritos, Encoding.UTF8, "application/json") };
+            if (ruta.EndsWith("/api/eventos", StringComparison.OrdinalIgnoreCase))
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[]", Encoding.UTF8, "application/json") };
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        var res = await new AdministracionSesionesClienteService(client).ObtenerDetalleSesionAdminAsync(sesionId);
+
+        Assert.True(res.EsExito);
+        Assert.DoesNotContain(rutas, r => r.Contains("/api/reservas/sesiones/", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(2, res.Valor!.Reservas.Count);
+        var confirmada = Assert.Single(res.Valor.Reservas, r => r.UsuarioId == u1);
+        var espera = Assert.Single(res.Valor.Reservas, r => r.UsuarioId == u2);
+        Assert.Equal(0, confirmada.Estado);
+        Assert.Equal(1, espera.Estado);
+        Assert.Equal("Ana Pérez", confirmada.NombreUsuario);
+        Assert.Equal("Administrador", espera.Origen);
     }
 }

@@ -8,7 +8,9 @@ RAIZ=/usr/share/nginx/html
 sed "s|REEMPLAZAR_EN_DESPLIEGUE|${URL_BASE_API}|g" "$RAIZ/appsettings.template.json" > "$RAIZ/appsettings.json"
 
 # 2. H-13: Calcular hash sha256 del script inline del importmap en index.html
-HASH=$(sed -n '/<script type="importmap">/,/<\/script>/p' "$RAIZ/index.html" | sed '1s/.*<script type="importmap">//; $s/<\/script>.*//' | openssl dgst -sha256 -binary 2>/dev/null | openssl base64 -A 2>/dev/null || true)
+# La CSP exige el hash EXACTO del contenido: $(...) elimina el salto de línea final que añade sed y printf '%s' no agrega otro.
+IMPORTMAP=$(sed -n '/<script type="importmap">/,/<\/script>/p' "$RAIZ/index.html" | sed '1s/.*<script type="importmap">//; $s/<\/script>.*//')
+HASH=$(printf '%s' "$IMPORTMAP" | openssl dgst -sha256 -binary 2>/dev/null | openssl base64 -A 2>/dev/null || true)
 
 if [ -n "$HASH" ]; then
     HASH_CSP="'sha256-${HASH}'"

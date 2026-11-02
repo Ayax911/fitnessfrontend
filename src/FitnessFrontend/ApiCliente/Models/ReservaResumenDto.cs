@@ -54,7 +54,6 @@ namespace FitnessFrontend.ApiCliente.Models
         public ReservaResumenDto()
         {
             AdditionalData = new Dictionary<string, object>();
-            Origen = 0;
             SesionCancelada = false;
         }
         /// <summary>

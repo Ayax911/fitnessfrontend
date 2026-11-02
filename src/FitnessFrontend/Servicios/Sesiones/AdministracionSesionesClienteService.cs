@@ -27,20 +27,22 @@ public class AdministracionSesionesClienteService : IAdministracionSesionesClien
     {
         try
         {
-            // H-27: Consultamos inscritos de la sesión protegiendo contra 403 Forbidden para que
-            // un fallo en la lista secundaria no bloquee las acciones principales de administración.
-            List<ReservaInscritoDto> inscritos = new();
+            // H-27 (D-E), RF-027, RF-028, RF-030, RN-020: el Administrador usa su endpoint propio
+            // (GET /api/admin/sesiones/{id}/inscritos); el del Entrenador sigue siendo solo del dueño.
+            // Un fallo en esta lista secundaria (p. ej. 403) no bloquea las acciones de administración.
+            var inscritos = new List<InscritoAdminDto>();
             try
             {
-                var inscritosResp = await _apiClient.Api.Reservas.Sesiones[sesionId].Inscritos.GetAsync(cancellationToken: ct);
+                var inscritosResp = await _apiClient.Api.Admin.Sesiones[sesionId].Inscritos.GetAsync(cancellationToken: ct);
                 if (inscritosResp != null)
                 {
-                    inscritos = inscritosResp.ToList();
+                    inscritos.AddRange(inscritosResp.Confirmados ?? new List<InscritoAdminDto>());
+                    inscritos.AddRange(inscritosResp.ListaEspera ?? new List<InscritoAdminDto>());
                 }
             }
             catch (ApiException)
             {
-                inscritos = new List<ReservaInscritoDto>();
+                inscritos = new List<InscritoAdminDto>();
             }
 
             // Consultamos eventos para ubicar metadata de la sesión
@@ -77,13 +79,13 @@ public class AdministracionSesionesClienteService : IAdministracionSesionesClien
             string? motivoCanc = null;
 
             var reservasMapeadas = inscritos.Select(i => new ReservaAdminDetalleDto(
-                ReservaId: Guid.Empty, // El DTO de inscritos expone UsuarioId, Estado y NombreCompleto (RN-020)
+                ReservaId: i.ReservaId ?? Guid.Empty, // sin priorización ni posición en la lista (RN-020)
                 UsuarioId: i.UsuarioId ?? Guid.Empty,
                 NombreUsuario: i.NombreCompleto ?? "Usuario ITM",
                 Correo: string.Empty,
                 Estado: i.Estado ?? 0,
                 FechaSolicitud: DateTimeOffset.UtcNow,
-                Origen: null
+                Origen: i.Origen switch { 1 => "Administrador", 0 => "Usuario", _ => null }
             )).ToList();
 
             var sesionDetalle = new SesionAdminDetalleDto(
