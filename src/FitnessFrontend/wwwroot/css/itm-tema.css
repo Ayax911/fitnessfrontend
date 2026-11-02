@@ -144,16 +144,35 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 .form-check-label { font: 400 14px/20px var(--font-texto); padding-top: 2px; }
 
 /* ------------------------------------------------------------------ Alertas: relleno sólido, texto en negrita y color de texto que pasa AA */
-.alert { border: 0; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); font: 400 15px/22px var(--font-texto); }
+/* Icono por variante (diseño "Pantallas del estudiante": itm-alerta con icono, sin depender del color) */
+.alert {
+  position: relative;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 28px);
+  font: 400 15px/22px var(--font-texto);
+}
+.alert::before {
+  content: "";
+  position: absolute;
+  left: var(--space-4);
+  top: calc(var(--space-3) + 1px);
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: var(--alerta-icono) center / contain no-repeat;
+  mask: var(--alerta-icono) center / contain no-repeat;
+}
 .alert-heading { font-family: var(--font-sans); font-weight: 700; color: inherit; }
-.alert-success { background: var(--modulo-reservas); color: var(--negro-itm); }
-.alert-warning { background: var(--modulo-asistencia); color: var(--negro-itm); }
-.alert-info { background: var(--modulo-eventos); color: var(--negro-itm); }
-.alert-danger { background: var(--peligro); color: var(--on-peligro); }
+.alert-success { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background: var(--modulo-reservas); color: var(--negro-itm); }
+.alert-warning { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 7.5v5.5M12 16.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--modulo-asistencia); color: var(--negro-itm); }
+.alert-info { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2.5'/%3E%3Cpath d='M12 11v6M12 7.5v.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--modulo-eventos); color: var(--negro-itm); }
+.alert-danger { --alerta-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M18 6L6 18' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"); background: var(--peligro); color: var(--on-peligro); }
 .alert-danger hr { border-color: currentColor; opacity: .4; }
 .alert-danger .btn-outline-danger { background: transparent; border-color: var(--on-peligro); color: var(--on-peligro) !important; }
 .alert-danger .btn-outline-danger:hover { background: var(--on-peligro); color: var(--peligro) !important; }
 .alert .btn-close { opacity: .8; }
+.alert-dismissible { padding-right: 3rem; }
 
 /* ------------------------------------------------------------------ Tarjetas y tablas */
 .card-itm, .card { border: 1px solid var(--gris-itm); border-radius: var(--radius-md); background: var(--superficie); box-shadow: var(--sombra-tarjeta); }
