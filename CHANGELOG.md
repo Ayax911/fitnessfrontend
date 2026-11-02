@@ -4,9 +4,9 @@ Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
 ## UX · Observaciones de la prueba manual (2026-11-02)
 - **Botón "Menú":** en pantallas ≥ 720 px se veía pero no hacía nada (el CSS ocultaba el panel). Ahora el **Administrador** siempre tiene "Menú" y un panel con sus 10 destinos bajo la barra (se cierra al navegar); sus enlaces ya no se salen de la barra. El Entrenador conserva sus 2 enlaces en la barra y el botón solo en celular.
-- **Aviso flotante al reservar** (`IAvisosService` + `ContenedorAvisos`, estilo "tinta suave" con los tokens de las insignias): "¡Reserva confirmada!" con enlace a Mis reservas, "Quedaste en lista de espera" (sin posición ni nivel, RN-020), "Reservas aún no disponibles" y errores. Reemplaza la alerta dentro de la página, que obligaba a desplazarse para verla. También en Programación y al cancelar en Mis reservas.
+- **Ventana de resultado al reservar** (`IAvisosService` + `ContenedorAvisos`), con el diseño del artifact "Pantallas del estudiante": modal centrado sobre fondo oscuro, sello circular sólido (verde con ✓ al confirmar, naranja con reloj en lista de espera, rojo con ✕ si se deniega), título, datos de la actividad (nombre y horario en Bogotá) y botones "Ver mis reservas" / "Seguir viendo actividades" o "Entendido". No desaparece sola; Esc o el fondo la cierran y el foco pasa a la ventana (`role="dialog"` / `alertdialog`). Sin posición ni nivel (RN-020). También en Programación y al cancelar en Mis reservas. Sustituye a la alerta dentro de la página, que obligaba a desplazarse.
 - **Páginas más compactas:** la lista de actividades pasa de 6.600 px a ~1.200 px de alto (12 tarjetas + "Mostrar más actividades"), 4 columnas en pantallas ≥ 1200 px, y menos espacio en cabeceras, tarjetas y títulos.
-- Pruebas: `AvisosYMenuQA3Tests` (servicio, componente, reserva confirmada y en espera, "Mostrar más", menú del Administrador y del Entrenador). 187/187.
+- Pruebas: `AvisosYMenuQA3Tests` (servicio, ventana, reserva confirmada, en espera y denegada, "Mostrar más", menú del Administrador y del Entrenador). 189/189.
 
 ## QA3-F1 · Correcciones de verificación independiente de calidad (H-13, H-27, H-28, H-30)
 - **Cierre de las 3:00 am (2026-11-02):**

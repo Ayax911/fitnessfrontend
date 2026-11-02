@@ -127,7 +127,7 @@
                                                  Clase="btn-outline-danger btn-sm"
                                                  EstaProcesando="@cancelandoEsta"
                                                  TextoProcesando="Cancelando..."
-                                                 OnClick="@(() => CancelarReserva(reservaId))">
+                                                 OnClick="@(() => CancelarReserva(reservaId, reserva.EventoNombre ?? string.Empty, CuandoTexto(reserva)))">
                                         Cancelar
                                     </BotonAccion>
                                 }
@@ -167,7 +167,15 @@
         }
     }
 
-    private async Task CancelarReserva(Guid reservaId)
+    private string CuandoTexto(ReservaResumenDto reserva)
+    {
+        if (!reserva.FechaHoraInicio.HasValue) return string.Empty;
+        var inicio = reserva.FechaHoraInicio.Value;
+        var fecha = $"{ZonaHoraria.FormatearFecha(inicio)}, {ZonaHoraria.FormatearHora(inicio)}";
+        return reserva.FechaHoraFin.HasValue ? $"{fecha} – {ZonaHoraria.FormatearHora(reserva.FechaHoraFin.Value)}" : fecha;
+    }
+
+    private async Task CancelarReserva(Guid reservaId, string actividad, string cuando)
     {
         if (reservaId == Guid.Empty) return;
 
@@ -178,12 +186,12 @@
 
         if (resultado.EsExitoso)
         {
-            Avisos.Exito("Reserva cancelada", "Se canceló tu reserva correctamente.");
+            Avisos.Exito("Reserva cancelada", "Se canceló tu reserva correctamente.", datos: new List<DatoAviso> { new("Actividad", actividad), new("Cuándo", cuando) });
             await CargarReservas();
         }
         else
         {
-            Avisos.Error("No se pudo cancelar", resultado.Mensaje ?? "No fue posible cancelar la reserva.");
+            Avisos.Error("No se pudo cancelar", resultado.Mensaje ?? "No fue posible cancelar la reserva.", new List<DatoAviso> { new("Actividad", actividad), new("Cuándo", cuando) });
         }
     }
 

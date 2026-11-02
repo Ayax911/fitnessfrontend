@@ -166,7 +166,7 @@
                                                 class="btn btn-sm btn-itm-primario w-100 mt-2"
                                                 style="min-height: 38px; font-size: 12px;"
                                                 disabled="@procesandoEsta"
-                                                @onclick="() => ReservarCupo(sesionId, evento.Nombre ?? string.Empty, hayCupo)">
+                                                @onclick="() => ReservarCupo(sesionId, evento.Nombre ?? string.Empty, CuandoTexto(sesion), hayCupo)">
                                             @(procesandoEsta ? "Procesando..." : (hayCupo ? "Reservar" : "Unirme a espera"))
                                         </button>
                                     }
@@ -272,7 +272,15 @@
         }
     }
 
-    private async Task ReservarCupo(Guid sesionId, string eventoNombre, bool hayCupo)
+    private string CuandoTexto(SesionResumenDto sesion)
+    {
+        if (!sesion.FechaHoraInicio.HasValue) return string.Empty;
+        var inicio = sesion.FechaHoraInicio.Value;
+        var fecha = $"{ZonaHoraria.FormatearFecha(inicio)}, {ZonaHoraria.FormatearHora(inicio)}";
+        return sesion.FechaHoraFin.HasValue ? $"{fecha} – {ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)}" : fecha;
+    }
+
+    private async Task ReservarCupo(Guid sesionId, string eventoNombre, string cuando, bool hayCupo)
     {
         if (sesionId == Guid.Empty) return;
 
@@ -281,23 +289,25 @@
         var resultado = await ReservasService.ReservarAsync(sesionId);
         _sesionEnProcesoId = null;
 
+        var datos = new List<DatoAviso> { new("Actividad", eventoNombre), new("Cuándo", cuando) };
+
         if (resultado.EsExito && resultado.Valor != null)
         {
             if (resultado.Valor.Estado == 1)
-                Avisos.Espera("Quedaste en lista de espera", $"{eventoNombre} no tiene cupo libre por ahora.");
+                Avisos.Espera("Quedaste en lista de espera", "Esta actividad no tiene cupo libre por ahora.", datos);
             else
-                Avisos.Exito("¡Reserva confirmada!", $"{eventoNombre}. Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas");
+                Avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas", datos);
 
             await CargarDatos();
         }
         else if (resultado.CodigoError == "VentanaNoAbierta")
         {
             _sesionesVentanaCerrada.Add(sesionId);
-            Avisos.Info("Las reservas para esta sesión aún no están disponibles");
+            Avisos.Error("No se pudo reservar", "Las reservas para esta sesión aún no están disponibles.", datos);
         }
         else
         {
-            Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible completar la reserva.");
+            Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible completar la reserva.", datos);
         }
     }
 }

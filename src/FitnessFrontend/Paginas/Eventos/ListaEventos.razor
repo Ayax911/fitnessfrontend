@@ -140,7 +140,7 @@
                                                  Deshabilitado="@(estaBloqueadaPorVentana || _sesionEnProcesoId.HasValue)"
                                                  EstaProcesando="@estaProcesandoEsta"
                                                  TextoProcesando="Reservando..."
-                                                 OnClick="@(() => RealizarReserva(sesionId))">
+                                                 OnClick="@(() => RealizarReserva(sesionId, evento.Nombre ?? string.Empty, CuandoTexto(sesion)))">
                                         Reservar cupo
                                     </BotonAccion>
                                 </div>
@@ -202,7 +202,16 @@
         _estado = await EventosService.ObtenerEventosDisponiblesAsync();
     }
 
-    private async Task RealizarReserva(Guid sesionId)
+    // Cuándo: fecha y horario en America/Bogotá (la conversión solo se hace aquí, IZonaHorariaService)
+    private string CuandoTexto(SesionResumenDto sesion)
+    {
+        if (!sesion.FechaHoraInicio.HasValue) return string.Empty;
+        var inicio = sesion.FechaHoraInicio.Value;
+        var fecha = $"{ZonaHoraria.FormatearFecha(inicio)}, {ZonaHoraria.FormatearHora(inicio)}";
+        return sesion.FechaHoraFin.HasValue ? $"{fecha} – {ZonaHoraria.FormatearHora(sesion.FechaHoraFin.Value)}" : fecha;
+    }
+
+    private async Task RealizarReserva(Guid sesionId, string actividad, string cuando)
     {
         if (sesionId == Guid.Empty) return;
 
@@ -211,18 +220,20 @@
         var resultado = await ReservasService.ReservarAsync(sesionId);
         _sesionEnProcesoId = null;
 
+        var datos = new List<DatoAviso> { new("Actividad", actividad), new("Cuándo", cuando) };
+
         if (resultado.EsExito && resultado.Valor != null)
         {
             // Estado: 0 = Confirmada, 1 = EnListaEspera
             if (resultado.Valor.Estado == 1)
             {
                 // RF-003: Cupo agotado, ubicado en lista de espera (sin posición ni nivel: RN-020)
-                Avisos.Espera("Quedaste en lista de espera", "Esta actividad no tiene cupo libre por ahora.");
+                Avisos.Espera("Quedaste en lista de espera", "Esta actividad no tiene cupo libre por ahora.", datos);
             }
             else
             {
                 // RF-002: Reserva confirmada
-                Avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas");
+                Avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas", datos);
             }
 
             // Refrescar listado para actualizar cupos
@@ -236,11 +247,11 @@
             if (resultado.CodigoError == "VentanaNoAbierta")
             {
                 _sesionesVentanaCerrada.Add(sesionId);
-                Avisos.Info("Reservas aún no disponibles para esta sesión");
+                Avisos.Error("No se pudo reservar", "Reservas aún no disponibles para esta sesión.", datos);
             }
             else
             {
-                Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible procesar la reserva.");
+                Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible procesar la reserva.", datos);
             }
         }
     }

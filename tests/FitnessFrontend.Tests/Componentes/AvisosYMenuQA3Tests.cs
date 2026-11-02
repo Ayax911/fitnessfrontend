@@ -14,6 +14,8 @@ using FitnessFrontend.Servicios.Infraestructura;
 using FitnessFrontend.Servicios.Reservas;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -23,7 +25,7 @@ namespace FitnessFrontend.Tests.Componentes;
 // lista con "Mostrar más". RN-020: ningún aviso muestra posición en la lista de espera ni nivel de priorización.
 public class AvisosYMenuQA3Tests : BunitContext
 {
-    // ------------------------------------------------------------------ Servicio de avisos
+    // ------------------------------------------------------------------ Servicio de ventanas de resultado
     [Fact]
     public void Avisos_Exito_SeAgregaYSeDescartaAlCerrar()
     {
@@ -37,46 +39,88 @@ public class AvisosYMenuQA3Tests : BunitContext
     }
 
     [Fact]
-    public void Avisos_MuestraComoMaximoTres_ElMasViejoSale()
+    public void Avisos_NoDesaparecenSolos_ElUsuarioDecideCuandoCerrar()
     {
         var avisos = new AvisosService();
-        for (var i = 1; i <= 5; i++) avisos.Info($"Aviso {i}");
+        avisos.Exito("Listo");
+        Assert.Single(avisos.Activos);
+    }
 
-        Assert.Equal(3, avisos.Activos.Count);
+    [Fact]
+    public void Avisos_HacenCola_ConservanLasMasRecientes()
+    {
+        var avisos = new AvisosService();
+        for (var i = 1; i <= 7; i++) avisos.Info($"Aviso {i}");
+
+        Assert.Equal(5, avisos.Activos.Count);
         Assert.Equal("Aviso 3", avisos.Activos[0].Titulo);
     }
 
+    // ------------------------------------------------------------------ Ventana centrada
     [Fact]
-    public async Task Avisos_DesaparecenSolosTrasElTiempoConfigurado()
+    public void Ventana_ExitoRenderizaSelloTituloDatosYBotones_YSeCierra()
     {
-        var avisos = new AvisosService { SegundosVisible = 0 };
-        avisos.Exito("Listo");
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var avisos = new AvisosService();
+        Services.AddSingleton<IAvisosService>(avisos);
+        var cut = Render<FitnessFrontend.Componentes.Compartidos.ContenedorAvisos>();
+        Assert.Empty(cut.FindAll(".itm-modal"));
 
-        for (var i = 0; i < 40 && avisos.Activos.Count > 0; i++) await Task.Delay(50);
-        Assert.Empty(avisos.Activos);
+        avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas",
+            new List<DatoAviso> { new("Actividad", "Spinning"), new("Cuándo", "03/11/2026, 06:00 a. m.") });
+
+        cut.WaitForAssertion(() =>
+        {
+            var caja = cut.Find(".itm-modal .itm-modal__caja[role='dialog'][aria-modal='true']");
+            Assert.Contains("¡Reserva confirmada!", caja.TextContent);
+            Assert.NotEmpty(cut.FindAll(".itm-resultado__sello--exito"));
+            Assert.Equal(new[] { "Actividad", "Cuándo" }, cut.FindAll("dl.itm-datos dt").Select(x => x.TextContent).ToArray());
+            Assert.Contains("Spinning", cut.Find("dl.itm-datos").TextContent);
+            Assert.Equal("/reservas", cut.Find(".itm-modal__acciones a").GetAttribute("href"));
+        });
+
+        cut.Find(".itm-modal__acciones button").Click();
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".itm-modal")));
     }
 
-    // ------------------------------------------------------------------ Componente flotante
     [Fact]
-    public void ContenedorAvisos_RenderizaTituloMensajeEnlaceYRolSegunTipo()
+    public void Ventana_Denegada_UsaSelloRojoYRolAlertdialog_ConUnSoloBotonEntendido()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose;
         var avisos = new AvisosService();
         Services.AddSingleton<IAvisosService>(avisos);
         var cut = Render<FitnessFrontend.Componentes.Compartidos.ContenedorAvisos>();
 
-        avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas");
-        avisos.Error("No se pudo reservar", "Inténtalo de nuevo.");
+        avisos.Error("No se pudo reservar", "Reservas aún no disponibles para esta sesión.");
 
         cut.WaitForAssertion(() =>
         {
-            Assert.Contains("¡Reserva confirmada!", cut.Markup);
-            Assert.Contains("href=\"/reservas\"", cut.Markup);
-            Assert.Single(cut.FindAll("div.itm-aviso--exito[role='status']"));
-            Assert.Single(cut.FindAll("div.itm-aviso--error[role='alert']"));
+            Assert.NotEmpty(cut.FindAll(".itm-modal__caja[role='alertdialog']"));
+            Assert.NotEmpty(cut.FindAll(".itm-resultado__sello--error"));
+            var boton = Assert.Single(cut.FindAll(".itm-modal__acciones button"));
+            Assert.Equal("Entendido", boton.TextContent.Trim());
+        });
+    }
+
+    [Fact]
+    public void Ventana_MuestraUnaALaVez_YEscCierraYPasaALaSiguiente()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var avisos = new AvisosService();
+        Services.AddSingleton<IAvisosService>(avisos);
+        var cut = Render<FitnessFrontend.Componentes.Compartidos.ContenedorAvisos>();
+
+        avisos.Exito("Primero");
+        avisos.Espera("Segundo");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Single(cut.FindAll(".itm-modal"));
+            Assert.Contains("Primero", cut.Find(".itm-modal__caja").TextContent);
         });
 
-        cut.Find("div.itm-aviso--exito .itm-aviso__cerrar").Click();
-        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll("div.itm-aviso--exito")));
+        cut.Find(".itm-modal").KeyDown(new KeyboardEventArgs { Key = "Escape" });
+        cut.WaitForAssertion(() => Assert.Contains("Segundo", cut.Find(".itm-modal__caja").TextContent));
     }
 
     // ------------------------------------------------------------------ Reservar desde la lista
@@ -111,7 +155,7 @@ public class AvisosYMenuQA3Tests : BunitContext
 
     private static List<EventoResumenDto> EventoConSesiones(int cantidad)
     {
-        var inicio = DateTimeOffset.UtcNow.AddDays(1).Date.AddHours(14);
+        var inicio = new DateTimeOffset(DateTime.UtcNow.Date.AddDays(1).AddHours(14), TimeSpan.Zero);
         return new List<EventoResumenDto>
         {
             new()
@@ -148,6 +192,10 @@ public class AvisosYMenuQA3Tests : BunitContext
             Assert.Equal(TipoAviso.Exito, aviso.Tipo);
             Assert.Equal("¡Reserva confirmada!", aviso.Titulo);
             Assert.Equal("/reservas", aviso.EnlaceUrl);
+            // Datos de la actividad: nombre y horario en Bogotá (nunca nivel ni posición)
+            Assert.Equal("Spinning", aviso.Datos!.Single(d => d.Etiqueta == "Actividad").Valor);
+            // 14:00 UTC = 09:00 en Bogotá
+            Assert.Contains("09:00", aviso.Datos!.Single(d => d.Etiqueta == "Cuándo").Valor);
         });
         // Ya no se pinta una alerta dentro de la página (obligaba a desplazarse para verla)
         Assert.DoesNotContain("alert-success", cut.Markup);
@@ -163,7 +211,7 @@ public class AvisosYMenuQA3Tests : BunitContext
         {
             var aviso = Assert.Single(avisos.Activos);
             Assert.Equal(TipoAviso.Espera, aviso.Tipo);
-            var texto = (aviso.Titulo + " " + aviso.Mensaje).ToLowerInvariant();
+            var texto = (aviso.Titulo + " " + aviso.Mensaje + " " + string.Join(" ", aviso.Datos!.Select(d => d.Valor))).ToLowerInvariant();
             foreach (var prohibido in new[] { "posición", "posicion", "prioriz", "nivel", "confiab" })
                 Assert.DoesNotContain(prohibido, texto);
         });
