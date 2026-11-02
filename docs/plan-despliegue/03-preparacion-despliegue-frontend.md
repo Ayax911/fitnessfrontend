@@ -45,12 +45,13 @@ Para que el cambio sea acotado:
 - El renovado de sesión (F1) se apoya en el contrato de refresh: si el SSO emite otro tipo de token, se sustituye en el manejador, no en las pantallas.
 Documentar en `README.md` una sección "Cambio a credenciales institucionales" con estos puntos de contacto.
 
-## 5. Lista de verificación antes de entregar a TI
+## 5. Lista de verificación antes de entregar a TI (QA2-F5 / QA3-F1)
 
-- [ ] `dotnet publish -c Release` sin advertencias nuevas y la imagen Docker arranca como usuario sin privilegios.
-- [ ] Rutas profundas recargables; 404 del servidor devuelve la aplicación, no un error de nginx.
-- [ ] Cabeceras y caché de la tabla anterior comprobadas con `curl -I`.
-- [ ] CSP probada sin errores en la consola en todas las pantallas.
-- [ ] Sin secretos ni URLs privadas en el repositorio; `appsettings.json` solo con el marcador.
-- [ ] `docs/checklist-e2e.md` ejecutado contra el entorno desplegado de pruebas.
-- [ ] Informe de Lighthouse (rendimiento, accesibilidad, buenas prácticas) archivado en `docs/despliegue/`.
+- [x] `dotnet publish -c Release` sin advertencias nuevas y la imagen Docker arranca como usuario sin privilegios (`USER 101` en `Dockerfile`).
+- [x] Rutas profundas recargables; `try_files $uri $uri/ /index.html` en `nginx.conf` probado con `curl -I http://localhost:5081/admin/calendario` (200 OK).
+- [x] Cabeceras de seguridad y caché comprobadas con `curl -I`: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `server_tokens off`, `Cache-Control: no-store` para `/appsettings.json` y `Cache-Control: public, max-age=31536000, immutable` para `_framework/`.
+- [x] CSP configurada sin `'unsafe-inline'` ni `'unsafe-eval'` en `script-src` usando el hash sha256 del script inline del importmap; `connect-src` restringido a `'self' ${URL_BASE_API}` sin comodines. OWASP ZAP sin alertas críticas ni medias.
+- [x] Sin secretos ni URLs privadas en el repositorio; `appsettings.json` solo con el marcador `REEMPLAZAR_EN_DESPLIEGUE`.
+- [ ] `docs/checklist-e2e.md` ejecutado contra el entorno desplegado de pruebas (a cargo de TI / usuario en entorno final).
+- [ ] Informe de Lighthouse (rendimiento, accesibilidad, buenas prácticas) archivado en `docs/despliegue/` (a cargo de TI en servidor desplegado).
+
