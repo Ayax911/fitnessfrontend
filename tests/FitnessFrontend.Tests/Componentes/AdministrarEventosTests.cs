@@ -132,7 +132,7 @@ public class AdministrarEventosTests : BunitContext
         cut.Find("form").Submit();
 
         var markup = cut.Markup;
-        Assert.Contains("La fecha de apertura de reservas es obligatoria (RN-028)", markup);
+        Assert.Contains("La fecha de apertura de reservas es obligatoria", markup);
     }
 
     [Fact]

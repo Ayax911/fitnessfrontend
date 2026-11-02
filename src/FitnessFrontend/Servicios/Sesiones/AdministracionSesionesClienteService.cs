@@ -142,7 +142,7 @@ public class AdministracionSesionesClienteService : IAdministracionSesionesClien
             };
 
             await _apiClient.Api.Eventos.Sesiones[sesionId].Cancelar.PostAsync(body, cancellationToken: ct);
-            return ResultadoOperacion.Exito("Sesión cancelada con éxito. Las reservas asociadas han sido canceladas sin penalización (RN-031).");
+            return ResultadoOperacion.Exito("Sesión cancelada con éxito. Las reservas asociadas han sido canceladas sin penalización.");
         }
         catch (ErrorDetalleDto errorEx)
         {

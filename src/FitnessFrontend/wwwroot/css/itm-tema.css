@@ -261,6 +261,8 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 .itm-barra .btn-barra--solido:hover { background: var(--superficie-panel); }
 .itm-menu-boton { display: inline-flex; }
 .itm-menu-movil { background: var(--azul-itm-2); border-bottom: 3px solid var(--celeste-itm); }
+.itm-menu-movil--fijo { display: none; }
+.itm-menu-movil--fijo.itm-menu-movil--abierto { display: block; }
 .itm-menu-movil .itm-barra__enlaces { display: flex; flex-direction: column; padding: var(--space-2) var(--space-4); }
 .itm-menu-movil .itm-barra__enlaces a { border-bottom: 0; border-left: 3px solid transparent; }
 .itm-menu-movil .itm-barra__enlaces a.active { border-left-color: var(--celeste-itm); background: var(--azul-itm); }
@@ -296,12 +298,12 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
   .itm-barra { padding-inline: var(--space-5); }
   .itm-barra__enlaces { display: flex; }
   .itm-barra__usuario { display: block; }
-  .itm-tabs { display: none; }
-  /* El botón y el panel "Menú" solo se ocultan donde las opciones caben en la barra (Entrenador). El del Administrador (10 destinos) queda siempre. */
-  .itm-barra .itm-menu-boton:not(.itm-menu-boton--siempre), .itm-menu-movil:not(.itm-menu-movil--siempre) { display: none; }
-  .itm-menu-movil--siempre .itm-barra__enlaces { flex-direction: row; flex-wrap: wrap; padding: var(--space-2) var(--space-5); }
-  .itm-menu-movil--siempre .itm-barra__enlaces a { border-left: 0; border-bottom: 3px solid transparent; }
-  .itm-menu-movil--siempre .itm-barra__enlaces a.active { background: transparent; border-bottom-color: var(--celeste-itm); }
+  .itm-tabs, .itm-barra .itm-menu-boton, .itm-menu-movil:not(.itm-menu-movil--fijo) { display: none; }
+  /* Menú del Administrador: fila fija bajo la barra (10 destinos) */
+  .itm-menu-movil--fijo { display: block; }
+  .itm-menu-movil--fijo .itm-barra__enlaces { flex-direction: row; flex-wrap: wrap; padding: var(--space-2) var(--space-5); }
+  .itm-menu-movil--fijo .itm-barra__enlaces a { border-left: 0; border-bottom: 3px solid transparent; }
+  .itm-menu-movil--fijo .itm-barra__enlaces a.active { background: transparent; border-bottom-color: var(--celeste-itm); }
 }
 @media (min-width: 1024px) {
   .itm-contenedor { padding-inline: var(--space-6); }

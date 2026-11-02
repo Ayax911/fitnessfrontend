@@ -15,8 +15,7 @@
 
             <AuthorizeView>
                 <Authorized>
-                    @* Administrador: sus 10 destinos no caben en la barra; van en el panel del botón "Menú" (todos los anchos).
-                       Entrenador: 2 destinos en la barra (≥ 720 px) y el botón "Menú" solo en celular. *@
+                    @* Administrador: sus 10 destinos van en el menú fijo bajo la barra. Entrenador: 2 destinos en la barra (≥ 720 px). *@
                     <AuthorizeView Roles="Administrador" Context="adminContext">
                         <NotAuthorized>
                             <AuthorizeView Roles="Entrenador" Context="entrenadorContext">
@@ -34,7 +33,7 @@
                         <span class="itm-barra__usuario">@context.User.Identity?.Name</span>
                         <AuthorizeView Roles="Administrador" Context="menuAdmin">
                             <Authorized>
-                                <button type="button" class="btn-barra itm-menu-boton itm-menu-boton--siempre" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
+                                <button type="button" class="btn-barra itm-menu-boton" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
                                     Menú
                                 </button>
                             </Authorized>
@@ -60,21 +59,22 @@
             </AuthorizeView>
         </div>
 
-        @* Administrador (siempre) y Entrenador (celular): el menú se despliega bajo la barra *@
-        <AuthorizeView Roles="Administrador,Entrenador" Context="desplegableContext">
+        @* Administrador: menú fijo bajo la barra en pantallas ≥ 720 px (sus 10 destinos no caben en la barra); en celular se despliega con "Menú".
+           Entrenador: sus 2 enlaces van en la barra y en celular se despliega con "Menú". *@
+        <AuthorizeView Roles="Administrador" Context="adminMenu">
             <Authorized>
-                @if (_menuAbierto)
-                {
-                    <AuthorizeView Roles="Administrador" Context="adminMovil">
-                        <Authorized>
-                            <nav class="itm-menu-movil itm-menu-movil--siempre" id="menu-movil" aria-label="Menú de administración"><NavMenuAdministrador /></nav>
-                        </Authorized>
-                        <NotAuthorized>
-                            <nav class="itm-menu-movil" id="menu-movil" aria-label="Menú del entrenador"><NavMenuEntrenador /></nav>
-                        </NotAuthorized>
-                    </AuthorizeView>
-                }
+                <nav class="itm-menu-movil itm-menu-movil--fijo @(_menuAbierto ? "itm-menu-movil--abierto" : "")" id="menu-movil" aria-label="Menú de administración"><NavMenuAdministrador /></nav>
             </Authorized>
+            <NotAuthorized>
+                <AuthorizeView Roles="Entrenador" Context="entrenadorMenu">
+                    <Authorized>
+                        @if (_menuAbierto)
+                        {
+                            <nav class="itm-menu-movil" id="menu-movil" aria-label="Menú del entrenador"><NavMenuEntrenador /></nav>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+            </NotAuthorized>
         </AuthorizeView>
     </header>
 

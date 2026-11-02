@@ -260,27 +260,27 @@ public class AvisosYMenuQA3Tests : BunitContext
     }
 
     [Fact]
-    public void Administrador_BotonMenuSiempreDisponible_ElPanelTraeLosDiezDestinos_YNoDesbordaLaBarra()
+    public void Administrador_MenuFijoBajoLaBarra_ConLosDiezDestinos_YBotonSoloParaCelular()
     {
         var cut = RenderLayout("Administrador");
 
-        // Los 10 destinos NO van en la barra (se salían de ella): solo en el panel
+        // Los 10 destinos NO van dentro de la barra (se salían de ella): van en el menú fijo de debajo
         Assert.Empty(cut.FindAll(".itm-barra .itm-barra__enlaces"));
-        Assert.Empty(cut.FindAll("#menu-movil"));
+        var panel = cut.Find("nav#menu-movil.itm-menu-movil--fijo");
+        Assert.Equal(10, panel.QuerySelectorAll("a").Length);
+        Assert.DoesNotContain("itm-menu-movil--abierto", panel.ClassName);
 
-        var boton = cut.Find("button.itm-menu-boton--siempre");
+        // En celular el panel se despliega con el botón "Menú" (en pantallas anchas el CSS lo muestra siempre y oculta el botón)
+        var boton = cut.Find("button.itm-menu-boton");
         Assert.Equal("false", boton.GetAttribute("aria-expanded"));
         boton.Click();
-
         cut.WaitForAssertion(() =>
         {
-            var panel = cut.Find("nav#menu-movil.itm-menu-movil--siempre");
-            Assert.Equal(10, panel.QuerySelectorAll("a").Length);
-            Assert.Equal("true", cut.Find("button.itm-menu-boton--siempre").GetAttribute("aria-expanded"));
+            Assert.Contains("itm-menu-movil--abierto", cut.Find("nav#menu-movil").ClassName);
+            Assert.Equal("true", cut.Find("button.itm-menu-boton").GetAttribute("aria-expanded"));
         });
-
-        cut.Find("button.itm-menu-boton--siempre").Click();
-        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll("#menu-movil")));
+        cut.Find("button.itm-menu-boton").Click();
+        cut.WaitForAssertion(() => Assert.DoesNotContain("itm-menu-movil--abierto", cut.Find("nav#menu-movil").ClassName));
     }
 
     [Fact]

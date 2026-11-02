@@ -81,7 +81,7 @@
                            No la calcula ni la precarga con un valor propio inventado. *@
                         <div class="col-12 col-md-6">
                             <label for="fechaApertura" class="form-label fw-semibold text-primary">
-                                <span class="bi bi-clock me-1"></span> Fecha de Apertura de Reservas (RN-028) *
+                                <span class="bi bi-clock me-1"></span> Fecha de apertura de reservas *
                             </label>
                             <input id="fechaApertura" type="datetime-local" class="form-control border-primary" 
                                    @bind="_fechaAperturaReservasLocal" required />
@@ -95,7 +95,7 @@
                             <div class="form-check form-switch fs-5 mb-3">
                                 <input class="form-check-input" type="checkbox" id="esRecurrenteSwitch" @bind="_modelo.EsRecurrente">
                                 <label class="form-check-label fw-bold fs-6" for="esRecurrenteSwitch">
-                                    Evento Recurrente (RF-008)
+                                    Evento recurrente
                                 </label>
                             </div>
                         </div>
@@ -128,7 +128,7 @@
                                        La lista de opciones de periodicidad se trata como dato extensible 
                                        que el backend provee, NO como una lista fija quemada en el HTML *@
                                     <div class="mb-3">
-                                        <label for="selectPatron" class="form-label fw-semibold small">Tipo de Periodicidad (RF-008) *</label>
+                                        <label for="selectPatron" class="form-label fw-semibold small">Tipo de periodicidad *</label>
                                         <select id="selectPatron" class="form-select" @bind="_tipoPeriodicidadSeleccionada">
                                             @if (_patronesSoportados != null)
                                             {
@@ -249,7 +249,7 @@
         // Validar fecha de apertura de reservas exigida por RN-028
         if (!_fechaAperturaReservasLocal.HasValue)
         {
-            _mensajeError = "La fecha de apertura de reservas es obligatoria (RN-028).";
+            _mensajeError = "La fecha de apertura de reservas es obligatoria.";
             return;
         }
 

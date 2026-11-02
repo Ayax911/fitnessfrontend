@@ -3,10 +3,11 @@
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
 ## UX · Observaciones de la prueba manual (2026-11-02)
-- **Botón "Menú":** en pantallas ≥ 720 px se veía pero no hacía nada (el CSS ocultaba el panel). Ahora el **Administrador** siempre tiene "Menú" y un panel con sus 10 destinos bajo la barra (se cierra al navegar); sus enlaces ya no se salen de la barra. El Entrenador conserva sus 2 enlaces en la barra y el botón solo en celular.
+- **Menú del Administrador fijo:** sus 10 destinos van en una fila fija bajo la barra (≥ 720 px), sin botón y sin salirse de la barra; en celular se despliega con "Menú". El Entrenador conserva sus 2 enlaces en la barra. (El botón "Menú" se veía en pantallas anchas pero no hacía nada: el CSS ocultaba el panel.)
+- **Sin códigos de requisitos en pantalla:** se quitaron los RF-/RN- de títulos, etiquetas y mensajes (Crear/Editar evento, Configuración, Notas de sesión, Auditoría, Puntos de acceso, Reportes, Indicador, Administrar sesión) y se dejó un texto breve de qué se hace en cada pantalla (también en Iniciar sesión y Crear cuenta). La trazabilidad sigue en los comentarios del código. Prueba `SinCodigosDeRequisitosEnPantallaTests` impide que vuelvan.
 - **Ventana de resultado al reservar** (`IAvisosService` + `ContenedorAvisos`), con el diseño del artifact "Pantallas del estudiante": modal centrado sobre fondo oscuro, sello circular sólido (verde con ✓ al confirmar, naranja con reloj en lista de espera, rojo con ✕ si se deniega), título, datos de la actividad (nombre y horario en Bogotá) y botones "Ver mis reservas" / "Seguir viendo actividades" o "Entendido". No desaparece sola; Esc o el fondo la cierran y el foco pasa a la ventana (`role="dialog"` / `alertdialog`). Sin posición ni nivel (RN-020). También en Programación y al cancelar en Mis reservas. Sustituye a la alerta dentro de la página, que obligaba a desplazarse.
 - **Páginas más compactas:** la lista de actividades pasa de 6.600 px a ~1.200 px de alto (12 tarjetas + "Mostrar más actividades"), 4 columnas en pantallas ≥ 1200 px, y menos espacio en cabeceras, tarjetas y títulos.
-- Pruebas: `AvisosYMenuQA3Tests` (servicio, ventana, reserva confirmada, en espera y denegada, "Mostrar más", menú del Administrador y del Entrenador). 189/189.
+- Pruebas: `AvisosYMenuQA3Tests` (servicio, ventana, reserva confirmada, en espera y denegada, "Mostrar más", menú del Administrador y del Entrenador, sin códigos de requisitos en pantalla). 190/190.
 
 ## QA3-F1 · Correcciones de verificación independiente de calidad (H-13, H-27, H-28, H-30)
 - **Cierre de las 3:00 am (2026-11-02):**
