@@ -88,6 +88,7 @@ public class MisReservasTests : BunitContext
 
         Services.AddSingleton<IReservasClienteService>(fakeService);
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
         Services.AddSingleton<FitnessFrontend.Servicios.Eventos.INotasYAnunciosClienteService>(new FakeNotasYAnunciosClienteService());
 
         var cut = Render<MisReservas>();

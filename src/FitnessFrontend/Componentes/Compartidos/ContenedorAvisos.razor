@@ -1,0 +1,52 @@
+@* Avisos flotantes (tinta suave): se muestran arriba a la derecha (arriba al centro en celular), sin desplazar la página.
+   Confirmación de reserva (RF-002), lista de espera (RF-003) y errores de acción. Sin datos de priorización (RN-020). *@
+@using FitnessFrontend.Servicios.Infraestructura
+@implements IDisposable
+@inject IAvisosService Avisos
+
+<div class="itm-avisos" aria-live="polite" aria-atomic="false">
+    @foreach (var aviso in Avisos.Activos)
+    {
+        <div class="itm-aviso itm-aviso--@aviso.Tipo.ToString().ToLowerInvariant()" role="@(aviso.Tipo == TipoAviso.Error ? "alert" : "status")" @key="aviso.Id">
+            <svg class="itm-icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                @switch (aviso.Tipo)
+                {
+                    case TipoAviso.Espera:
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" /><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                        break;
+                    case TipoAviso.Error:
+                        <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+                        break;
+                    case TipoAviso.Info:
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" /><path d="M12 11v6M12 7.5v.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+                        break;
+                    default:
+                        <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                        break;
+                }
+            </svg>
+            <div class="itm-aviso__texto">
+                <strong>@aviso.Titulo</strong>
+                @if (!string.IsNullOrWhiteSpace(aviso.Mensaje))
+                {
+                    <span>@aviso.Mensaje</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(aviso.EnlaceTexto) && !string.IsNullOrWhiteSpace(aviso.EnlaceUrl))
+                {
+                    <a class="itm-aviso__accion" href="@aviso.EnlaceUrl">@aviso.EnlaceTexto</a>
+                }
+            </div>
+            <button type="button" class="itm-aviso__cerrar" aria-label="Cerrar aviso" @onclick="() => Avisos.Descartar(aviso.Id)">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" /></svg>
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Avisos.Cambio += AlCambiar;
+
+    private void AlCambiar() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Avisos.Cambio -= AlCambiar;
+}

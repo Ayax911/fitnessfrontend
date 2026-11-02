@@ -102,6 +102,7 @@ public class Amb014VentanaNoAbiertaTests : BunitContext
         Services.AddSingleton<IEventosClienteService>(new FakeEventosClienteService(eventos));
         Services.AddSingleton<IReservasClienteService>(reservasService);
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<ListaEventos>();
 

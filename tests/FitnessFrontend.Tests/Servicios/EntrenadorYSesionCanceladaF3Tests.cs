@@ -144,6 +144,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider());
         Services.AddSingleton<IAsistenciaManualClienteService>(servicio);
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<AsistenciaManual>(p => p.Add(x => x.IdSesion, sesionId));
 
@@ -166,6 +167,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider());
         Services.AddSingleton<IAsistenciaManualClienteService>(servicio);
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<AsistenciaManual>(p => p.Add(x => x.IdSesion, sesionId));
 
@@ -209,6 +211,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider());
         Services.AddSingleton<INotasYAnunciosClienteService>(servicio);
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<NotasDeSesion>(p => p.Add(x => x.IdSesion, sesionId));
 
@@ -246,6 +249,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
         Services.AddSingleton<IReservasClienteService>(reservasService);
         Services.AddSingleton<INotasYAnunciosClienteService>(new NotasYAnunciosServiceFalso());
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<MisReservas>();
         var markup = cut.Markup;
@@ -277,6 +281,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
         Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider());
         Services.AddSingleton<INotasYAnunciosClienteService>(servicio);
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<NotasDeSesion>(p => p.Add(x => x.IdSesion, sesionId));
 

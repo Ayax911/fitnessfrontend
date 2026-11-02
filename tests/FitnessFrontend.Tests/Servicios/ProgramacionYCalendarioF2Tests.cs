@@ -234,6 +234,7 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
         Services.AddSingleton<IBloqueosClienteService>(new BloqueosServiceFalso());
         Services.AddSingleton<IReservasClienteService>(new ReservasServiceFalso());
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<Programacion>(p => p.Add(x => x.FechaReferencia, new DateTime(2026, 11, 4, 12, 0, 0, DateTimeKind.Utc)));
 
@@ -265,6 +266,7 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
         Services.AddSingleton<IBloqueosClienteService>(bloqueosService);
         Services.AddSingleton<IReservasClienteService>(new ReservasServiceFalso());
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<Programacion>(p => p.Add(x => x.FechaReferencia, new DateTime(2026, 11, 2, 12, 0, 0, DateTimeKind.Utc)));
 
@@ -307,6 +309,7 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
         Services.AddSingleton<IBloqueosClienteService>(new BloqueosServiceFalso());
         Services.AddSingleton<IReservasClienteService>(new ReservasServiceFalso());
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cutProgramacion = Render<Programacion>(p => p.Add(x => x.FechaReferencia, new DateTime(2026, 11, 3, 12, 0, 0, DateTimeKind.Utc)));
         var markupProg = cutProgramacion.Markup;
@@ -335,6 +338,7 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
         Services.AddSingleton<IBloqueosClienteService>(new BloqueosServiceFalso());
         Services.AddSingleton<IReservasClienteService>(new ReservasServiceFalso());
         Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<Programacion>();
 

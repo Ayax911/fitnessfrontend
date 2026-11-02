@@ -11,6 +11,7 @@
 @inject IEventosClienteService EventosService
 @inject IReservasClienteService ReservasService
 @inject IZonaHorariaService ZonaHoraria
+@inject IAvisosService Avisos
 
 <div class="itm-contenedor itm-pagina">
     <div class="itm-pagina__cabecera">
@@ -28,14 +29,6 @@
             </button>
         </div>
     </div>
-
-    @if (!string.IsNullOrWhiteSpace(_mensajeGlobal))
-    {
-        <div class="alert @(_mensajeEsExito ? "alert-success" : "alert-warning") alert-dismissible fade show mb-4" role="alert">
-            @_mensajeGlobal
-            <button type="button" class="btn-close" @onclick="() => _mensajeGlobal = null" aria-label="Cerrar"></button>
-        </div>
-    }
 
     <EstadoDeCarga Estado="@_estado" AlReintentar="CargarEventos" MensajeCargando="Cargando actividades disponibles...">
         <CargandoTemplate>
@@ -61,11 +54,11 @@
                 @if (dias.Count > 1)
                 {
                     <div class="itm-chips" role="group" aria-label="Día">
-                        <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == null ? "true" : "false")" @onclick="() => _diaSeleccionado = null">Todos</button>
+                        <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == null ? "true" : "false")" @onclick="() => SeleccionarDia(null)">Todos</button>
                         @foreach (var dia in dias)
                         {
                             var d = dia;
-                            <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == d ? "true" : "false")" @onclick="() => _diaSeleccionado = d">@EtiquetaDia(d)</button>
+                            <button type="button" class="itm-chip" aria-pressed="@(_diaSeleccionado == d ? "true" : "false")" @onclick="() => SeleccionarDia(d)">@EtiquetaDia(d)</button>
                         }
                     </div>
                 }
@@ -80,7 +73,7 @@
                 else
                 {
                     <div class="itm-rejilla">
-                        @foreach (var item in visibles)
+                        @foreach (var item in visibles.Take(_limite))
                         {
                             var evento = item.Evento;
                             var sesion = item.Sesion;
@@ -154,6 +147,12 @@
                             </article>
                         }
                     </div>
+                    @if (visibles.Count > _limite)
+                    {
+                        <div class="itm-mas">
+                            <button type="button" class="btn btn-itm-secundario" @onclick="MostrarMas">Mostrar más actividades (@(visibles.Count - _limite) restantes)</button>
+                        </div>
+                    }
                 }
             }
         </ExitoTemplate>
@@ -165,8 +164,16 @@
     private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
     private Guid? _sesionEnProcesoId;
     private DateTime? _diaSeleccionado;
-    private string? _mensajeGlobal;
-    private bool _mensajeEsExito;
+    private const int TamanoPagina = 12;
+    private int _limite = TamanoPagina;
+
+    private void SeleccionarDia(DateTime? dia)
+    {
+        _diaSeleccionado = dia;
+        _limite = TamanoPagina;
+    }
+
+    private void MostrarMas() => _limite += TamanoPagina;
 
     private static List<(EventoResumenDto Evento, SesionResumenDto Sesion)> ObtenerSesiones(IReadOnlyList<EventoResumenDto> eventos) =>
         eventos.SelectMany(e => (e.Sesiones ?? new()).Where(s => s.FechaHoraInicio.HasValue).Select(s => (Evento: e, Sesion: s)))
@@ -200,24 +207,22 @@
         if (sesionId == Guid.Empty) return;
 
         _sesionEnProcesoId = sesionId;
-        _mensajeGlobal = null;
 
         var resultado = await ReservasService.ReservarAsync(sesionId);
         _sesionEnProcesoId = null;
 
         if (resultado.EsExito && resultado.Valor != null)
         {
-            _mensajeEsExito = true;
             // Estado: 0 = Confirmada, 1 = EnListaEspera
             if (resultado.Valor.Estado == 1)
             {
-                // RF-003: Cupo agotado, ubicado en lista de espera
-                _mensajeGlobal = "Cupo agotado. Has sido ubicado en la lista de espera para esta sesión.";
+                // RF-003: Cupo agotado, ubicado en lista de espera (sin posición ni nivel: RN-020)
+                Avisos.Espera("Quedaste en lista de espera", "Esta actividad no tiene cupo libre por ahora.");
             }
             else
             {
                 // RF-002: Reserva confirmada
-                _mensajeGlobal = "¡Reserva confirmada exitosamente! Puedes consultarla en Mis Reservas.";
+                Avisos.Exito("¡Reserva confirmada!", "Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas");
             }
 
             // Refrescar listado para actualizar cupos
@@ -225,19 +230,17 @@
         }
         else
         {
-            _mensajeEsExito = false;
-
-            @* PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
-               si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
-               No añadir motivo, nivel ni fecha estimada — violaría RN-020. *@
+            // PENDIENTE (AMB-014): mensaje genérico neutro mientras el stakeholder no defina
+            // si debe mostrarse un texto explicativo o simplemente ocultarse la acción.
+            // No añadir motivo, nivel ni fecha estimada — violaría RN-020.
             if (resultado.CodigoError == "VentanaNoAbierta")
             {
                 _sesionesVentanaCerrada.Add(sesionId);
-                _mensajeGlobal = "Reservas aún no disponibles para esta sesión.";
+                Avisos.Info("Reservas aún no disponibles para esta sesión");
             }
             else
             {
-                _mensajeGlobal = resultado.MensajeError ?? "No fue posible procesar la reserva.";
+                Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible procesar la reserva.");
             }
         }
     }

@@ -12,6 +12,7 @@
 @inject IBloqueosClienteService BloqueosService
 @inject IReservasClienteService ReservasService
 @inject IZonaHorariaService ZonaHoraria
+@inject IAvisosService Avisos
 
 <div class="itm-contenedor itm-pagina">
     <div class="itm-pagina__cabecera">
@@ -56,14 +57,6 @@
             </svg>
         </button>
     </div>
-
-    @if (!string.IsNullOrWhiteSpace(_mensajeGlobal))
-    {
-        <div class="alert @(_mensajeEsExito ? "alert-success" : "alert-warning") alert-dismissible fade show mb-4" role="alert">
-            @_mensajeGlobal
-            <button type="button" class="btn-close" @onclick="() => _mensajeGlobal = null" aria-label="Cerrar"></button>
-        </div>
-    }
 
     @if (_cargando)
     {
@@ -196,8 +189,6 @@
 
     private bool _cargando = true;
     private string? _errorCarga;
-    private string? _mensajeGlobal;
-    private bool _mensajeEsExito;
     private Guid? _sesionEnProcesoId;
     private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
 
@@ -286,34 +277,27 @@
         if (sesionId == Guid.Empty) return;
 
         _sesionEnProcesoId = sesionId;
-        _mensajeGlobal = null;
 
         var resultado = await ReservasService.ReservarAsync(sesionId);
         _sesionEnProcesoId = null;
 
         if (resultado.EsExito && resultado.Valor != null)
         {
-            var res = resultado.Valor;
-            var esListaEspera = res.Estado == 1;
-            _mensajeEsExito = true;
-            _mensajeGlobal = esListaEspera
-                ? $"Te has unido a la lista de espera para {eventoNombre}. Te notificaremos si se libera un cupo."
-                : $"¡Reserva confirmada con éxito para {eventoNombre}!";
+            if (resultado.Valor.Estado == 1)
+                Avisos.Espera("Quedaste en lista de espera", $"{eventoNombre} no tiene cupo libre por ahora.");
+            else
+                Avisos.Exito("¡Reserva confirmada!", $"{eventoNombre}. Puedes consultarla en Mis reservas.", "Ver mis reservas", "/reservas");
 
             await CargarDatos();
         }
+        else if (resultado.CodigoError == "VentanaNoAbierta")
+        {
+            _sesionesVentanaCerrada.Add(sesionId);
+            Avisos.Info("Las reservas para esta sesión aún no están disponibles");
+        }
         else
         {
-            _mensajeEsExito = false;
-            if (resultado.CodigoError == "VentanaNoAbierta")
-            {
-                _sesionesVentanaCerrada.Add(sesionId);
-                _mensajeGlobal = "Las reservas para esta sesión aún no están disponibles.";
-            }
-            else
-            {
-                _mensajeGlobal = resultado.MensajeError ?? "No fue posible completar la reserva.";
-            }
+            Avisos.Error("No se pudo reservar", resultado.MensajeError ?? "No fue posible completar la reserva.");
         }
     }
 }

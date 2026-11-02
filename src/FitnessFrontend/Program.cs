@@ -27,6 +27,7 @@ if (string.IsNullOrWhiteSpace(urlBaseApi) || urlBaseApi.StartsWith("REEMPLAZAR",
 // Servicios transversales de infraestructura
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+builder.Services.AddSingleton<IAvisosService, AvisosService>();
 
 // Autenticación y autorización (RF-013, Patrón 7)
 builder.Services.AddAuthorizationCore();

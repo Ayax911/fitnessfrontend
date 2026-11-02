@@ -102,6 +102,7 @@ public class ListaEventosTests : BunitContext
         Services.AddSingleton<IEventosClienteService>(new FakeEventosClienteService(eventos));
         Services.AddSingleton<IReservasClienteService>(fakeReservasService);
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<ListaEventos>();
         var markup = cut.Markup;
@@ -137,6 +138,7 @@ public class ListaEventosTests : BunitContext
         Services.AddSingleton<IEventosClienteService>(new FakeEventosClienteService(eventos));
         Services.AddSingleton<IReservasClienteService>(new FakeReservasClienteService());
         Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+        Services.AddSingleton<FitnessFrontend.Servicios.Infraestructura.IAvisosService>(new FitnessFrontend.Servicios.Infraestructura.AvisosService());
 
         var cut = Render<ListaEventos>();
         var markup = cut.Markup;

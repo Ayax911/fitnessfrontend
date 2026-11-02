@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @using FitnessFrontend.Servicios.Identidad
+@using FitnessFrontend.Componentes.Compartidos
 @inject IAutenticacionService AutenticacionService
 @inject NavigationManager NavigationManager
 
@@ -14,10 +15,9 @@
 
             <AuthorizeView>
                 <Authorized>
+                    @* Administrador: sus 10 destinos no caben en la barra; van en el panel del botón "Menú" (todos los anchos).
+                       Entrenador: 2 destinos en la barra (≥ 720 px) y el botón "Menú" solo en celular. *@
                     <AuthorizeView Roles="Administrador" Context="adminContext">
-                        <Authorized>
-                            <NavMenuAdministrador />
-                        </Authorized>
                         <NotAuthorized>
                             <AuthorizeView Roles="Entrenador" Context="entrenadorContext">
                                 <Authorized>
@@ -32,12 +32,21 @@
 
                     <div class="itm-barra__derecha">
                         <span class="itm-barra__usuario">@context.User.Identity?.Name</span>
-                        <AuthorizeView Roles="Administrador,Entrenador" Context="menuContext">
+                        <AuthorizeView Roles="Administrador" Context="menuAdmin">
                             <Authorized>
-                                <button type="button" class="btn-barra itm-menu-boton" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
+                                <button type="button" class="btn-barra itm-menu-boton itm-menu-boton--siempre" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
                                     Menú
                                 </button>
                             </Authorized>
+                            <NotAuthorized>
+                                <AuthorizeView Roles="Entrenador" Context="menuEntrenador">
+                                    <Authorized>
+                                        <button type="button" class="btn-barra itm-menu-boton" aria-expanded="@(_menuAbierto ? "true" : "false")" aria-controls="menu-movil" @onclick="AlternarMenu">
+                                            Menú
+                                        </button>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </NotAuthorized>
                         </AuthorizeView>
                         <button type="button" class="btn-barra" @onclick="CerrarSesion">Cerrar sesión</button>
                     </div>
@@ -51,17 +60,19 @@
             </AuthorizeView>
         </div>
 
-        @* Celular, Administrador y Entrenador: tienen más de 3 destinos, así que el menú se despliega bajo la barra *@
+        @* Administrador (siempre) y Entrenador (celular): el menú se despliega bajo la barra *@
         <AuthorizeView Roles="Administrador,Entrenador" Context="desplegableContext">
             <Authorized>
                 @if (_menuAbierto)
                 {
-                    <div class="itm-menu-movil" id="menu-movil">
-                        <AuthorizeView Roles="Administrador" Context="adminMovil">
-                            <Authorized><NavMenuAdministrador /></Authorized>
-                            <NotAuthorized><NavMenuEntrenador /></NotAuthorized>
-                        </AuthorizeView>
-                    </div>
+                    <AuthorizeView Roles="Administrador" Context="adminMovil">
+                        <Authorized>
+                            <nav class="itm-menu-movil itm-menu-movil--siempre" id="menu-movil" aria-label="Menú de administración"><NavMenuAdministrador /></nav>
+                        </Authorized>
+                        <NotAuthorized>
+                            <nav class="itm-menu-movil" id="menu-movil" aria-label="Menú del entrenador"><NavMenuEntrenador /></nav>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 }
             </Authorized>
         </AuthorizeView>
@@ -70,6 +81,8 @@
     <main id="main-content" class="flex-grow-1 d-flex flex-column">
         @Body
     </main>
+
+    <ContenedorAvisos />
 
     <footer class="itm-pie">
         <div class="itm-contenedor" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
