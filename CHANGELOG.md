@@ -2,6 +2,11 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## QA2-F2 · QR dinámico real conectado a la API (H-02)
+- Reemplazado generador simulado en cliente `dyn_` en `PuntosAccesoClienteService.cs` por el endpoint real `GET /api/asistencia/puntos-acceso/{id}/qr-actual`.
+- El nombre del punto se obtiene dinámicamente desde el listado del backend y el periodo/vencimiento son gobernados por `ValidoHastaUtc` del servidor.
+- Agregada prueba obligatoria en `PantallaPuntoAccesoF6Tests.cs` (167 pruebas en verde).
+
 ## QA2-F1 · Conectar los siete servicios simulados a Kiota (H-01)
 - Conectados a la API Kiota y eliminados todos los datos simulados en memoria de:
   - `ReportesClienteService`: endpoints agregados `/api/reportes/*` (≤ 90 días, error 400 y exportación CSV con `formato=csv`).

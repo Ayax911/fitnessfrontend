@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FitnessFrontend.ApiCliente;
 using FitnessFrontend.ApiCliente.Models;
 using FitnessFrontend.Servicios.Infraestructura;
+using Microsoft.Kiota.Abstractions;
 
 namespace FitnessFrontend.Servicios.Asistencia;
 
@@ -62,16 +63,65 @@ public class PuntosAccesoClienteService : IPuntosAccesoClienteService
         }
     }
 
-    public Task<EstadoDeCarga<QrPuntoAccesoDto>> ObtenerQrActualAsync(Guid puntoAccesoId, CancellationToken ct = default)
-    {
-        var ahora = DateTimeOffset.UtcNow;
-        var periodoSegundos = 15;
-        var unix = ahora.ToUnixTimeSeconds();
-        var inicioPeriodo = unix - (unix % periodoSegundos);
-        var finPeriodo = DateTimeOffset.FromUnixTimeSeconds(inicioPeriodo + periodoSegundos);
-        var token = $"dyn_{puntoAccesoId:N}_{inicioPeriodo}";
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, string> _nombresCache = new();
 
-        return Task.FromResult(EstadoDeCarga<QrPuntoAccesoDto>.Correcto(
-            new QrPuntoAccesoDto(token, finPeriodo, periodoSegundos, "Punto de Acceso Principal")));
+    public async Task<EstadoDeCarga<QrPuntoAccesoDto>> ObtenerQrActualAsync(Guid puntoAccesoId, CancellationToken ct = default)
+    {
+        try
+        {
+            var qr = await _apiClient.Api.Asistencia.PuntosAcceso[puntoAccesoId].QrActual.GetAsync(cancellationToken: ct);
+            if (qr == null || string.IsNullOrWhiteSpace(qr.Token))
+            {
+                return EstadoDeCarga<QrPuntoAccesoDto>.Fallo("El servidor no devolvió un código QR vigente.");
+            }
+
+            if (!_nombresCache.TryGetValue(puntoAccesoId, out var nombre))
+            {
+                try
+                {
+                    var lista = await ListarAsync(ct);
+                    if (lista.EsExito && lista.Valor != null)
+                    {
+                        foreach (var p in lista.Valor)
+                        {
+                            if (p.Id.HasValue && !string.IsNullOrWhiteSpace(p.Nombre))
+                            {
+                                _nombresCache[p.Id.Value] = p.Nombre;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // No bloquear la visualización si la consulta de nombres falla
+                }
+
+                _nombresCache.TryGetValue(puntoAccesoId, out nombre);
+            }
+
+            var periodo = qr.PeriodoSegundos ?? 15;
+            var validoHasta = qr.ValidoHastaUtc ?? DateTimeOffset.UtcNow.AddSeconds(periodo);
+
+            return EstadoDeCarga<QrPuntoAccesoDto>.Correcto(
+                new QrPuntoAccesoDto(qr.Token, validoHasta, periodo, nombre ?? "Punto de Acceso"));
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return EstadoDeCarga<QrPuntoAccesoDto>.Fallo(
+                errorEx.Mensaje ?? "No fue posible obtener el código QR actual.",
+                errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            return EstadoDeCarga<QrPuntoAccesoDto>.Fallo(
+                $"Error del servidor al obtener QR ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return EstadoDeCarga<QrPuntoAccesoDto>.Fallo(
+                $"Error de conexión al obtener el código QR: {ex.Message}",
+                "ErrorConexion");
+        }
     }
 }

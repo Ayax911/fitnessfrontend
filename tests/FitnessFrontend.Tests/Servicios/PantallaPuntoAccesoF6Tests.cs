@@ -204,4 +204,32 @@ public class PantallaPuntoAccesoF6Tests : BunitContext
         var elementoAria = cut.Find("[aria-live='off']");
         Assert.NotNull(elementoAria);
     }
+
+    [Fact]
+    public async Task QA2_F2_ServicioLlamaQrActual_SinPrefijoDyn()
+    {
+        var puntoId = Guid.NewGuid();
+        var json = @"{
+            ""token"": ""token_real_backend_456"",
+            ""validoHastaUtc"": ""2026-11-01T20:00:15Z"",
+            ""periodoSegundos"": 15
+        }";
+
+        var client = KiotaTestHelper.CrearCliente(req =>
+        {
+            Assert.Equal(System.Net.Http.HttpMethod.Get, req.Method);
+            Assert.Contains($"/api/asistencia/puntos-acceso/{puntoId}/qr-actual", req.RequestUri!.AbsolutePath);
+            return new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var servicio = new PuntosAccesoClienteService(client);
+        var res = await servicio.ObtenerQrActualAsync(puntoId);
+
+        Assert.True(res.EsExito);
+        Assert.Equal("token_real_backend_456", res.Valor!.Token);
+        Assert.DoesNotContain("dyn_", res.Valor.Token);
+    }
 }
