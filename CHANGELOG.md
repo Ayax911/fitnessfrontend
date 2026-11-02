@@ -2,6 +2,17 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## QA2-F1 · Conectar los siete servicios simulados a Kiota (H-01)
+- Conectados a la API Kiota y eliminados todos los datos simulados en memoria de:
+  - `ReportesClienteService`: endpoints agregados `/api/reportes/*` (≤ 90 días, error 400 y exportación CSV con `formato=csv`).
+  - `AuditoriaClienteService`: `/api/auditoria` con tope estricto de máximo 50 elementos por página y mapeo accesible de errores 403.
+  - `BloqueosClienteService`: `GET/POST /api/calendario/bloqueos` y `DELETE /api/calendario/bloqueos/{id}`.
+  - `AdministracionSesionesClienteService`: cancelar con motivo obligatorio, reprogramar, e inscripción/retiro administrativo.
+  - `NotasYAnunciosClienteService`: anuncios y notas con control de rol RN-007 y mensajes de error amigables.
+  - `AsistenciaManualClienteService`: registro manual de asistencia por sesión e inscritos.
+  - `RetroalimentacionClienteService`: `/api/retroalimentacion` y `/api/retroalimentacion/mios` con mensaje comprensible ante rate limit 429 (`LimiteExcedido`).
+- Creada suite de pruebas con `HttpMessageHandler` y `FitnessApiClient` simulado en `ServiciosKiotaConectadosQA2F1Tests.cs` y ampliado `AusenciaPriorizacionRN020Tests.cs` (166 pruebas en verde).
+
 ## Pruebas de calidad ronda 2 (test(qa))
 - Informe del cliente en [docs/pruebas-calidad/02-resultados-ronda-2.md](docs/pruebas-calidad/02-resultados-ronda-2.md): H-01 y H-02 persisten (siete servicios en memoria y QR generado en el cliente); H-07 (cliente) y H-08 corregidos; H-13, H-14 y H-19 persisten.
 - `pruebas/funcional/recorrido-navegador.js` ampliado a las pantallas F2–F7 (18 comprobaciones; 9 cumplen).

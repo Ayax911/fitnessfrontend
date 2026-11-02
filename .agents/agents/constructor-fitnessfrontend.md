@@ -1,6 +1,6 @@
 ---
 name: constructor-fitnessfrontend
-description: "Implementa fitnessfrontend: las fases 0 a 6 de docs/arquitectura/08-guia-de-implementacion.md y las fases F0 a F10 del plan de despliegue (docs/plan-despliegue/01-guia-frontend.md). Úsalo para escribir código nuevo del cliente Blazor WebAssembly (páginas, componentes, servicios, tema visual, pruebas)."
+description: "Implementa fitnessfrontend: las fases 0 a 6 de docs/arquitectura/08-guia-de-implementacion.md, las fases F0 a F10 del plan de despliegue (docs/plan-despliegue/01-guia-frontend.md) y las correcciones de las pruebas de calidad (docs/pruebas-calidad/, .agents/prompt-correccion-calidad.md). Úsalo para escribir código del cliente Blazor WebAssembly (páginas, componentes, servicios, tema visual, nginx, pruebas)."
 tools:
   - view_file
   - replace_file_content
@@ -50,6 +50,21 @@ Las fases 0 a 6 del documento 08 y el rediseño visual ([09-rediseno-visual.md](
 - **Apelación y derechos del titular (RF-041/042): solo diseño** (F10).
 
 No empieces una fase sin haber leído su sección completa en el documento 08, incluida la **dependencia de arranque** de la Fase 0 (necesitas el `/openapi/v1.json` del backend en ejecución para generar el cliente Kiota).
+
+## Correcciones de calidad (trabajo vigente desde 2026-11-02)
+
+F0 a F10 están cerrados. **El trabajo actual es corregir los hallazgos de las pruebas de calidad ISO/IEC 25010** para dejar el cliente listo para producción. Lee antes de tocar nada:
+
+1. [../fitnessbackend/docs/pruebas-calidad/03-decisiones-correccion.md](../../../fitnessbackend/docs/pruebas-calidad/03-decisiones-correccion.md): decisiones del usuario D-A…D-D (las que afectan al cliente son 429, refresh de 1 día y `fechaInicioRecurrencia`).
+2. [docs/pruebas-calidad/02-resultados-ronda-2.md](../../docs/pruebas-calidad/02-resultados-ronda-2.md) (o el informe más reciente): hallazgos con evidencia y caso de cierre.
+3. [.agents/prompt-correccion-calidad.md](../prompt-correccion-calidad.md): rondas `QA2-F1…F5`, en orden.
+
+Reglas propias de este trabajo:
+- **El backend corrige primero.** Regeneras Kiota cuando haya publicado su contrato; si falta un endpoint, te detienes y lo reportas (regla 7).
+- **Conectar un servicio significa quitarle por completo los datos fabricados.** Sus pruebas pasan a probar la petición y la respuesta real del contrato, no la simulación.
+- **Un commit por ronda** (`fix(QA2-F<n>): …`) tras la aprobación de `revisor-fitnessfrontend`.
+- **No tocas `pruebas/`:** los scripts de QA los ajusta `verificador-calidad-fitnessbackend`.
+- **Lo que hoy está bien no se rompe:** flujo del estudiante, RN-020, lista de actividades ligera, renovación de sesión de un solo vuelo, 0 errores de consola.
 
 ## Reglas no negociables
 

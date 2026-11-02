@@ -26,6 +26,10 @@ namespace FitnessFrontend.ApiCliente.Models
         public int? IntervaloMinimoCheckInGeneralMinutos { get; set; }
         /// <summary>The margenAperturaAsistenciaMinutos property</summary>
         public int? MargenAperturaAsistenciaMinutos { get; set; }
+        /// <summary>The periodoRotacionQrSegundos property</summary>
+        public int? PeriodoRotacionQrSegundos { get; set; }
+        /// <summary>The periodosDeToleranciaQr property</summary>
+        public int? PeriodosDeToleranciaQr { get; set; }
         /// <summary>The umbralAsistenciasPrioritario property</summary>
         public int? UmbralAsistenciasPrioritario { get; set; }
         /// <summary>The umbralInasistenciasPenalizacion property</summary>
@@ -61,6 +65,8 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "duracionVentanaAsistenciaMinutos", n => { DuracionVentanaAsistenciaMinutos = n.GetIntValue(); } },
                 { "intervaloMinimoCheckInGeneralMinutos", n => { IntervaloMinimoCheckInGeneralMinutos = n.GetIntValue(); } },
                 { "margenAperturaAsistenciaMinutos", n => { MargenAperturaAsistenciaMinutos = n.GetIntValue(); } },
+                { "periodoRotacionQrSegundos", n => { PeriodoRotacionQrSegundos = n.GetIntValue(); } },
+                { "periodosDeToleranciaQr", n => { PeriodosDeToleranciaQr = n.GetIntValue(); } },
                 { "umbralAsistenciasPrioritario", n => { UmbralAsistenciasPrioritario = n.GetIntValue(); } },
                 { "umbralInasistenciasPenalizacion", n => { UmbralInasistenciasPenalizacion = n.GetIntValue(); } },
             };
@@ -78,6 +84,8 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteIntValue("duracionVentanaAsistenciaMinutos", DuracionVentanaAsistenciaMinutos);
             writer.WriteIntValue("intervaloMinimoCheckInGeneralMinutos", IntervaloMinimoCheckInGeneralMinutos);
             writer.WriteIntValue("margenAperturaAsistenciaMinutos", MargenAperturaAsistenciaMinutos);
+            writer.WriteIntValue("periodoRotacionQrSegundos", PeriodoRotacionQrSegundos);
+            writer.WriteIntValue("periodosDeToleranciaQr", PeriodosDeToleranciaQr);
             writer.WriteIntValue("umbralAsistenciasPrioritario", UmbralAsistenciasPrioritario);
             writer.WriteIntValue("umbralInasistenciasPenalizacion", UmbralInasistenciasPenalizacion);
             writer.WriteAdditionalData(AdditionalData);

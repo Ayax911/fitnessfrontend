@@ -60,6 +60,39 @@ Además del checklist anterior, para cada fase verifica:
 - **Kiota:** `ApiCliente/` regenerado (no editado) y `kiota-lock.json` actualizado tras cada contrato.
 - **Commit y registro:** un commit por fase; `CHANGELOG.md` y `docs/checklist-e2e.md` actualizados.
 
+## Revisión de las correcciones de calidad (rondas `QA2-F1…F5`)
+
+Fuentes:
+- [../fitnessbackend/docs/pruebas-calidad/03-decisiones-correccion.md](../../../fitnessbackend/docs/pruebas-calidad/03-decisiones-correccion.md);
+- el informe de la ronda de pruebas más reciente;
+- [.agents/prompt-correccion-calidad.md](../prompt-correccion-calidad.md);
+- la skill `pruebas-obligatorias-fitnessfrontend`, sección "Correcciones de calidad".
+
+Además del checklist general, verifica:
+
+- **Ningún servicio en memoria (H-01):**
+  - `grep_search` en `Servicios/`: todo `*ClienteService.cs` concreto usa `FitnessApiClient`;
+  - no quedan listas sembradas ni nombres ficticios (`Spinning Matutino`, `Admin Sistema`, `pedro.entrenador`, "Punto de Acceso Principal");
+  - las pruebas del servicio verifican la petición y la respuesta del contrato, no la simulación.
+- **QR (H-02):**
+  - no queda generación de tokens en el cliente (`dyn_`, `ToUnixTimeSeconds` para el periodo);
+  - la renovación se programa con `validoHastaUtc` del servidor;
+  - no se dibuja un QR vencido;
+  - los temporizadores se liberan.
+- **Contrato nuevo:**
+  - 429 con mensaje y sin reintento automático en check-in e ingreso;
+  - el login de una cuenta bloqueada no muestra un mensaje distinto;
+  - el refresh vencido lleva al login con ruta de retorno;
+  - `fechaInicioRecurrencia` es opcional y sin validación de negocio en el cliente.
+- **`ApiCliente/` regenerado, no editado:** `kiota-lock.json` actualizado; `git diff` de `ApiCliente/` coherente con el OpenAPI.
+- **nginx (H-13, H-14):**
+  - CSP sin `*` en `connect-src` ni `unsafe-eval` (solo `wasm-unsafe-eval`);
+  - `server_tokens off`;
+  - `appsettings.json` sigue con `no-store`;
+  - `immutable` solo para archivos con huella.
+- **Zona horaria y formato `es-CO`** intactos si se recortó la globalización: existe una prueba de conversión a `America/Bogota`.
+- **Sin cambios en `pruebas/`** por parte del constructor.
+
 ## Formato del reporte
 
 Para cada hallazgo: **archivo:línea**, **qué patrón/regla viola**, **por qué es un problema concreto** (no una preferencia de estilo), y si es **bloqueante** (impide cerrar la fase) o **sugerencia** (el constructor decide). Si no hay bloqueantes, dilo explícitamente ("Fase N aprobada, sin bloqueantes") — no dejes la aprobación implícita en el silencio.

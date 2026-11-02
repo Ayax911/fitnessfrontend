@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Xunit;
+using AnuncioSesionDto = FitnessFrontend.Servicios.Eventos.AnuncioSesionDto;
 
 namespace FitnessFrontend.Tests.Servicios;
 
@@ -92,7 +93,7 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
     private class NotasYAnunciosServiceFalso : INotasYAnunciosClienteService
     {
         public List<NotaIncidenciaDto> Notas { get; set; } = new();
-        public List<AnuncioSesionDto> Anuncios { get; set; } = new();
+        public List<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto> Anuncios { get; set; } = new();
 
         public Task<EstadoDeCarga<IReadOnlyList<NotaIncidenciaDto>>> ObtenerNotasAsync(Guid sesionId, CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<IReadOnlyList<NotaIncidenciaDto>>.Correcto(Notas));
@@ -103,15 +104,15 @@ public class EntrenadorYSesionCanceladaF3Tests : BunitContext
             return Task.FromResult(ResultadoOperacion.Exito("Nota guardada"));
         }
 
-        public Task<EstadoDeCarga<IReadOnlyList<AnuncioSesionDto>>> ObtenerAnunciosPorSesionAsync(Guid sesionId, CancellationToken ct = default) =>
-            Task.FromResult(EstadoDeCarga<IReadOnlyList<AnuncioSesionDto>>.Correcto(Anuncios));
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>> ObtenerAnunciosPorSesionAsync(Guid sesionId, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>.Correcto(Anuncios));
 
-        public Task<EstadoDeCarga<IReadOnlyList<AnuncioSesionDto>>> ObtenerAnunciosMisReservasAsync(CancellationToken ct = default) =>
-            Task.FromResult(EstadoDeCarga<IReadOnlyList<AnuncioSesionDto>>.Correcto(Anuncios));
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>> ObtenerAnunciosMisReservasAsync(CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>>.Correcto(Anuncios));
 
         public Task<ResultadoOperacion> PublicarAnuncioAsync(Guid sesionId, string mensaje, CancellationToken ct = default)
         {
-            Anuncios.Add(new AnuncioSesionDto(Guid.NewGuid(), sesionId, mensaje, DateTimeOffset.UtcNow, "Entrenador"));
+            Anuncios.Add(new FitnessFrontend.Servicios.Eventos.AnuncioSesionDto(Guid.NewGuid(), sesionId, mensaje, DateTimeOffset.UtcNow, "Entrenador"));
             return Task.FromResult(ResultadoOperacion.Exito("Anuncio publicado"));
         }
     }

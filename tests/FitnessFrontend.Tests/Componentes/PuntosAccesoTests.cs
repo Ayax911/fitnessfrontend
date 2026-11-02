@@ -10,6 +10,7 @@ using FitnessFrontend.Servicios.Asistencia;
 using FitnessFrontend.Servicios.Infraestructura;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using QrPuntoAccesoDto = FitnessFrontend.Servicios.Asistencia.QrPuntoAccesoDto;
 
 namespace FitnessFrontend.Tests.Componentes;
 
@@ -17,14 +18,13 @@ namespace FitnessFrontend.Tests.Componentes;
 public class PuntosAccesoTests : BunitContext
 {
     private static readonly Guid IdRecepcion = Guid.NewGuid();
-    private const string TokenRecepcion = "tokenFijoDeRecepcion_abc123";
 
     private class PuntosFalso : IPuntosAccesoClienteService
     {
         public List<PuntoAccesoDto> Puntos { get; } = new()
         {
-            new() { Id = IdRecepcion, Nombre = "Recepción", TokenQR = TokenRecepcion, Activo = true },
-            new() { Id = Guid.NewGuid(), Nombre = "Torniquete viejo", TokenQR = "tokenViejo", Activo = false }
+            new() { Id = IdRecepcion, Nombre = "Recepción", Activo = true },
+            new() { Id = Guid.NewGuid(), Nombre = "Torniquete viejo", Activo = false }
         };
         public List<string> Creados { get; } = new();
         public List<(Guid Id, string Nombre, bool Activo)> Actualizados { get; } = new();
@@ -37,7 +37,7 @@ public class PuntosAccesoTests : BunitContext
         {
             if (ErrorAlCrear != null) return Task.FromResult(EstadoDeCarga<PuntoAccesoDto>.Fallo(ErrorAlCrear, "NombreDuplicado"));
             Creados.Add(nombre);
-            var nuevo = new PuntoAccesoDto { Id = Guid.NewGuid(), Nombre = nombre, TokenQR = "tokenNuevo", Activo = true };
+            var nuevo = new PuntoAccesoDto { Id = Guid.NewGuid(), Nombre = nombre, Activo = true };
             Puntos.Add(nuevo);
             return Task.FromResult(EstadoDeCarga<PuntoAccesoDto>.Correcto(nuevo));
         }

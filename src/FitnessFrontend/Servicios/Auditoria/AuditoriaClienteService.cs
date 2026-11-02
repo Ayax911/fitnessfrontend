@@ -3,22 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FitnessFrontend.ApiCliente;
+using FitnessFrontend.ApiCliente.Models;
 using FitnessFrontend.Servicios.Infraestructura;
+using Microsoft.Kiota.Abstractions;
 
 namespace FitnessFrontend.Servicios.Auditoria;
 
-// Fachada para RF-032 (Auditoría administrativa)
+// RF-032: Cliente para consulta de auditoría administrativa conectado a la API
 public class AuditoriaClienteService : IAuditoriaClienteService
 {
-    private static readonly List<RegistroAuditoriaDto> _almacenAuditoria = new()
-    {
-        new(Guid.NewGuid(), DateTimeOffset.UtcNow.AddMinutes(-10), "Admin Sistema", "Administrador", "CancelarSesion", "Sesion", "Cancelada sesión de Spinning por mantenimiento. 8 reservas afectadas sin penalización."),
-        new(Guid.NewGuid(), DateTimeOffset.UtcNow.AddHours(-1), "Admin Sistema", "Administrador", "CrearBloqueo", "Calendario", "Creado bloqueo Festivo Nacional del 02/11/2026 al 02/11/2026."),
-        new(Guid.NewGuid(), DateTimeOffset.UtcNow.AddHours(-3), "Carlos Entrenador", "Entrenador", "AsistenciaManual", "Asistencia", "Marcada asistencia presencial manual al estudiante Juan Gomez."),
-        new(Guid.NewGuid(), DateTimeOffset.UtcNow.AddHours(-5), "Admin Sistema", "Administrador", "AsignarRol", "Usuario", "Asignado rol Entrenador a pedro.entrenador@itm.edu.co.")
-    };
+    private readonly FitnessApiClient _apiClient;
 
-    public Task<EstadoDeCarga<PaginaAuditoriaDto>> ConsultarAuditoriaAsync(
+    public AuditoriaClienteService(FitnessApiClient apiClient)
+    {
+        _apiClient = apiClient;
+    }
+
+    public async Task<EstadoDeCarga<PaginaAuditoriaDto>> ConsultarAuditoriaAsync(
         DateTimeOffset? desde = null,
         DateTimeOffset? hasta = null,
         string? tipoAccion = null,
@@ -27,32 +29,78 @@ public class AuditoriaClienteService : IAuditoriaClienteService
         int tamano = 25,
         CancellationToken ct = default)
     {
-        var query = _almacenAuditoria.AsEnumerable();
+        try
+        {
+            var tamanoAjustado = Math.Min(Math.Max(1, tamano), 50); // Máx 50 por página según RF-032 / H-19
 
-        if (desde.HasValue)
-        {
-            query = query.Where(a => a.FechaHoraUtc >= desde.Value);
-        }
-        if (hasta.HasValue)
-        {
-            query = query.Where(a => a.FechaHoraUtc <= hasta.Value);
-        }
-        if (!string.IsNullOrWhiteSpace(tipoAccion))
-        {
-            query = query.Where(a => a.Accion.Equals(tipoAccion, StringComparison.OrdinalIgnoreCase));
-        }
-        if (!string.IsNullOrWhiteSpace(actor))
-        {
-            query = query.Where(a => a.ActorNombre.Contains(actor, StringComparison.OrdinalIgnoreCase) ||
-                                     a.ActorRol.Contains(actor, StringComparison.OrdinalIgnoreCase));
-        }
+            var respuesta = await _apiClient.Api.Auditoria.GetAsync(q =>
+            {
+                q.QueryParameters.Desde = desde;
+                q.QueryParameters.Hasta = hasta;
+                if (!string.IsNullOrWhiteSpace(tipoAccion))
+                {
+                    q.QueryParameters.Accion = tipoAccion;
+                }
+                if (Guid.TryParse(actor, out var actorGuid))
+                {
+                    q.QueryParameters.ActorId = actorGuid;
+                }
+                q.QueryParameters.Pagina = pagina;
+                q.QueryParameters.Tamano = tamanoAjustado;
+            }, ct);
 
-        var ordenados = query.OrderByDescending(a => a.FechaHoraUtc).ToList();
-        var total = ordenados.Count;
-        var paginados = ordenados.Skip((pagina - 1) * tamano).Take(tamano).ToList();
-        var totalPaginas = (int)Math.Ceiling((double)total / tamano);
+            if (respuesta == null)
+            {
+                return EstadoDeCarga<PaginaAuditoriaDto>.Correcto(
+                    new PaginaAuditoriaDto(new List<RegistroAuditoriaDto>(), 0, pagina, 1));
+            }
 
-        var resultado = new PaginaAuditoriaDto(paginados, total, pagina, Math.Max(1, totalPaginas));
-        return Task.FromResult(EstadoDeCarga<PaginaAuditoriaDto>.Correcto(resultado));
+            var elementos = (respuesta.Items ?? new List<ApiCliente.Models.RegistroAuditoriaDto>())
+                .Select(item =>
+                {
+                    var id = item.Id ?? Guid.Empty;
+                    var fecha = item.FechaHoraUtc ?? DateTimeOffset.UtcNow;
+                    var actorIdStr = item.ActorId?.ToString() ?? "Sistema";
+                    var rol = item.ActorRol ?? "Administrador";
+                    var accion = item.Accion ?? "Accion";
+                    var entidad = string.IsNullOrWhiteSpace(item.EntidadId)
+                        ? (item.EntidadTipo ?? "—")
+                        : $"{item.EntidadTipo} ({item.EntidadId})";
+                    var detalle = string.IsNullOrWhiteSpace(item.Motivo)
+                        ? (item.Resumen ?? string.Empty)
+                        : $"{item.Resumen} | Motivo: {item.Motivo}";
+
+                    return new RegistroAuditoriaDto(id, fecha, actorIdStr, rol, accion, entidad, detalle);
+                }).ToList();
+
+            var total = respuesta.Total ?? 0;
+            var paginaActual = respuesta.Pagina ?? pagina;
+            var totalPaginas = (int)Math.Ceiling((double)total / tamanoAjustado);
+
+            var resultado = new PaginaAuditoriaDto(elementos, total, paginaActual, Math.Max(1, totalPaginas));
+            return EstadoDeCarga<PaginaAuditoriaDto>.Correcto(resultado);
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return EstadoDeCarga<PaginaAuditoriaDto>.Fallo(
+                errorEx.Mensaje ?? "No fue posible consultar el registro de auditoría.",
+                errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            var mensaje = apiEx.ResponseStatusCode == 403
+                ? "No tienes permisos para ver el registro de auditoría."
+                : $"Error del servidor al consultar auditoría ({apiEx.ResponseStatusCode}).";
+
+            return EstadoDeCarga<PaginaAuditoriaDto>.Fallo(
+                mensaje,
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return EstadoDeCarga<PaginaAuditoriaDto>.Fallo(
+                $"Error de conexión al consultar auditoría: {ex.Message}",
+                "ErrorConexion");
+        }
     }
 }

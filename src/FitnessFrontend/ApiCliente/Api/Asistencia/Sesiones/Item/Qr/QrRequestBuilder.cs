@@ -12,7 +12,7 @@ using System;
 namespace FitnessFrontend.ApiCliente.Api.Asistencia.Sesiones.Item.Qr
 {
     /// <summary>
-    /// Builds and executes requests for operations under \api\asistencia\sesiones\{idSesion}\qr
+    /// Builds and executes requests for operations under \api\asistencia\sesiones\{idSesion-id}\qr
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class QrRequestBuilder : BaseRequestBuilder
@@ -22,7 +22,7 @@ namespace FitnessFrontend.ApiCliente.Api.Asistencia.Sesiones.Item.Qr
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public QrRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/asistencia/sesiones/{idSesion}/qr", pathParameters)
+        public QrRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/asistencia/sesiones/{idSesion%2Did}/qr", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace FitnessFrontend.ApiCliente.Api.Asistencia.Sesiones.Item.Qr
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public QrRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/asistencia/sesiones/{idSesion}/qr", rawUrl)
+        public QrRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/asistencia/sesiones/{idSesion%2Did}/qr", rawUrl)
         {
         }
         /// <returns>A <see cref="global::FitnessFrontend.ApiCliente.Models.SesionQRDto"/></returns>

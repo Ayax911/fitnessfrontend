@@ -25,6 +25,8 @@ namespace FitnessFrontend.ApiCliente.Models
 #endif
         /// <summary>The fechaFinRecurrencia property</summary>
         public Date? FechaFinRecurrencia { get; set; }
+        /// <summary>The fechaInicioRecurrencia property</summary>
+        public Date? FechaInicioRecurrencia { get; set; }
         /// <summary>The horaFin property</summary>
         public Time? HoraFin { get; set; }
         /// <summary>The horaInicio property</summary>
@@ -58,6 +60,7 @@ namespace FitnessFrontend.ApiCliente.Models
             {
                 { "diasSemana", n => { DiasSemana = n.GetCollectionOfPrimitiveValues<int?>()?.AsList(); } },
                 { "fechaFinRecurrencia", n => { FechaFinRecurrencia = n.GetDateValue(); } },
+                { "fechaInicioRecurrencia", n => { FechaInicioRecurrencia = n.GetDateValue(); } },
                 { "horaFin", n => { HoraFin = n.GetTimeValue(); } },
                 { "horaInicio", n => { HoraInicio = n.GetTimeValue(); } },
                 { "tipo", n => { Tipo = n.GetIntValue(); } },
@@ -72,6 +75,7 @@ namespace FitnessFrontend.ApiCliente.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteCollectionOfPrimitiveValues<int?>("diasSemana", DiasSemana);
             writer.WriteDateValue("fechaFinRecurrencia", FechaFinRecurrencia);
+            writer.WriteDateValue("fechaInicioRecurrencia", FechaInicioRecurrencia);
             writer.WriteTimeValue("horaFin", HoraFin);
             writer.WriteTimeValue("horaInicio", HoraInicio);
             writer.WriteIntValue("tipo", Tipo);

@@ -28,6 +28,10 @@ namespace FitnessFrontend.ApiCliente.Models
         public int? IntervaloMinimoCheckInGeneralMinutos { get; set; }
         /// <summary>The margenAperturaAsistenciaMinutos property</summary>
         public int? MargenAperturaAsistenciaMinutos { get; set; }
+        /// <summary>The periodoRotacionQrSegundos property</summary>
+        public int? PeriodoRotacionQrSegundos { get; set; }
+        /// <summary>The periodosDeToleranciaQr property</summary>
+        public int? PeriodosDeToleranciaQr { get; set; }
         /// <summary>The umbralAsistenciasPrioritario property</summary>
         public int? UmbralAsistenciasPrioritario { get; set; }
         /// <summary>The umbralInasistenciasPenalizacion property</summary>
@@ -38,6 +42,8 @@ namespace FitnessFrontend.ApiCliente.Models
         public ConfiguracionPriorizacionDto()
         {
             AdditionalData = new Dictionary<string, object>();
+            PeriodoRotacionQrSegundos = 30;
+            PeriodosDeToleranciaQr = 1;
         }
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
@@ -64,6 +70,8 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "id", n => { Id = n.GetIntValue(); } },
                 { "intervaloMinimoCheckInGeneralMinutos", n => { IntervaloMinimoCheckInGeneralMinutos = n.GetIntValue(); } },
                 { "margenAperturaAsistenciaMinutos", n => { MargenAperturaAsistenciaMinutos = n.GetIntValue(); } },
+                { "periodoRotacionQrSegundos", n => { PeriodoRotacionQrSegundos = n.GetIntValue(); } },
+                { "periodosDeToleranciaQr", n => { PeriodosDeToleranciaQr = n.GetIntValue(); } },
                 { "umbralAsistenciasPrioritario", n => { UmbralAsistenciasPrioritario = n.GetIntValue(); } },
                 { "umbralInasistenciasPenalizacion", n => { UmbralInasistenciasPenalizacion = n.GetIntValue(); } },
             };
@@ -82,6 +90,8 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteIntValue("id", Id);
             writer.WriteIntValue("intervaloMinimoCheckInGeneralMinutos", IntervaloMinimoCheckInGeneralMinutos);
             writer.WriteIntValue("margenAperturaAsistenciaMinutos", MargenAperturaAsistenciaMinutos);
+            writer.WriteIntValue("periodoRotacionQrSegundos", PeriodoRotacionQrSegundos);
+            writer.WriteIntValue("periodosDeToleranciaQr", PeriodosDeToleranciaQr);
             writer.WriteIntValue("umbralAsistenciasPrioritario", UmbralAsistenciasPrioritario);
             writer.WriteIntValue("umbralInasistenciasPenalizacion", UmbralInasistenciasPenalizacion);
             writer.WriteAdditionalData(AdditionalData);

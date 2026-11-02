@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Xunit;
+using QrPuntoAccesoDto = FitnessFrontend.Servicios.Asistencia.QrPuntoAccesoDto;
 
 namespace FitnessFrontend.Tests.Servicios;
 

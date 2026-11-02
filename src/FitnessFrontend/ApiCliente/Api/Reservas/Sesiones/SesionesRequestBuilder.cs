@@ -17,27 +17,27 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones
     {
         /// <summary>Gets an item from the FitnessFrontend.ApiCliente.api.reservas.sesiones.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
-        /// <returns>A <see cref="global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder"/></returns>
-        public global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder this[Guid position]
+        /// <returns>A <see cref="global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder"/></returns>
+        public global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder this[Guid position]
         {
             get
             {
                 var urlTplParams = new Dictionary<string, object>(PathParameters);
-                urlTplParams.Add("idSesion", position);
-                return new global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder(urlTplParams, RequestAdapter);
+                urlTplParams.Add("idSesion%2Did", position);
+                return new global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
         /// <summary>Gets an item from the FitnessFrontend.ApiCliente.api.reservas.sesiones.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
-        /// <returns>A <see cref="global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder"/></returns>
+        /// <returns>A <see cref="global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder"/></returns>
         [Obsolete("This indexer is deprecated and will be removed in the next major version. Use the one with the typed parameter instead.")]
-        public global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder this[string position]
+        public global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder this[string position]
         {
             get
             {
                 var urlTplParams = new Dictionary<string, object>(PathParameters);
-                if (!string.IsNullOrWhiteSpace(position)) urlTplParams.Add("idSesion", position);
-                return new global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.WithIdSesionItemRequestBuilder(urlTplParams, RequestAdapter);
+                if (!string.IsNullOrWhiteSpace(position)) urlTplParams.Add("idSesion%2Did", position);
+                return new global::FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.IdSesionItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
         /// <summary>

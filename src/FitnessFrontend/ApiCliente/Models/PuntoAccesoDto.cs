@@ -26,14 +26,6 @@ namespace FitnessFrontend.ApiCliente.Models
 #else
         public string Nombre { get; set; }
 #endif
-        /// <summary>The tokenQR property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? TokenQR { get; set; }
-#nullable restore
-#else
-        public string TokenQR { get; set; }
-#endif
         /// <summary>
         /// Instantiates a new <see cref="global::FitnessFrontend.ApiCliente.Models.PuntoAccesoDto"/> and sets the default values.
         /// </summary>
@@ -62,7 +54,6 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "activo", n => { Activo = n.GetBoolValue(); } },
                 { "id", n => { Id = n.GetGuidValue(); } },
                 { "nombre", n => { Nombre = n.GetStringValue(); } },
-                { "tokenQR", n => { TokenQR = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -75,7 +66,6 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteBoolValue("activo", Activo);
             writer.WriteGuidValue("id", Id);
             writer.WriteStringValue("nombre", Nombre);
-            writer.WriteStringValue("tokenQR", TokenQR);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

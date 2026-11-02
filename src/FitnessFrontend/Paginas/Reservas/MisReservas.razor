@@ -149,7 +149,7 @@
 
 @code {
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ReservaResumenDto>>? _estado;
-    private Dictionary<Guid, List<AnuncioSesionDto>> _anunciosPorSesion = new();
+    private Dictionary<Guid, List<FitnessFrontend.Servicios.Eventos.AnuncioSesionDto>> _anunciosPorSesion = new();
     private Guid? _cancelandoReservaId;
     private string? _mensajeAlerta;
     private bool _alertaEsExito;

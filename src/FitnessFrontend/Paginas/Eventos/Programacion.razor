@@ -202,7 +202,7 @@
     private readonly HashSet<Guid> _sesionesVentanaCerrada = new();
 
     private List<(EventoResumenDto Evento, SesionResumenDto Sesion)> _sesionesSemana = new();
-    private List<BloqueoCalendarioDto> _bloqueosSemana = new();
+    private List<FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto> _bloqueosSemana = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -269,7 +269,7 @@
                 .Where(x => x.Sesion.FechaHoraInicio.HasValue)
                 .ToList();
 
-            _bloqueosSemana = (resBloqueos.Valor ?? new List<BloqueoCalendarioDto>()).ToList();
+            _bloqueosSemana = (resBloqueos.Valor ?? new List<FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto>()).ToList();
         }
         catch (Exception ex)
         {

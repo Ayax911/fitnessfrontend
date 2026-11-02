@@ -2,6 +2,7 @@
 #pragma warning disable CS0618
 using FitnessFrontend.ApiCliente.Api.Eventos.Item;
 using FitnessFrontend.ApiCliente.Api.Eventos.MisActividades;
+using FitnessFrontend.ApiCliente.Api.Eventos.Sesiones;
 using FitnessFrontend.ApiCliente.Models;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions.Serialization;
@@ -23,6 +24,11 @@ namespace FitnessFrontend.ApiCliente.Api.Eventos
         public global::FitnessFrontend.ApiCliente.Api.Eventos.MisActividades.MisActividadesRequestBuilder MisActividades
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Eventos.MisActividades.MisActividadesRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The sesiones property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Eventos.Sesiones.SesionesRequestBuilder Sesiones
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Eventos.Sesiones.SesionesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>Gets an item from the FitnessFrontend.ApiCliente.api.eventos.item collection</summary>
         /// <param name="position">Unique identifier of the item</param>
@@ -54,7 +60,7 @@ namespace FitnessFrontend.ApiCliente.Api.Eventos
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public EventosRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/eventos", pathParameters)
+        public EventosRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/eventos{?desde*,hasta*,pagina*,tamano*}", pathParameters)
         {
         }
         /// <summary>
@@ -62,23 +68,28 @@ namespace FitnessFrontend.ApiCliente.Api.Eventos
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public EventosRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/eventos", rawUrl)
+        public EventosRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/eventos{?desde*,hasta*,pagina*,tamano*}", rawUrl)
         {
         }
         /// <returns>A List&lt;global::FitnessFrontend.ApiCliente.Models.EventoResumenDto&gt;</returns>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
+        /// <exception cref="global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto">When receiving a 400 status code</exception>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public async Task<List<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>?> GetAsync(Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<List<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>?> GetAsync(Action<RequestConfiguration<global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder.EventosRequestBuilderGetQueryParameters>>? requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #nullable restore
 #else
-        public async Task<List<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>> GetAsync(Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
+        public async Task<List<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>> GetAsync(Action<RequestConfiguration<global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder.EventosRequestBuilderGetQueryParameters>> requestConfiguration = default, CancellationToken cancellationToken = default)
         {
 #endif
             var requestInfo = ToGetRequestInformation(requestConfiguration);
-            var collectionResult = await RequestAdapter.SendCollectionAsync<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>(requestInfo, global::FitnessFrontend.ApiCliente.Models.EventoResumenDto.CreateFromDiscriminatorValue, default, cancellationToken).ConfigureAwait(false);
+            var errorMapping = new Dictionary<string, ParsableFactory<IParsable>>
+            {
+                { "400", global::FitnessFrontend.ApiCliente.Models.ErrorDetalleDto.CreateFromDiscriminatorValue },
+            };
+            var collectionResult = await RequestAdapter.SendCollectionAsync<global::FitnessFrontend.ApiCliente.Models.EventoResumenDto>(requestInfo, global::FitnessFrontend.ApiCliente.Models.EventoResumenDto.CreateFromDiscriminatorValue, errorMapping, cancellationToken).ConfigureAwait(false);
             return collectionResult?.AsList();
         }
         /// <returns>A <see cref="Guid"/></returns>
@@ -107,11 +118,11 @@ namespace FitnessFrontend.ApiCliente.Api.Eventos
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<DefaultQueryParameters>>? requestConfiguration = default)
+        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder.EventosRequestBuilderGetQueryParameters>>? requestConfiguration = default)
         {
 #nullable restore
 #else
-        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<DefaultQueryParameters>> requestConfiguration = default)
+        public RequestInformation ToGetRequestInformation(Action<RequestConfiguration<global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder.EventosRequestBuilderGetQueryParameters>> requestConfiguration = default)
         {
 #endif
             var requestInfo = new RequestInformation(Method.GET, UrlTemplate, PathParameters);
@@ -147,12 +158,34 @@ namespace FitnessFrontend.ApiCliente.Api.Eventos
         {
             return new global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder(rawUrl, RequestAdapter);
         }
+        [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
+        #pragma warning disable CS1591
+        public partial class EventosRequestBuilderGetQueryParameters 
+        #pragma warning restore CS1591
+        {
+            #pragma warning disable CS1591
+            [QueryParameter("desde")]
+            public DateTimeOffset? Desde { get; set; }
+            #pragma warning restore CS1591
+            #pragma warning disable CS1591
+            [QueryParameter("hasta")]
+            public DateTimeOffset? Hasta { get; set; }
+            #pragma warning restore CS1591
+            #pragma warning disable CS1591
+            [QueryParameter("pagina")]
+            public int? Pagina { get; set; }
+            #pragma warning restore CS1591
+            #pragma warning disable CS1591
+            [QueryParameter("tamano")]
+            public int? Tamano { get; set; }
+            #pragma warning restore CS1591
+        }
         /// <summary>
         /// Configuration for the request such as headers, query parameters, and middleware options.
         /// </summary>
         [Obsolete("This class is deprecated. Please use the generic RequestConfiguration class generated by the generator.")]
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
-        public partial class EventosRequestBuilderGetRequestConfiguration : RequestConfiguration<DefaultQueryParameters>
+        public partial class EventosRequestBuilderGetRequestConfiguration : RequestConfiguration<global::FitnessFrontend.ApiCliente.Api.Eventos.EventosRequestBuilder.EventosRequestBuilderGetQueryParameters>
         {
         }
         /// <summary>

@@ -3,89 +3,134 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FitnessFrontend.ApiCliente;
+using FitnessFrontend.ApiCliente.Models;
 using FitnessFrontend.Servicios.Identidad;
 using FitnessFrontend.Servicios.Infraestructura;
+using Microsoft.Kiota.Abstractions;
 
 namespace FitnessFrontend.Servicios.Bloqueos;
 
-// RF-031: Implementación de fachada para bloqueos de calendario
+// RF-031: Implementación de cliente para bloqueos de calendario conectado a la API
 public class BloqueosClienteService : IBloqueosClienteService
 {
-    private static readonly List<BloqueoCalendarioDto> BloqueosMemoria = new();
+    private readonly FitnessApiClient _apiClient;
 
-    public Task<EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>> ObtenerBloqueosAsync(
+    public BloqueosClienteService(FitnessApiClient apiClient)
+    {
+        _apiClient = apiClient;
+    }
+
+    public async Task<EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>> ObtenerBloqueosAsync(
         DateTimeOffset? desde = null,
         DateTimeOffset? hasta = null,
         CancellationToken ct = default)
     {
-        lock (BloqueosMemoria)
+        try
         {
-            var consulta = BloqueosMemoria.AsEnumerable();
-            if (desde.HasValue)
+            var respuesta = await _apiClient.Api.Calendario.Bloqueos.GetAsync(q =>
             {
-                consulta = consulta.Where(b => b.Hasta >= desde.Value);
-            }
-            if (hasta.HasValue)
+                q.QueryParameters.Desde = desde;
+                q.QueryParameters.Hasta = hasta;
+            }, ct);
+
+            if (respuesta == null)
             {
-                consulta = consulta.Where(b => b.Desde <= hasta.Value);
+                return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Correcto(new List<BloqueoCalendarioDto>());
             }
 
-            IReadOnlyList<BloqueoCalendarioDto> lista = consulta.OrderBy(b => b.Desde).ToList();
-            return Task.FromResult(EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Correcto(lista));
+            var dtos = respuesta.Select(b => new BloqueoCalendarioDto(
+                b.Id ?? Guid.Empty,
+                b.Desde ?? DateTimeOffset.UtcNow,
+                b.Hasta ?? DateTimeOffset.UtcNow,
+                b.Motivo ?? string.Empty,
+                b.Tipo switch { 1 => "Festivo", 2 => "Institucional", _ => "Mantenimiento" }
+            )).OrderBy(b => b.Desde).ToList();
+
+            return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Correcto(dtos);
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Fallo(
+                errorEx.Mensaje ?? "No fue posible consultar los bloqueos de calendario.",
+                errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Fallo(
+                $"Error del servidor al consultar bloqueos ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Fallo(
+                $"Error de conexión al consultar bloqueos: {ex.Message}",
+                "ErrorConexion");
         }
     }
 
-    public Task<ResultadoOperacion> CrearBloqueoAsync(CrearBloqueoRequest request, CancellationToken ct = default)
+    public async Task<ResultadoOperacion> CrearBloqueoAsync(CrearBloqueoRequest request, CancellationToken ct = default)
     {
-        if (request.Hasta <= request.Desde)
+        try
         {
-            return Task.FromResult(ResultadoOperacion.Fallo("El rango de fechas es inválido. La fecha final debe ser posterior a la fecha inicial.", "RangoInvalido"));
+            var tipoInt = string.Equals(request.Tipo, "Festivo", StringComparison.OrdinalIgnoreCase) ? 1 :
+                          string.Equals(request.Tipo, "Institucional", StringComparison.OrdinalIgnoreCase) ? 2 : 0;
+
+            var body = new ApiCliente.Models.CrearBloqueoRequest
+            {
+                Desde = request.Desde,
+                Hasta = request.Hasta,
+                Motivo = request.Motivo,
+                Tipo = tipoInt
+            };
+
+            var respuesta = await _apiClient.Api.Calendario.Bloqueos.PostAsync(body, cancellationToken: ct);
+            return ResultadoOperacion.Exito();
         }
-
-        if (string.IsNullOrWhiteSpace(request.Motivo))
+        catch (ErrorDetalleDto errorEx)
         {
-            return Task.FromResult(ResultadoOperacion.Fallo("El motivo del bloqueo es obligatorio.", "MotivoRequerido"));
+            return ResultadoOperacion.Fallo(
+                errorEx.Mensaje ?? "No fue posible crear el bloqueo.",
+                errorEx.CodigoError);
         }
-
-        var nuevo = new BloqueoCalendarioDto(
-            Guid.NewGuid(),
-            request.Desde,
-            request.Hasta,
-            request.Motivo,
-            request.Tipo);
-
-        lock (BloqueosMemoria)
+        catch (ApiException apiEx)
         {
-            BloqueosMemoria.Add(nuevo);
+            return ResultadoOperacion.Fallo(
+                $"Error del servidor al crear bloqueo ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
         }
-
-        return Task.FromResult(ResultadoOperacion.Exito());
-    }
-
-    public Task<ResultadoOperacion> EliminarBloqueoAsync(Guid bloqueoId, CancellationToken ct = default)
-    {
-        lock (BloqueosMemoria)
+        catch (Exception ex)
         {
-            BloqueosMemoria.RemoveAll(b => b.Id == bloqueoId);
-        }
-
-        return Task.FromResult(ResultadoOperacion.Exito());
-    }
-
-    // Auxiliar para pruebas o siembra inicial de bloqueos
-    public static void SembrarBloqueo(BloqueoCalendarioDto bloqueo)
-    {
-        lock (BloqueosMemoria)
-        {
-            BloqueosMemoria.Add(bloqueo);
+            return ResultadoOperacion.Fallo(
+                $"Error de conexión al crear bloqueo: {ex.Message}",
+                "ErrorConexion");
         }
     }
 
-    public static void LimpiarBloqueos()
+    public async Task<ResultadoOperacion> EliminarBloqueoAsync(Guid bloqueoId, CancellationToken ct = default)
     {
-        lock (BloqueosMemoria)
+        try
         {
-            BloqueosMemoria.Clear();
+            await _apiClient.Api.Calendario.Bloqueos[bloqueoId].DeleteAsync(cancellationToken: ct);
+            return ResultadoOperacion.Exito();
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return ResultadoOperacion.Fallo(
+                errorEx.Mensaje ?? "No fue posible eliminar el bloqueo.",
+                errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            return ResultadoOperacion.Fallo(
+                $"Error del servidor al eliminar bloqueo ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return ResultadoOperacion.Fallo(
+                $"Error de conexión al eliminar bloqueo: {ex.Message}",
+                "ErrorConexion");
         }
     }
 }

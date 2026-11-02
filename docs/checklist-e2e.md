@@ -69,6 +69,7 @@
 | F8 / PWA | Manifiesto PWA standalone y soporte de instalación sin almacenamiento en caché obsoleto | ✅ probado (PwaF8Tests.ManifiestoPwa_ExisteYContienePropiedadesRequeridas) |
 | F9 / Cierre visual | Accesibilidad WCAG, skip-link, cobertura RF y aislamiento de rutas por rol | ✅ probado (NavegacionPorRolTests, AccesibilidadF9Tests) |
 | F10 / Diseños diferidos | Bocetos de UI para apelación (RF-041) y titular (RF-042) documentados sin quiebre de RN-020 | ✅ documentado (04-diseno-ui-apelacion-y-derechos-titular.md) |
+| QA2-F1 / H-01 | Conexión de 7 servicios de fachada a cliente Kiota real sin datos en memoria ni fabricación local | ✅ probado (ServiciosKiotaConectadosQA2F1Tests, AusenciaPriorizacionRN020Tests) |
 
 
 ## Pendiente que requiere a una persona

@@ -12,7 +12,7 @@ using System;
 namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.Inscritos
 {
     /// <summary>
-    /// Builds and executes requests for operations under \api\reservas\sesiones\{idSesion}\inscritos
+    /// Builds and executes requests for operations under \api\reservas\sesiones\{idSesion-id}\inscritos
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class InscritosRequestBuilder : BaseRequestBuilder
@@ -22,7 +22,7 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.Inscritos
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public InscritosRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/reservas/sesiones/{idSesion}/inscritos", pathParameters)
+        public InscritosRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/reservas/sesiones/{idSesion%2Did}/inscritos", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace FitnessFrontend.ApiCliente.Api.Reservas.Sesiones.Item.Inscritos
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public InscritosRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/reservas/sesiones/{idSesion}/inscritos", rawUrl)
+        public InscritosRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/reservas/sesiones/{idSesion%2Did}/inscritos", rawUrl)
         {
         }
         /// <returns>A List&lt;global::FitnessFrontend.ApiCliente.Models.ReservaInscritoDto&gt;</returns>

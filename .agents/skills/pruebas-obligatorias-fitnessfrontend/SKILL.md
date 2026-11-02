@@ -75,3 +75,14 @@ Detalle en [docs/plan-despliegue/01-guia-frontend.md](../../../docs/plan-desplie
 | **F8 PWA** | El *service worker* no intercepta `/api/`; hay estrategia de actualización | Solo se prueba la instalación |
 | **F9 Cierre** | `AusenciaPriorizacionRN020Tests` cubre todas las pantallas de Usuario/Entrenador nuevas y las de F2–F7; no hay desbordes a 390 px (verificación visual registrada) | La prueba enumera pantallas a mano y olvida las nuevas: recorrer por reflexión las páginas con `@page` |
 
+## Correcciones de calidad (rondas `QA2-F1…F5`, desde 2026-11-02)
+
+Fuentes: `../fitnessbackend/docs/pruebas-calidad/03-decisiones-correccion.md` y [.agents/prompt-correccion-calidad.md](../../prompt-correccion-calidad.md). Cada hallazgo corregido necesita **una prueba que falle si se revierte la corrección**.
+
+| Ronda · hallazgo | Prueba obligatoria | Señal de falso positivo |
+|---|---|---|
+| **F1 · H-01** (una por servicio: reportes, auditoría, bloqueos, sesiones, notas/anuncios, asistencia manual, retroalimentación) | Con `HttpMessageHandler` simulado: método, ruta, query y cuerpo correctos; deserializa el JSON **real** del contrato; un 4xx → `EstadoDeCarga` de error con el mensaje del contrato; ningún dato aparece si el handler devuelve una lista vacía | La prueba sigue usando el servicio en memoria o un falso de la interfaz, no el cliente Kiota |
+| **F2 · H-02** | El servicio llama a `qr-actual`; la siguiente petición se programa por `validoHastaUtc` (reloj falso); con fallo de red no se dibuja un QR vencido; no queda ningún token `dyn_` | La prueba usa el reloj real o no comprueba el vencimiento |
+| **F3 · D-B / D-C / D-D** | 429 → mensaje sin reintento automático (check-in, ingreso, login, registro); la cuenta bloqueada no muestra un mensaje distinto; refresh 401 → login con `returnUrl` y aviso; `fechaInicioRecurrencia` viaja en el cuerpo y el 400 se muestra junto al campo | Se prueba solo el caso feliz |
+| **F3 · H-19** | Los botones de paginación de Auditoría renderizan un SVG con `aria-hidden` y un texto accesible | Se verifica solo el texto |
+| **F4 · H-13 / H-14** | Prueba de `nginx.conf` (o del script de arranque) que verifica CSP sin `*` en `connect-src`, `server_tokens off` y `no-store` para `appsettings.json`; prueba de `IZonaHorariaService` (America/Bogota, formato `es-CO`) si se recortó la globalización | Se revisa el archivo a ojo en vez de probarlo |

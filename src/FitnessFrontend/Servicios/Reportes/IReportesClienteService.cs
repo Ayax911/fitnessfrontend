@@ -73,4 +73,10 @@ public interface IReportesClienteService
         DateTimeOffset desde,
         DateTimeOffset hasta,
         CancellationToken ct = default);
+
+    Task<EstadoDeCarga<string>> DescargarCsvAsync(
+        string reporte,
+        DateTimeOffset desde,
+        DateTimeOffset hasta,
+        CancellationToken ct = default);
 }

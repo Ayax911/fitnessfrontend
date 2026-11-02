@@ -169,28 +169,37 @@ public class RetroalimentacionF7Tests : BunitContext
     [Fact]
     public async Task Prueba3_Aislamiento_UsuarioNoVeReportesAjenos()
     {
-        // 3. Un usuario no ve reportes ajenos (verificado en el servicio con aislamiento de usuario)
+        // 3. ObtenerMisReportesAsync llama al endpoint /api/retroalimentacion/mios del contrato real
         var idUsuario1 = Guid.Parse("11111111-aaaa-bbbb-cccc-111111111111");
-        var idUsuario2 = Guid.Parse("22222222-aaaa-bbbb-cccc-222222222222");
+        var jsonRespuesta = $@"[
+            {{
+                ""id"": ""{Guid.NewGuid()}"",
+                ""usuarioId"": ""{idUsuario1}"",
+                ""tipo"": 1,
+                ""mensaje"": ""Reporte propio"",
+                ""ruta"": ""/inicio"",
+                ""estado"": 0,
+                ""fechaCreacionUtc"": ""2026-11-01T10:00:00Z""
+            }}
+        ]";
 
-        var authService1 = new FakeAuthService(email: "usuario1@itm.edu.co", id: idUsuario1);
-        var servicioReal = new RetroalimentacionClienteService(authService1);
+        var clienteKiota = KiotaTestHelper.CrearCliente(req =>
+        {
+            Assert.Equal(HttpMethod.Get, req.Method);
+            Assert.Contains("/api/retroalimentacion/mios", req.RequestUri!.ToString());
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(jsonRespuesta, System.Text.Encoding.UTF8, "application/json")
+            };
+        });
 
-        // Usuario 1 envía un reporte
-        await servicioReal.EnviarReporteAsync(new CrearReporteDto("Sugerencia", "Mensaje de usuario 1", "/inicio"));
+        var servicio = new RetroalimentacionClienteService(clienteKiota);
+        var misReportes = await servicio.ObtenerMisReportesAsync();
 
-        // Usuario 1 consulta sus reportes: ve 1 reporte
-        var misReportes1 = await servicioReal.ObtenerMisReportesAsync();
-        Assert.True(misReportes1.EsExito);
-        Assert.All(misReportes1.Valor!, r => Assert.Equal(idUsuario1, r.UsuarioId));
-
-        // Ahora un usuario 2 consulta sus reportes: NO ve los del usuario 1
-        var authService2 = new FakeAuthService(email: "usuario2@itm.edu.co", id: idUsuario2);
-        var servicioRealParaUsuario2 = new RetroalimentacionClienteService(authService2);
-
-        var misReportes2 = await servicioRealParaUsuario2.ObtenerMisReportesAsync();
-        Assert.True(misReportes2.EsExito);
-        Assert.DoesNotContain(misReportes2.Valor!, r => r.UsuarioId == idUsuario1);
+        Assert.True(misReportes.EsExito);
+        Assert.Single(misReportes.Valor!);
+        Assert.Equal(idUsuario1, misReportes.Valor![0].UsuarioId);
+        Assert.Equal("Reporte propio", misReportes.Valor![0].Mensaje);
     }
 
     [Fact]

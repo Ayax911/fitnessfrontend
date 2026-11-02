@@ -384,8 +384,7 @@
         _errorRangoFechas = null;
         _cargando = true;
 
-        var desdeUtc = ZonaHoraria.AUtc(_fechaDesdeLocal.Date);
-        var hastaUtc = ZonaHoraria.AUtc(_fechaHastaLocal.Date.AddDays(1).AddTicks(-1));
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
 
         try
         {
@@ -444,82 +443,60 @@
         _ = CargarReporteActual();
     }
 
+    private (DateTimeOffset DesdeUtc, DateTimeOffset HastaUtc) ObtenerRangoFechasUtc()
+    {
+        var desdeUtc = ZonaHoraria.AUtc(_fechaDesdeLocal.Date);
+        var hastaUtc = ZonaHoraria.AUtc(_fechaHastaLocal.Date.AddDays(1).AddTicks(-1));
+        return (desdeUtc, hastaUtc);
+    }
+
     private async Task ExportarCsvAsistencia()
     {
-        var cabeceras = new[] { "Actividad", "FechaHoraUtc", "Capacidad", "Inscritos", "Asistentes", "NoAsistentes", "PorcentajeAsistencia" };
-        var filas = _reporteAsistencia.Select(r => new[]
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("asistencia", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
         {
-            r.EventoNombre,
-            r.FechaHora.ToString("o"),
-            r.CupoMaximo.ToString(),
-            r.Inscritos.ToString(),
-            r.Asistentes.ToString(),
-            r.NoAsistentes.ToString(),
-            r.PorcentajeAsistencia.ToString("F1")
-        });
-
-        var csv = GeneradorCsv.Generar(cabeceras, filas);
-        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-asistencia-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-asistencia-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
     }
 
     private async Task ExportarCsvOcupacion()
     {
-        var cabeceras = new[] { "Actividad", "Fecha", "CupoOfrecido", "CupoOcupado", "PorcentajeOcupacion" };
-        var filas = _reporteOcupacion.Select(o => new[]
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("ocupacion", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
         {
-            o.EventoNombre,
-            o.Fecha.ToString("yyyy-MM-dd"),
-            o.CupoTotal.ToString(),
-            o.CupoOcupado.ToString(),
-            o.PorcentajeOcupacion.ToString("F1")
-        });
-
-        var csv = GeneradorCsv.Generar(cabeceras, filas);
-        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-ocupacion-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-ocupacion-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
     }
 
     private async Task ExportarCsvInasistencias()
     {
-        var cabeceras = new[] { "Actividad", "TotalReservas", "Inasistencias", "TasaInasistencia" };
-        var filas = _reporteInasistencias.Select(i => new[]
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("inasistencias", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
         {
-            i.EventoNombre,
-            i.TotalReservas.ToString(),
-            i.Inasistencias.ToString(),
-            i.TasaInasistencia.ToString("F1")
-        });
-
-        var csv = GeneradorCsv.Generar(cabeceras, filas);
-        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-inasistencias-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-inasistencias-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
     }
 
     private async Task ExportarCsvHorasPico()
     {
-        var cabeceras = new[] { "DiaSemana", "FranjaHoraLocal", "TotalIngresosYCheckins" };
-        var filas = _reporteHorasPico.Select(h => new[]
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("horaspico", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
         {
-            h.DiaSemana,
-            $"{h.FranjaHora:D2}:00",
-            h.TotalIngresosYCheckins.ToString()
-        });
-
-        var csv = GeneradorCsv.Generar(cabeceras, filas);
-        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-horas-pico-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-horas-pico-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
     }
 
     private async Task ExportarCsvUso()
     {
-        if (_reporteUso == null) return;
-        var cabeceras = new[] { "Metrica", "Valor" };
-        var filas = new[]
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("uso", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
         {
-            new[] { "RegistrosNuevos", _reporteUso.RegistrosNuevos.ToString() },
-            new[] { "UsuariosActivos", _reporteUso.UsuariosActivos.ToString() },
-            new[] { "ReservasCreadas", _reporteUso.ReservasCreadas.ToString() },
-            new[] { "Cancelaciones", _reporteUso.Cancelaciones.ToString() }
-        };
-
-        var csv = GeneradorCsv.Generar(cabeceras, filas);
-        await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-uso-plataforma-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", csv);
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-uso-plataforma-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
     }
 }

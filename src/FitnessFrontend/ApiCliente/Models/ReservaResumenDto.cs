@@ -34,6 +34,18 @@ namespace FitnessFrontend.ApiCliente.Models
         public DateTimeOffset? FechaHoraSolicitud { get; set; }
         /// <summary>The id property</summary>
         public Guid? Id { get; set; }
+        /// <summary>The motivoCancelacionSesion property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? MotivoCancelacionSesion { get; set; }
+#nullable restore
+#else
+        public string MotivoCancelacionSesion { get; set; }
+#endif
+        /// <summary>The origen property</summary>
+        public int? Origen { get; set; }
+        /// <summary>The sesionCancelada property</summary>
+        public bool? SesionCancelada { get; set; }
         /// <summary>The sesionEventoId property</summary>
         public Guid? SesionEventoId { get; set; }
         /// <summary>
@@ -42,6 +54,8 @@ namespace FitnessFrontend.ApiCliente.Models
         public ReservaResumenDto()
         {
             AdditionalData = new Dictionary<string, object>();
+            Origen = 0;
+            SesionCancelada = false;
         }
         /// <summary>
         /// Creates a new instance of the appropriate class based on discriminator value
@@ -68,6 +82,9 @@ namespace FitnessFrontend.ApiCliente.Models
                 { "fechaHoraInicio", n => { FechaHoraInicio = n.GetDateTimeOffsetValue(); } },
                 { "fechaHoraSolicitud", n => { FechaHoraSolicitud = n.GetDateTimeOffsetValue(); } },
                 { "id", n => { Id = n.GetGuidValue(); } },
+                { "motivoCancelacionSesion", n => { MotivoCancelacionSesion = n.GetStringValue(); } },
+                { "origen", n => { Origen = n.GetIntValue(); } },
+                { "sesionCancelada", n => { SesionCancelada = n.GetBoolValue(); } },
                 { "sesionEventoId", n => { SesionEventoId = n.GetGuidValue(); } },
             };
         }
@@ -85,6 +102,9 @@ namespace FitnessFrontend.ApiCliente.Models
             writer.WriteDateTimeOffsetValue("fechaHoraInicio", FechaHoraInicio);
             writer.WriteDateTimeOffsetValue("fechaHoraSolicitud", FechaHoraSolicitud);
             writer.WriteGuidValue("id", Id);
+            writer.WriteStringValue("motivoCancelacionSesion", MotivoCancelacionSesion);
+            writer.WriteIntValue("origen", Origen);
+            writer.WriteBoolValue("sesionCancelada", SesionCancelada);
             writer.WriteGuidValue("sesionEventoId", SesionEventoId);
             writer.WriteAdditionalData(AdditionalData);
         }

@@ -1,8 +1,8 @@
 {
-  "descriptionHash": "8FDAE2591EB8ED70A00D7822C63986EF8B2C236872584312991774B92BB5108E53C3B75FD6ABE82CE02EA407925AF112C5C6EBC9985EE2FE8C9B69DDF2767E24",
+  "descriptionHash": "5C527BB1F4FF7A1060332014EF215C1A5C7B5CFAEACF28E4F3B0A652A2539DA8040773A1ECCDD78476D77E3523BDB6A835E142CFB480F55F4C3BB1C5B2021F29",
   "descriptionLocation": "http://localhost:5224/openapi/v1.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.35.0",
+  "kiotaVersion": "1.37.0",
   "clientClassName": "FitnessApiClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "FitnessFrontend.ApiCliente",

@@ -19,6 +19,7 @@ using FitnessFrontend.Servicios.Reservas;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using BloqueoCalendarioDto = FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto;
 
 namespace FitnessFrontend.Tests.Servicios;
 
@@ -78,20 +79,20 @@ public class ProgramacionYCalendarioF2Tests : BunitContext
 
     private class BloqueosServiceFalso : IBloqueosClienteService
     {
-        public List<BloqueoCalendarioDto> Bloqueos { get; set; } = new();
+        public List<FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto> Bloqueos { get; set; } = new();
 
-        public Task<EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>> ObtenerBloqueosAsync(
+        public Task<EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto>>> ObtenerBloqueosAsync(
             DateTimeOffset? desde = null, DateTimeOffset? hasta = null, CancellationToken ct = default)
         {
             var res = Bloqueos.AsEnumerable();
             if (desde.HasValue) res = res.Where(b => b.Hasta >= desde.Value);
             if (hasta.HasValue) res = res.Where(b => b.Desde <= hasta.Value);
-            return Task.FromResult(EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Correcto(res.ToList()));
+            return Task.FromResult(EstadoDeCarga<IReadOnlyList<FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto>>.Correcto(res.ToList()));
         }
 
-        public Task<ResultadoOperacion> CrearBloqueoAsync(CrearBloqueoRequest request, CancellationToken ct = default)
+        public Task<ResultadoOperacion> CrearBloqueoAsync(FitnessFrontend.Servicios.Bloqueos.CrearBloqueoRequest request, CancellationToken ct = default)
         {
-            Bloqueos.Add(new BloqueoCalendarioDto(Guid.NewGuid(), request.Desde, request.Hasta, request.Motivo, request.Tipo));
+            Bloqueos.Add(new FitnessFrontend.Servicios.Bloqueos.BloqueoCalendarioDto(Guid.NewGuid(), request.Desde, request.Hasta, request.Motivo, request.Tipo));
             return Task.FromResult(ResultadoOperacion.Exito());
         }
 
