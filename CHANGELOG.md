@@ -2,6 +2,11 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## QA2-F4 · Cabeceras CSP, seguridad y optimización de descarga nginx (H-13, H-14)
+- Configurada directiva estricta Content-Security-Policy en `nginx.conf` (`default-src 'self'`, `style-src-elem`, `font-src`, `img-src` con data: y `connect-src` completo).
+- Compresión dinámica y `gzip_static on` para servir artefactos `.wasm`, `.dll` y `.js` precomprimidos con caché inmutable (H-14).
+- Incorporadas cabeceras de endurecimiento `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` y `Referrer-Policy`.
+
 ## QA2-F3 · Cambios de contrato y detalles pendientes (D-B, D-C, D-D, H-19)
 - Mensajes amigables y respetuosos ante rate limit 429 en login, registro, check-in e ingreso (D-B).
 - Preservación de returnUrl al redirigir al login si falla la renovación de sesión (D-C).
