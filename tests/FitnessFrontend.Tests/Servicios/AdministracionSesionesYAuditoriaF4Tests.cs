@@ -237,7 +237,7 @@ public class AdministracionSesionesYAuditoriaF4Tests : BunitContext
         // Verifica presencia de controles de paginación
         Assert.Contains("Página 1 de 2", markup);
         Assert.Contains("Total: 50 registros", markup);
-        Assert.Contains("Siguiente →", markup);
+        Assert.Contains("Siguiente", markup);
     }
 
     [Fact]

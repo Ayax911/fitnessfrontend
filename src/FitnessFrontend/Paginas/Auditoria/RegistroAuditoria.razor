@@ -134,20 +134,26 @@
             </span>
             <div class="btn-group" role="group" aria-label="Paginación de auditoría">
                 <button type="button"
-                        class="btn btn-itm-secundario"
+                        class="btn btn-itm-secundario d-inline-flex align-items-center gap-1"
                         style="min-height: 48px; min-width: 48px;"
                         disabled="@(_paginaActual <= 1)"
                         @onclick="() => CargarPagina(_paginaActual - 1)"
                         aria-label="Página anterior">
-                    ← Anterior
+                    <svg class="itm-icono" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Anterior</span>
                 </button>
                 <button type="button"
-                        class="btn btn-itm-secundario"
+                        class="btn btn-itm-secundario d-inline-flex align-items-center gap-1"
                         style="min-height: 48px; min-width: 48px;"
                         disabled="@(_paginaActual >= _totalPaginas)"
                         @onclick="() => CargarPagina(_paginaActual + 1)"
                         aria-label="Página siguiente">
-                    Siguiente →
+                    <span>Siguiente</span>
+                    <svg class="itm-icono" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d="M9 18l6-6-6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </button>
             </div>
         </div>

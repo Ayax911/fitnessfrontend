@@ -34,15 +34,21 @@ public class AsistenciaClienteService : IAsistenciaClienteService
         }
         catch (ErrorDetalleDto errorEx)
         {
-            return EstadoDeCarga<CheckInResultadoDto>.Fallo(
-                errorEx.Mensaje ?? "No fue posible registrar el check-in.",
-                errorEx.CodigoError);
+            var codigo = errorEx.CodigoError ?? "Error";
+            var es429 = errorEx.ResponseStatusCode == 429 || string.Equals(codigo, "LimiteExcedido", StringComparison.OrdinalIgnoreCase);
+            var mensaje = es429
+                ? "Demasiados intentos. Espera unos minutos."
+                : (errorEx.Mensaje ?? "No fue posible registrar el check-in.");
+
+            return EstadoDeCarga<CheckInResultadoDto>.Fallo(mensaje, codigo);
         }
         catch (ApiException apiEx)
         {
-            return EstadoDeCarga<CheckInResultadoDto>.Fallo(
-                $"Error del servidor al registrar check-in ({apiEx.ResponseStatusCode}).",
-                apiEx.ResponseStatusCode.ToString());
+            var mensaje = apiEx.ResponseStatusCode == 429
+                ? "Demasiados intentos. Espera unos minutos."
+                : $"Error del servidor al registrar check-in ({apiEx.ResponseStatusCode}).";
+
+            return EstadoDeCarga<CheckInResultadoDto>.Fallo(mensaje, apiEx.ResponseStatusCode.ToString());
         }
         catch (Exception ex)
         {
@@ -67,16 +73,22 @@ public class AsistenciaClienteService : IAsistenciaClienteService
         }
         catch (ErrorDetalleDto errorEx)
         {
+            var codigo = errorEx.CodigoError ?? "Error";
+            var es429 = errorEx.ResponseStatusCode == 429 || string.Equals(codigo, "LimiteExcedido", StringComparison.OrdinalIgnoreCase);
+            var mensaje = es429
+                ? "Demasiados intentos. Espera unos minutos."
+                : (errorEx.Mensaje ?? "No fue posible registrar el ingreso general.");
+
             // Respeta el rechazo por intervalo mínimo (RN-030) mostrando el mensaje del backend sin inventar cuenta regresiva
-            return EstadoDeCarga<CheckInResultadoDto>.Fallo(
-                errorEx.Mensaje ?? "No fue posible registrar el ingreso general.",
-                errorEx.CodigoError);
+            return EstadoDeCarga<CheckInResultadoDto>.Fallo(mensaje, codigo);
         }
         catch (ApiException apiEx)
         {
-            return EstadoDeCarga<CheckInResultadoDto>.Fallo(
-                $"Error al registrar ingreso ({apiEx.ResponseStatusCode}).",
-                apiEx.ResponseStatusCode.ToString());
+            var mensaje = apiEx.ResponseStatusCode == 429
+                ? "Demasiados intentos. Espera unos minutos."
+                : $"Error al registrar ingreso ({apiEx.ResponseStatusCode}).";
+
+            return EstadoDeCarga<CheckInResultadoDto>.Fallo(mensaje, apiEx.ResponseStatusCode.ToString());
         }
         catch (Exception ex)
         {

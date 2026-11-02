@@ -156,17 +156,21 @@
                                     </div>
 
                                     <div class="row g-3">
-                                        <div class="col-12 col-md-4">
+                                        <div class="col-12 col-md-3">
+                                            <label for="fechaInicioRecurrencia" class="form-label fw-semibold small">Fecha Inicio Recurrencia *</label>
+                                            <input id="fechaInicioRecurrencia" type="date" class="form-control" @bind="_fechaInicioRecurrenciaLocal" required />
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label for="fechaFinRecurrencia" class="form-label fw-semibold small">Fecha Fin de Recurrencia *</label>
+                                            <input id="fechaFinRecurrencia" type="date" class="form-control" @bind="_fechaFinRecurrenciaLocal" required />
+                                        </div>
+                                        <div class="col-12 col-md-3">
                                             <label for="horaInicio" class="form-label fw-semibold small">Hora de Inicio *</label>
                                             <input id="horaInicio" type="time" class="form-control" @bind="_horaInicioLocal" required />
                                         </div>
-                                        <div class="col-12 col-md-4">
+                                        <div class="col-12 col-md-3">
                                             <label for="horaFin" class="form-label fw-semibold small">Hora de Fin *</label>
                                             <input id="horaFin" type="time" class="form-control" @bind="_horaFinLocal" required />
-                                        </div>
-                                        <div class="col-12 col-md-4">
-                                            <label for="fechaFinRecurrencia" class="form-label fw-semibold small">Fecha Fin de Recurrencia *</label>
-                                            <input id="fechaFinRecurrencia" type="date" class="form-control" @bind="_fechaFinRecurrenciaLocal" required />
                                         </div>
                                     </div>
                                 </div>
@@ -199,6 +203,7 @@
     private readonly HashSet<int> _diasSeleccionados = new();
     private TimeOnly _horaInicioLocal = new(8, 0);
     private TimeOnly _horaFinLocal = new(9, 0);
+    private DateOnly _fechaInicioRecurrenciaLocal;
     private DateOnly _fechaFinRecurrenciaLocal;
 
     private bool _procesando;
@@ -212,6 +217,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _fechaInicioRecurrenciaLocal = DateOnly.FromDateTime(ZonaHoraria.ObtenerFechaHoyLocal());
         _fechaFinRecurrenciaLocal = DateOnly.FromDateTime(ZonaHoraria.ObtenerFechaHoyLocal().AddMonths(1));
 
         // Trata la lista de patrones de periodicidad como dato dinámico provisto por el servicio
@@ -289,9 +295,10 @@
             {
                 Tipo = _tipoPeriodicidadSeleccionada,
                 DiasSemana = diasLista,
+                FechaInicioRecurrencia = new Date(_fechaInicioRecurrenciaLocal.Year, _fechaInicioRecurrenciaLocal.Month, _fechaInicioRecurrenciaLocal.Day),
+                FechaFinRecurrencia = new Date(_fechaFinRecurrenciaLocal.Year, _fechaFinRecurrenciaLocal.Month, _fechaFinRecurrenciaLocal.Day),
                 HoraInicio = new Time(_horaInicioLocal.Hour, _horaInicioLocal.Minute, 0),
-                HoraFin = new Time(_horaFinLocal.Hour, _horaFinLocal.Minute, 0),
-                FechaFinRecurrencia = new Date(_fechaFinRecurrenciaLocal.Year, _fechaFinRecurrenciaLocal.Month, _fechaFinRecurrenciaLocal.Day)
+                HoraFin = new Time(_horaFinLocal.Hour, _horaFinLocal.Minute, 0)
             };
         }
 

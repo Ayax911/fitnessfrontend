@@ -70,6 +70,11 @@ public class AutenticacionService : IAutenticacionService
         }
         catch (ApiException apiEx)
         {
+            if (apiEx.ResponseStatusCode == 429)
+            {
+                return ResultadoOperacion.Fallo("Has intentado iniciar sesión demasiadas veces. Espera unos minutos antes de volver a intentar.", "LimiteExcedido");
+            }
+
             return ResultadoOperacion.Fallo($"Error de autenticación ({apiEx.ResponseStatusCode}): Credenciales incorrectas o cuenta inactiva.", "CredencialesInvalidas");
         }
         catch (Exception ex)
@@ -114,8 +119,12 @@ public class AutenticacionService : IAutenticacionService
         {
             var (mensaje, codigo) = ErroresApi.Traducir(ex, "completar el registro");
 
-            // El backend devuelve las reglas de Identity en inglés; se muestra el requisito en español
-            if (codigo == "ContrasenaInvalida")
+            if (ex is ApiException apiEx && apiEx.ResponseStatusCode == 429 || codigo == "LimiteExcedido")
+            {
+                mensaje = "Has alcanzado el límite de intentos de registro. Espera unos minutos.";
+                codigo = "LimiteExcedido";
+            }
+            else if (codigo == "ContrasenaInvalida")
             {
                 mensaje = "La contraseña no cumple los requisitos de seguridad: mínimo 6 caracteres, con mayúscula, minúscula, número y un símbolo.";
             }

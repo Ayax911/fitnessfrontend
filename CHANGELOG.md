@@ -2,6 +2,13 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## QA2-F3 · Cambios de contrato y detalles pendientes (D-B, D-C, D-D, H-19)
+- Mensajes amigables y respetuosos ante rate limit 429 en login, registro, check-in e ingreso (D-B).
+- Preservación de returnUrl al redirigir al login si falla la renovación de sesión (D-C).
+- Incorporación de `FechaInicioRecurrencia` en `PatronRecurrencia` y formulario de `CrearEvento.razor` (D-D).
+- Manejo accesible de error 400 (`RangoExcesivo`) en `Reportes.razor`.
+- Paginación de auditoría con botones e íconos SVG accesibles en línea (H-19).
+
 ## QA2-F2 · QR dinámico real conectado a la API (H-02)
 - Reemplazado generador simulado en cliente `dyn_` en `PuntosAccesoClienteService.cs` por el endpoint real `GET /api/asistencia/puntos-acceso/{id}/qr-actual`.
 - El nombre del punto se obtiene dinámicamente desde el listado del backend y el periodo/vencimiento son gobernados por `ValidoHastaUtc` del servidor.

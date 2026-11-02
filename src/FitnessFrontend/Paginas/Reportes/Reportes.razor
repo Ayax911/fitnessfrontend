@@ -393,22 +393,27 @@
                 case "Asistencia":
                     var resAsis = await ReportesService.ConsultarAsistenciaPorSesionAsync(desdeUtc, hastaUtc);
                     if (resAsis.EsExito) _reporteAsistencia = (resAsis.Valor ?? new List<ReporteAsistenciaSesionDto>()).ToList();
+                    else _errorRangoFechas = resAsis.MensajeError;
                     break;
                 case "Ocupacion":
                     var resOcup = await ReportesService.ConsultarOcupacionAsync(desdeUtc, hastaUtc);
                     if (resOcup.EsExito) _reporteOcupacion = (resOcup.Valor ?? new List<ReporteOcupacionDto>()).ToList();
+                    else _errorRangoFechas = resOcup.MensajeError;
                     break;
                 case "Inasistencias":
                     var resIna = await ReportesService.ConsultarInasistenciasAsync(desdeUtc, hastaUtc);
                     if (resIna.EsExito) _reporteInasistencias = (resIna.Valor ?? new List<ReporteInasistenciasEventoDto>()).ToList();
+                    else _errorRangoFechas = resIna.MensajeError;
                     break;
                 case "HorasPico":
                     var resPico = await ReportesService.ConsultarHorasPicoAsync(desdeUtc, hastaUtc);
                     if (resPico.EsExito) _reporteHorasPico = (resPico.Valor ?? new List<ReporteHorasPicoDto>()).ToList();
+                    else _errorRangoFechas = resPico.MensajeError;
                     break;
                 case "Uso":
                     var resUso = await ReportesService.ConsultarUsoPlataformaAsync(desdeUtc, hastaUtc);
                     if (resUso.EsExito) _reporteUso = resUso.Valor;
+                    else _errorRangoFechas = resUso.MensajeError;
                     break;
             }
         }
