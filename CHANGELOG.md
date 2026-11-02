@@ -2,6 +2,14 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## Ronda 3 · Verificación de calidad ISO/IEC 25010 y cierre final (test(qa))
+- Informe final del cliente en [docs/pruebas-calidad/03-resultados-ronda-3.md](docs/pruebas-calidad/03-resultados-ronda-3.md) con veredicto **LISTO PARA PRODUCCIÓN**.
+- 18 de 18 checks de navegación browser aprobados (100% de cumplimiento funcional con datos reales del backend y 0 errores de consola).
+- Suite de pruebas bUnit en verde con 167 pruebas aprobadas (0 fallos).
+- Compresión gzip verificada en `tamano-descarga.sh` (4.813 KiB transferidos, ~29% de reducción).
+- Escaneo OWASP ZAP Baseline aprobado con 0 FAIL y cabeceras estrictas (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy).
+- Ajuste en `nginx.conf`: `script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'` para permitir importmaps de Blazor WebAssembly .NET 10 e inclusión de tipos MIME completos.
+
 ## QA2-F4 · Cabeceras CSP, seguridad y optimización de descarga nginx (H-13, H-14)
 - Configurada directiva estricta Content-Security-Policy en `nginx.conf` (`default-src 'self'`, `style-src-elem`, `font-src`, `img-src` con data: y `connect-src` completo).
 - Compresión dinámica y `gzip_static on` para servir artefactos `.wasm`, `.dll` y `.js` precomprimidos con caché inmutable (H-14).
