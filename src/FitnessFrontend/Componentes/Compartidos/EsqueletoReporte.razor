@@ -1,0 +1,32 @@
+@* Esqueleto de la página de reportes: con la misma forma que una tabla de datos (título, filas), para que al llegar
+   los datos la pantalla no cambie de tamaño. Va dentro de la región estable (.itm-area-estable): nunca reemplaza
+   la cabecera, los filtros ni las pestañas. *@
+<div class="itm-esqueleto-reporte" role="status" aria-busy="true">
+    <span class="itm-solo-lectores">@Mensaje</span>
+    <div class="card-itm p-4" aria-hidden="true">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <span class="itm-esq itm-esq--titulo" style="width: 260px;"></span>
+            <span class="itm-esq itm-esq--boton" style="width: 120px;"></span>
+        </div>
+        <div class="itm-esqueleto-reporte__cab">
+            <span class="itm-esq itm-esq--linea"></span>
+            <span class="itm-esq itm-esq--linea"></span>
+            <span class="itm-esq itm-esq--linea"></span>
+            <span class="itm-esq itm-esq--linea"></span>
+        </div>
+        @for (var i = 0; i < Filas; i++)
+        {
+            <div class="itm-esqueleto-reporte__fila">
+                <span class="itm-esq itm-esq--linea" style="width: @(45 + (i * 13) % 35)%;"></span>
+                <span class="itm-esq itm-esq--linea" style="width: 60%;"></span>
+                <span class="itm-esq itm-esq--linea" style="width: 50%;"></span>
+                <span class="itm-esq itm-esq--linea" style="width: 40%;"></span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Filas { get; set; } = 8;
+    [Parameter] public string Mensaje { get; set; } = "Cargando datos del reporte...";
+}

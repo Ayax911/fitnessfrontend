@@ -141,4 +141,54 @@ public class MisActividadesPertenenciaTests : BunitContext
         Assert.Contains("Yoga Integral - Profe Diana", htmlEntrenador2);
         Assert.DoesNotContain("Spinning Avanzado - Profe Carlos", htmlEntrenador2);
     }
+
+    // Observación de uso (2026-11-02): con muchas sesiones recurrentes la página se volvía una lista larga.
+    // Ahora cada actividad se despliega, muestra 8 sesiones y ofrece "Mostrar todas".
+    [Fact]
+    public void MisActividades_ColapsadasPorDefecto_YUnaActividadLargaSeLimitaConMostrarTodas()
+    {
+        var entrenadorId = Guid.NewGuid();
+        var sesiones = new List<SesionResumenDto>();
+        for (var i = 0; i < 12; i++)
+        {
+            sesiones.Add(new SesionResumenDto
+            {
+                Id = Guid.NewGuid(),
+                FechaHoraInicio = DateTimeOffset.UtcNow.AddDays(i + 1),
+                FechaHoraFin = DateTimeOffset.UtcNow.AddDays(i + 1).AddHours(1),
+                CupoMaximo = 20,
+                CuposOcupados = 3
+            });
+        }
+        var actividad = new ActividadAsignadaDto
+        {
+            EventoId = Guid.NewGuid(),
+            Nombre = "Funcional Recurrente",
+            EntrenadorNombre = "Entrenador Uno",
+            EsRecurrente = true,
+            Sesiones = sesiones
+        };
+        var diccionario = new Dictionary<string, IReadOnlyList<ActividadAsignadaDto>>
+        {
+            [entrenadorId.ToString()] = new List<ActividadAsignadaDto> { actividad }
+        };
+        Services.AddSingleton<IEventosClienteService>(new MockEventosClienteService(entrenadorId.ToString(), diccionario));
+        Services.AddSingleton<IZonaHorariaService, ZonaHorariaService>();
+
+        var cut = Render<MisActividades>();
+
+        // Colapsada: se ve el nombre y el resumen, pero ninguna sesión
+        Assert.Contains("Funcional Recurrente", cut.Markup);
+        Assert.Contains("12 sesiones", cut.Markup);
+        Assert.Empty(cut.FindAll("a.btn-outline-primary"));
+
+        // Expandida: solo las primeras 8 con sus accesos, y un botón para ver las 12
+        cut.Find("button.itm-actividad__cab").Click();
+        Assert.Equal(8, cut.FindAll("li.itm-sesion").Count);
+        Assert.Contains("Mostrar las 12 sesiones", cut.Markup);
+
+        cut.Find(".itm-mostrar-mas button").Click();
+        Assert.Equal(12, cut.FindAll("li.itm-sesion").Count);
+        Assert.Contains("Mostrar menos", cut.Markup);
+    }
 }

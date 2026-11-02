@@ -1,4 +1,5 @@
 @* RF-010: Consultar actividades asignadas al entrenador autenticado *@
+@* RF-011, RF-012, RF-027, RF-029, RF-034: accesos por sesión (inscritos, QR, asistencia manual, notas y avisos) *@
 @page "/entrenador/actividades"
 @attribute [Authorize(Roles = "Entrenador")]
 @using FitnessFrontend.ApiCliente.Models
@@ -32,85 +33,118 @@
             }
             else
             {
-                <div class="row row-cols-1 row-cols-md-2 g-4">
-                    @foreach (var act in actividades)
-                    {
-                        <div class="col" @key="act.EventoId">
-                            <div class="card card-itm h-100">
-                                <div class="card-header card-itm-header d-flex justify-content-between align-items-center">
-                                    <h2 class="h5 mb-0 fw-bold text-truncate">@act.Nombre</h2>
-                                    @if (act.EsRecurrente == true)
-                                    {
-                                        <span class="badge bg-light text-primary border border-primary small">Recurrente</span>
-                                    }
-                                </div>
-                                <div class="card-body">
-                                    @if (!string.IsNullOrWhiteSpace(act.Descripcion))
-                                    {
-                                        <p class="card-text text-secondary small texto-extenso mb-3">@act.Descripcion</p>
-                                    }
+                var ahora = DateTimeOffset.UtcNow;
+                var totalSesiones = actividades.Sum(a => a.Sesiones?.Count ?? 0);
 
-                                    <h3 class="h6 fw-bold border-top pt-3 mb-2">Sesiones Programadas:</h3>
-                                    @if (act.Sesiones == null || act.Sesiones.Count == 0)
-                                    {
-                                        <p class="text-muted small fst-italic mb-0">Sin sesiones asignadas.</p>
-                                    }
-                                    else
-                                    {
-                                        <div class="list-group list-group-flush">
-                                            @foreach (var sesion in act.Sesiones)
-                                            {
-                                                <div class="list-group-item px-0 py-3 border-0 border-bottom">
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <span class="fw-semibold">
-                                                            @if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
-                                                            {
-                                                                @ZonaHoraria.FormatearRango(sesion.FechaHoraInicio.Value, sesion.FechaHoraFin.Value)
-                                                            }
-                                                            else if (sesion.FechaHoraInicio.HasValue)
-                                                            {
-                                                                @ZonaHoraria.FormatearFechaHora(sesion.FechaHoraInicio.Value)
-                                                            }
-                                                        </span>
-                                                        <span class="badge bg-light text-dark border">
-                                                            @(sesion.CuposOcupados ?? 0) / @(sesion.CupoMaximo ?? 0) inscritos
-                                                        </span>
-                                                    </div>
+                <div class="itm-actividades-barra">
+                    <span>@actividades.Count actividades · @totalSesiones sesiones en total</span>
+                    <div class="itm-actividades-barra__acciones">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ExpandirTodas">Expandir todas</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ContraerTodas">Contraer todas</button>
+                    </div>
+                </div>
 
-                                                    <div class="d-flex flex-wrap gap-2 justify-content-end mt-2">
-                                                        @* RF-011: Ver inscritos de la sesión *@
-                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/inscritos")" class="btn btn-sm btn-outline-primary">
-                                                            Inscritos
-                                                        </a>
-                                                        @* RF-027: Asistencia manual *@
-                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/asistencia")" class="btn btn-sm btn-outline-success">
-                                                            Asistencia manual
-                                                        </a>
-                                                        @* RF-034 / RF-029: Notas y avisos *@
-                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/notas")" class="btn btn-sm btn-outline-secondary">
-                                                            Notas y avisos
-                                                        </a>
-                                                        @* RF-012: Generar QR de asistencia *@
-                                                        <a href="@($"/entrenador/sesiones/{sesion.Id}/qr")" class="btn btn-sm btn-itm-primario">
-                                                            Código QR
-                                                        </a>
-                                                    </div>
+                @foreach (var act in actividades)
+                {
+                    var sesiones = (act.Sesiones ?? new List<SesionResumenDto>()).OrderBy(s => s.FechaHoraInicio).ToList();
+                    var proxima = sesiones.FirstOrDefault(s => s.FechaHoraInicio >= ahora);
+                    var clave = act.EventoId ?? Guid.Empty;
+                    var abierta = _abiertas.Contains(clave);
+                    var mostrarTodas = _mostrarTodasSesiones.Contains(clave);
+                    var visibles = mostrarTodas ? sesiones : sesiones.Take(LimiteSesiones).ToList();
+
+                    <section class="itm-actividad" @key="clave">
+                        <button type="button"
+                                class="itm-actividad__cab"
+                                aria-expanded="@(abierta ? "true" : "false")"
+                                aria-controls="sesiones-@clave"
+                                @onclick="() => Alternar(clave)">
+                            <span class="itm-actividad__titulo">
+                                <h2>@act.Nombre</h2>
+                                <span class="itm-actividad__resumen">
+                                    @sesiones.Count @(sesiones.Count == 1 ? "sesión" : "sesiones")
+                                    @if (proxima != null && proxima.FechaHoraInicio.HasValue)
+                                    {
+                                        <span> · próxima: @ZonaHoraria.FormatearFechaHora(proxima.FechaHoraInicio.Value)</span>
+                                    }
+                                    else if (sesiones.Count > 0)
+                                    {
+                                        <span> · sin sesiones próximas</span>
+                                    }
+                                </span>
+                            </span>
+                            @if (act.EsRecurrente == true)
+                            {
+                                <span class="badge bg-light text-primary border border-primary">Recurrente</span>
+                            }
+                            <svg class="itm-actividad__chevron @(abierta ? "itm-actividad__chevron--abierta" : "")" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+
+                        @if (abierta)
+                        {
+                            <div id="sesiones-@clave" class="itm-actividad__cuerpo">
+                                @if (!string.IsNullOrWhiteSpace(act.Descripcion))
+                                {
+                                    <p class="itm-texto-libre">@act.Descripcion</p>
+                                }
+
+                                @if (sesiones.Count == 0)
+                                {
+                                    <p class="text-muted small fst-italic mt-3 mb-0">Sin sesiones asignadas.</p>
+                                }
+                                else
+                                {
+                                    <ul class="itm-sesiones" aria-label="Sesiones de @act.Nombre">
+                                        @foreach (var sesion in visibles)
+                                        {
+                                            var pasada = EsPasada(sesion, ahora);
+                                            <li class="itm-sesion @(pasada ? "itm-sesion--pasada" : "")" @key="sesion.Id ?? Guid.Empty">
+                                                <span class="itm-sesion__cuando">@TextoCuando(sesion)</span>
+                                                <span class="badge bg-light text-dark border">@(sesion.CuposOcupados ?? 0) / @(sesion.CupoMaximo ?? 0) inscritos</span>
+                                                <div class="itm-sesion__acciones">
+                                                    @* RF-011: Ver inscritos de la sesión *@
+                                                    <a href="@($"/entrenador/sesiones/{sesion.Id}/inscritos")" class="btn btn-sm btn-outline-primary">Inscritos</a>
+                                                    @* RF-027: Asistencia manual *@
+                                                    <a href="@($"/entrenador/sesiones/{sesion.Id}/asistencia")" class="btn btn-sm btn-outline-success">Asistencia manual</a>
+                                                    @* RF-034 / RF-029: Notas y avisos *@
+                                                    <a href="@($"/entrenador/sesiones/{sesion.Id}/notas")" class="btn btn-sm btn-outline-secondary">Notas y avisos</a>
+                                                    @* RF-012: Generar QR de asistencia *@
+                                                    <a href="@($"/entrenador/sesiones/{sesion.Id}/qr")" class="btn btn-sm btn-itm-primario">Código QR</a>
                                                 </div>
-                                            }
+                                            </li>
+                                        }
+                                    </ul>
+
+                                    @if (sesiones.Count > LimiteSesiones)
+                                    {
+                                        <div class="itm-mostrar-mas">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => AlternarMostrarTodas(clave)">
+                                                @(mostrarTodas ? "Mostrar menos" : $"Mostrar las {sesiones.Count} sesiones")
+                                            </button>
                                         </div>
                                     }
-                                </div>
+                                }
                             </div>
-                        </div>
-                    }
-                </div>
+                        }
+                    </section>
+                }
             }
         </ExitoTemplate>
     </EstadoDeCarga>
 </div>
 
 @code {
+    // Cuántas sesiones se muestran por actividad antes de pedir "Mostrar más" (una actividad recurrente puede tener decenas)
+    private const int LimiteSesiones = 8;
+
     private FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>? _estado;
+    private IReadOnlyList<ActividadAsignadaDto> actividades = Array.Empty<ActividadAsignadaDto>();
+
+    // Todas las actividades empiezan colapsadas: la pantalla muestra el resumen de cada una, no todas sus sesiones
+    private readonly HashSet<Guid> _abiertas = new();
+    private readonly HashSet<Guid> _mostrarTodasSesiones = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,5 +155,35 @@
     {
         _estado = FitnessFrontend.Servicios.Infraestructura.EstadoDeCarga<IReadOnlyList<ActividadAsignadaDto>>.Cargando();
         _estado = await EventosService.ObtenerMisActividadesAsync();
+        actividades = _estado.EsExito && _estado.Valor != null ? _estado.Valor : Array.Empty<ActividadAsignadaDto>();
+    }
+
+    private void Alternar(Guid eventoId)
+    {
+        if (!_abiertas.Remove(eventoId)) _abiertas.Add(eventoId);
+    }
+
+    private void AlternarMostrarTodas(Guid eventoId)
+    {
+        if (!_mostrarTodasSesiones.Remove(eventoId)) _mostrarTodasSesiones.Add(eventoId);
+    }
+
+    private void ExpandirTodas()
+    {
+        foreach (var a in actividades) _abiertas.Add(a.EventoId ?? Guid.Empty);
+    }
+
+    private void ContraerTodas() => _abiertas.Clear();
+
+    private static bool EsPasada(SesionResumenDto sesion, DateTimeOffset ahora) =>
+        (sesion.FechaHoraFin ?? sesion.FechaHoraInicio ?? DateTimeOffset.MinValue) < ahora;
+
+    private string TextoCuando(SesionResumenDto sesion)
+    {
+        if (sesion.FechaHoraInicio.HasValue && sesion.FechaHoraFin.HasValue)
+            return ZonaHoraria.FormatearRango(sesion.FechaHoraInicio.Value, sesion.FechaHoraFin.Value);
+        if (sesion.FechaHoraInicio.HasValue)
+            return ZonaHoraria.FormatearFechaHora(sesion.FechaHoraInicio.Value);
+        return "Sin fecha";
     }
 }

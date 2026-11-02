@@ -82,7 +82,7 @@
                     <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
                         @foreach (var nota in _notas)
                         {
-                            <div class="list-group-item px-0 py-2 border-bottom" @key="nota.Id">
+                            <div class="list-group-item px-0 py-2 border-bottom itm-texto-libre" @key="nota.Id">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="badge @(nota.Tipo == "Incidencia" ? "bg-danger" : "bg-info text-dark")">
                                         @nota.Tipo
@@ -92,7 +92,7 @@
                                     </span>
                                 </div>
                                 @* Renderizado seguro como texto plano (RF-034 escape) *@
-                                <p class="mb-1 mt-2 text-dark" style="white-space: pre-wrap; font-size: 13px;">@nota.Contenido</p>
+                                <p class="mb-1 mt-2 text-dark itm-texto-libre" style="white-space: pre-wrap; font-size: 13px;">@nota.Contenido</p>
                                 <span class="text-muted" style="font-size: 11px;">Por: @nota.CreadaPorNombre</span>
                             </div>
                         }
@@ -149,7 +149,7 @@
                     <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
                         @foreach (var anuncio in _anuncios)
                         {
-                            <div class="list-group-item px-0 py-2 border-bottom" @key="anuncio.Id">
+                            <div class="list-group-item px-0 py-2 border-bottom itm-texto-libre" @key="anuncio.Id">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="badge bg-primary-subtle text-primary fw-bold">Aviso</span>
                                     <span class="text-muted" style="font-size: 11px;">
@@ -157,7 +157,7 @@
                                     </span>
                                 </div>
                                 @* Renderizado seguro como texto plano (RF-029 escape) *@
-                                <p class="mb-1 mt-2 text-dark" style="white-space: pre-wrap; font-size: 13px;">@anuncio.Mensaje</p>
+                                <p class="mb-1 mt-2 text-dark itm-texto-libre" style="white-space: pre-wrap; font-size: 13px;">@anuncio.Mensaje</p>
                                 <span class="text-muted" style="font-size: 11px;">Publicado por: @anuncio.PublicadoPorNombre</span>
                             </div>
                         }

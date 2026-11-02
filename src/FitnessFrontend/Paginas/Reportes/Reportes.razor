@@ -92,12 +92,11 @@
         </li>
     </ul>
 
+    @* La región cambia de contenido al cargar, pero conserva su altura (.itm-area-estable): la pantalla no salta *@
+    <div class="itm-area-estable">
     @if (_cargando)
     {
-        <div role="status" aria-busy="true">
-            <span class="itm-solo-lectores">Cargando datos del reporte...</span>
-            <EsqueletoTarjetas Cantidad="4" Mensaje="Cargando reporte..." />
-        </div>
+        <EsqueletoReporte Filas="8" />
     }
     else
     {
@@ -364,6 +363,7 @@
             </div>
         }
     }
+    </div>
 </div>
 
 @code {

@@ -167,7 +167,7 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 .badge { border-radius: var(--radius-md); font: 600 13px/16px var(--font-sans); padding: var(--space-1) var(--space-3); }
 
 /* ------------------------------------------------------------------ Insignia de estado (A · tinta suave): icono + palabra, nunca solo color */
-.itm-estado { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 8px; border-radius: var(--radius-md); font: 600 13px/16px var(--font-sans); background: var(--t); color: var(--x); white-space: nowrap; }
+.itm-estado { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 8px; border-radius: var(--radius-md); font: 600 13px/16px var(--font-sans); background: var(--t); color: var(--x); max-width: 100%; white-space: normal; }
 .itm-estado .itm-icono { width: 16px; height: 16px; }
 .itm-estado--ok { --t: var(--estado-ok-fondo); --x: var(--estado-ok-texto); }
 .itm-estado--espera { --t: var(--estado-espera-fondo); --x: var(--estado-espera-texto); }
@@ -416,6 +416,63 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
 @media (min-width: 720px) {
   .itm-modal--hoja { align-items: center; }
   .itm-modal--hoja .itm-modal__caja { border-radius: var(--radius-lg); padding-bottom: var(--space-5); }
+}
+
+/* ------------------------------------------------------------------ Estabilidad de la página al cargar
+   La región que cambia al cargar conserva una altura mínima: así el documento nunca se encoge a una altura menor que la
+   posición de scroll del usuario y el navegador no lo sube al cambiar de pestaña o de semana. */
+.itm-area-estable { min-height: 560px; }
+.itm-esqueleto-reporte__cab, .itm-esqueleto-reporte__fila { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr; gap: var(--space-4); align-items: center; }
+.itm-esqueleto-reporte__cab { padding-bottom: var(--space-3); border-bottom: 2px solid var(--gris-itm); margin-bottom: var(--space-2); }
+.itm-esqueleto-reporte__fila { padding: var(--space-3) 0; border-bottom: 1px solid var(--gris-itm); }
+.itm-esqueleto-reporte__fila .itm-esq--linea, .itm-esqueleto-reporte__cab .itm-esq--linea { height: 14px; }
+
+/* Vista semanal: cada día es su propia columna (no una fila de tarjetas). Así un día vacío no estira a los demás ni
+   los desplaza hacia abajo. Escritorio: 7 columnas; tableta: 2 columnas en flujo; celular: una columna. */
+.itm-semana { display: flex; flex-direction: column; gap: var(--space-3); align-items: stretch; }
+.itm-semana__dia { min-width: 0; }
+@media (min-width: 720px) and (max-width: 1199.98px) {
+  .itm-semana { display: block; column-count: 2; column-gap: var(--space-3); }
+  .itm-semana__dia { break-inside: avoid; margin-bottom: var(--space-3); }
+}
+@media (min-width: 1200px) {
+  .itm-semana { flex-direction: row; align-items: flex-start; }
+  .itm-semana__dia { flex: 1 1 0; }
+}
+
+/* ------------------------------------------------------------------ Texto escrito por personas (notas, avisos, descripciones)
+   Nunca debe salir del recuadro: palabras largas o sin espacios se parten. */
+.itm-texto-libre { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+
+/* ------------------------------------------------------------------ Mis actividades del entrenador
+   Cada actividad es un bloque colapsable con resumen; sus sesiones se ven en una lista compacta, no todas abiertas. */
+.itm-actividades-barra { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); font: 400 14px/20px var(--font-texto); color: var(--texto-suave); }
+.itm-actividades-barra__acciones { display: flex; gap: var(--space-2); }
+.itm-actividad { background: var(--superficie); border: 1px solid var(--gris-itm); border-radius: var(--radius-md); margin-bottom: var(--space-3); box-shadow: var(--sombra-tarjeta); }
+.itm-actividad__cab { width: 100%; min-height: var(--tap); display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: transparent; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer; color: inherit; }
+.itm-actividad__cab:hover { background: var(--superficie-panel); }
+.itm-actividad__cab:focus-visible { outline: 3px solid var(--foco); outline-offset: -3px; }
+.itm-actividad__titulo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.itm-actividad__titulo h2 { margin: 0; font: 700 17px/22px var(--font-sans); color: var(--azul-itm); overflow-wrap: anywhere; }
+.itm-actividad__resumen { font: 400 13px/18px var(--font-texto); color: var(--texto-suave); }
+.itm-actividad__chevron { flex: none; width: 20px; height: 20px; transition: transform .15s ease-out; }
+.itm-actividad__chevron--abierta { transform: rotate(180deg); }
+.itm-actividad__cuerpo { padding: 0 var(--space-4) var(--space-4); border-top: 1px solid var(--gris-itm); }
+.itm-actividad__cuerpo > .itm-texto-libre { margin: var(--space-3) 0 0; font: 400 14px/20px var(--font-texto); color: var(--texto-suave); }
+.itm-sesiones { list-style: none; margin: var(--space-2) 0 0; padding: 0; }
+.itm-sesion { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--gris-itm); }
+.itm-sesion:last-child { border-bottom: 0; }
+.itm-sesion__cuando { min-width: 0; font: 600 14px/20px var(--font-sans); overflow-wrap: anywhere; }
+.itm-sesion--pasada { opacity: .6; }
+.itm-sesion__acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.itm-sesion__acciones .btn { min-height: 40px; }
+/* Botón verde de "Asistencia manual" (el tema no lo definía y se veía como texto): mismo tamaño que los demás */
+.btn-outline-success { background: var(--superficie); color: var(--estado-ok-texto); border: 2px solid var(--estado-ok-texto); }
+.btn-outline-success:hover:not(:disabled) { background: var(--estado-ok-fondo); color: var(--estado-ok-texto); }
+.itm-mostrar-mas { margin-top: var(--space-3); }
+@media (min-width: 720px) {
+  .itm-sesion { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .itm-sesion__acciones { grid-column: auto; justify-content: flex-end; }
 }
 
 /* Clases utilitarias de dimensiones (M-08) */

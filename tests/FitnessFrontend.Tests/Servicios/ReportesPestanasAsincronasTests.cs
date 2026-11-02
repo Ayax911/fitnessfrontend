@@ -99,4 +99,18 @@ public class ReportesPestanasAsincronasTests : BunitContext
             Assert.Empty(cut.FindAll(".itm-esq"));
         }, TimeSpan.FromSeconds(3));
     }
+
+    // Observación de uso (2026-11-02): al cambiar de pestaña la pantalla se subía al inicio. La región que cambia debe
+    // conservar su altura y mostrar un esqueleto con forma de tabla (no reemplazar la página entera).
+    [Fact]
+    public void AlCambiarDePestana_LaRegionEstableConservaSuAlturaYMuestraEsqueleto()
+    {
+        var cut = Preparar();
+
+        IrAPestana(cut, "Ocupación");
+
+        Assert.NotEmpty(cut.FindAll(".itm-area-estable"));
+        cut.WaitForAssertion(() => Assert.Contains("Yoga Vespertino", cut.Markup), TimeSpan.FromSeconds(3));
+        Assert.NotEmpty(cut.FindAll(".itm-area-estable"));
+    }
 }

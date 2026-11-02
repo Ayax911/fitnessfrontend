@@ -58,10 +58,10 @@
         </button>
     </div>
 
+    <div class="itm-area-estable">
     @if (_cargando)
     {
-        <div role="status" aria-busy="true" class="mb-4">
-            <span class="itm-solo-lectores">Cargando programación de la semana...</span>
+        <div class="mb-4">
             <EsqueletoTarjetas Cantidad="7" Mensaje="Cargando programación de la semana..." />
         </div>
     }
@@ -75,7 +75,7 @@
     else
     {
         @* Cuadrícula semanal: en celular lista vertical por día; en desktop columnas *@
-        <div class="row g-3">
+        <div class="itm-semana">
             @for (int i = 0; i < 7; i++)
             {
                 var diaActual = InicioSemanaLocal.AddDays(i).Date;
@@ -88,8 +88,8 @@
                     .Where(b => ZonaHoraria.AHoraLocal(b.Desde).Date <= diaActual && ZonaHoraria.AHoraLocal(b.Hasta).Date >= diaActual)
                     .ToList();
 
-                <div class="col-12 col-md-6 col-xl">
-                    <div class="card-itm h-100 p-3" style="min-height: 220px; background: @(diaActual == DateTime.UtcNow.Date ? "#f0f7ff" : "#ffffff"); border: 1px solid @(diaActual == DateTime.UtcNow.Date ? "var(--azul-itm)" : "var(--borde-tarjeta)");">
+                <div class="itm-semana__dia">
+                    <div class="card-itm p-3" style="background: @(diaActual == DateTime.UtcNow.Date ? "#f0f7ff" : "#ffffff"); border: 1px solid @(diaActual == DateTime.UtcNow.Date ? "var(--azul-itm)" : "var(--borde-tarjeta)");">
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                             <span style="font-weight: 700; font-size: 14px; text-transform: capitalize;">
                                 @diaActual.ToString("dddd", new System.Globalization.CultureInfo("es-CO"))
@@ -119,7 +119,7 @@
                         @* Sesiones del día *@
                         @if (sesionesDelDia.Count == 0 && bloqueosDelDia.Count == 0)
                         {
-                            <p class="text-muted small my-auto text-center py-3">Sin actividades</p>
+                            <p class="text-muted small text-center mb-0 py-2">Sin actividades</p>
                         }
                         else
                         {
@@ -178,6 +178,7 @@
             }
         </div>
     }
+    </div>
 </div>
 
 @code {

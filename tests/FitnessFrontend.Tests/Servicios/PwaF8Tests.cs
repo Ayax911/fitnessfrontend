@@ -17,7 +17,7 @@ public class PwaF8Tests
         using var doc = JsonDocument.Parse(json);
         var raiz = doc.RootElement;
 
-        Assert.Equal("Gimnasio ITM — Bienestar Universitario", raiz.GetProperty("name").GetString());
+        Assert.Equal("Reservas eventos ITM", raiz.GetProperty("name").GetString());
         Assert.Equal("standalone", raiz.GetProperty("display").GetString());
         Assert.Equal("#011C5B", raiz.GetProperty("theme_color").GetString());
         Assert.Equal("#011C5B", raiz.GetProperty("background_color").GetString());
