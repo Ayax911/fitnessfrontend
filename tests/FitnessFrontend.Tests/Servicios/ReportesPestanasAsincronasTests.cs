@@ -51,6 +51,17 @@ public class ReportesPestanasAsincronasTests : BunitContext
         public Task<EstadoDeCarga<ReporteUsoPlataformaDto>> ConsultarUsoPlataformaAsync(DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
             Lento(new ReporteUsoPlataformaDto(10, 50, 123, 5));
 
+        public Task<EstadoDeCarga<IReadOnlyList<ReporteResumenMensualDto>>> ConsultarResumenMensualAsync(DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
+            Lento<IReadOnlyList<ReporteResumenMensualDto>>(new List<ReporteResumenMensualDto> { new(new DateTime(2026, 10, 1), 37, 2, 410, 12, 388, 1520, 291, 44) });
+
+        public Task<EstadoDeCarga<IReadOnlyList<ReporteUsoPantallasDto>>> ConsultarUsoPantallasAsync(DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
+            Lento<IReadOnlyList<ReporteUsoPantallasDto>>(new List<ReporteUsoPantallasDto>
+            {
+                new("/admin/reportes", "escritorio", "Administrador", 6),
+                new("/eventos", "movil", "Usuario", 90),
+                new("/login", "movil", "anonimo", 4)
+            });
+
         public Task<EstadoDeCarga<string>> DescargarCsvAsync(string tipo, DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
             Lento("﻿a;b");
     }
@@ -112,5 +123,58 @@ public class ReportesPestanasAsincronasTests : BunitContext
         Assert.NotEmpty(cut.FindAll(".itm-area-estable"));
         cut.WaitForAssertion(() => Assert.Contains("Yoga Vespertino", cut.Markup), TimeSpan.FromSeconds(3));
         Assert.NotEmpty(cut.FindAll(".itm-area-estable"));
+    }
+
+    // Informes a futuro: resumen mensual (hasta 24 meses) y uso de pantallas (telemetría anónima)
+    [Fact]
+    public void ResumenMensual_MuestraLasCifrasDelMes()
+    {
+        var cut = Preparar();
+
+        IrAPestana(cut, "Resumen mensual");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("1520", cut.Markup);  // ingresos generales
+            Assert.Contains("291", cut.Markup);   // usuarios activos
+            Assert.Empty(cut.FindAll(".itm-esq"));
+        }, TimeSpan.FromSeconds(3));
+        Assert.Contains("24 meses", cut.Markup);
+    }
+
+    [Fact]
+    public void UsoDePantallas_MuestraTotalesPorcentajeDeCelularYRolesLegibles()
+    {
+        var cut = Preparar();
+
+        IrAPestana(cut, "Uso de pantallas");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("/admin/reportes", cut.Markup);
+            Assert.Contains("Sin sesión", cut.Markup);   // el rol "anonimo" se muestra legible
+            Assert.Empty(cut.FindAll(".itm-esq"));
+        }, TimeSpan.FromSeconds(3));
+        Assert.Contains(">100<", cut.Markup.Replace(" ", ""));      // 6 + 90 + 4 visitas
+        Assert.Contains("94", cut.Markup);                           // 94 % desde el celular (94 de 100)
+        Assert.Contains("no identifican personas", cut.Markup);
+    }
+
+    [Fact]
+    public void AlEntrarAlResumenMensual_ElRangoPasaA12MesesYAlSalirVuelveA14Dias()
+    {
+        var cut = Preparar();
+        var hoy = DateTime.Today;
+
+        IrAPestana(cut, "Resumen mensual");
+        cut.WaitForAssertion(() => Assert.Contains("1520", cut.Markup), TimeSpan.FromSeconds(3));
+        var primerMes = new DateTime(hoy.Year, hoy.Month, 1).AddMonths(-11);
+        Assert.Equal(primerMes.ToString("yyyy-MM-dd"), cut.Find("#fechaDesde").GetAttribute("value"));
+        Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Últimos 12 meses");
+
+        IrAPestana(cut, "Ocupación");   // un reporte limitado a 90 días
+        cut.WaitForAssertion(() => Assert.Contains("Yoga Vespertino", cut.Markup), TimeSpan.FromSeconds(3));
+        Assert.Equal(hoy.AddDays(-14).ToString("yyyy-MM-dd"), cut.Find("#fechaDesde").GetAttribute("value"));
+        Assert.DoesNotContain(cut.FindAll("button"), b => b.TextContent.Trim() == "Últimos 12 meses");
     }
 }

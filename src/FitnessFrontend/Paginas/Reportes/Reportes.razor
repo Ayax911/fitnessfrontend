@@ -36,6 +36,10 @@
                     <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoUltimos7Dias">Últimos 7 días</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoEsteMes">Este mes</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoMesAnterior">Mes anterior</button>
+                    @if (_pestañaActiva == "Mensual")
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm" style="min-height: 38px;" @onclick="AtajoUltimos12Meses">Últimos 12 meses</button>
+                    }
                 </div>
             </div>
         </div>
@@ -88,6 +92,22 @@
                     role="tab"
                     @onclick="@(() => CambiarPestana("Uso"))">
                 Uso de plataforma
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Mensual" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Mensual"))">
+                Resumen mensual
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(_pestañaActiva == "Pantallas" ? "active fw-bold" : "")"
+                    style="min-height: 48px;"
+                    role="tab"
+                    @onclick="@(() => CambiarPestana("Pantallas"))">
+                Uso de pantallas
             </button>
         </li>
     </ul>
@@ -362,6 +382,124 @@
                 }
             </div>
         }
+
+        @* Pestaña 6: Resumen mensual (informes semestrales y anuales; hasta 24 meses) *@
+        @if (_pestañaActiva == "Mensual")
+        {
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Resumen mensual</h2>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvMensual">
+                        Descargar CSV
+                    </button>
+                </div>
+                <p class="text-muted small">Una fila por mes calendario (el backend cuenta los meses en UTC). Admite hasta 24 meses; los demás reportes, 90 días. «Usuarios activos» son personas distintas en el mes, por eso no se suman entre meses.</p>
+
+                @if (_reporteMensual.Count == 0)
+                {
+                    <p class="text-muted small">No hay datos en el rango seleccionado.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <caption class="visually-hidden">Resumen mensual de actividad</caption>
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Mes</th>
+                                    <th scope="col" class="text-end">Sesiones</th>
+                                    <th scope="col" class="text-end">Sesiones canceladas</th>
+                                    <th scope="col" class="text-end">Reservas</th>
+                                    <th scope="col" class="text-end">Cancelaciones</th>
+                                    <th scope="col" class="text-end">Asistencias</th>
+                                    <th scope="col" class="text-end">Ingresos generales</th>
+                                    <th scope="col" class="text-end">Usuarios activos</th>
+                                    <th scope="col" class="text-end">Registros nuevos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var m in _reporteMensual)
+                                {
+                                    <tr @key="m.Mes">
+                                        <td class="fw-semibold">@m.Mes.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-CO"))</td>
+                                        <td class="text-end">@m.SesionesProgramadas</td>
+                                        <td class="text-end">@m.SesionesCanceladas</td>
+                                        <td class="text-end">@m.ReservasCreadas</td>
+                                        <td class="text-end">@m.Cancelaciones</td>
+                                        <td class="text-end">@m.AsistenciasSesion</td>
+                                        <td class="text-end">@m.IngresosGenerales</td>
+                                        <td class="text-end">@m.UsuariosActivos</td>
+                                        <td class="text-end">@m.RegistrosNuevos</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Pestaña 7: Uso de pantallas (telemetría anónima del cliente) *@
+        @if (_pestañaActiva == "Pantallas")
+        {
+            var totalVistas = _reportePantallas.Sum(p => p.Vistas);
+            var vistasMovil = _reportePantallas.Where(p => p.Dispositivo == "movil").Sum(p => p.Vistas);
+            <div class="card-itm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-bold mb-0">Uso de pantallas</h2>
+                    <button type="button" class="btn btn-outline-success btn-sm" style="min-height: 40px;" @onclick="ExportarCsvPantallas">
+                        Descargar CSV
+                    </button>
+                </div>
+                <p class="text-muted small">Datos anónimos: cuentan visitas por pantalla, dispositivo y rol; no identifican personas. Las rutas con identificadores se agrupan como «{id}».</p>
+
+                @if (_reportePantallas.Count == 0)
+                {
+                    <p class="text-muted small">Aún no hay visitas registradas en el rango seleccionado.</p>
+                }
+                else
+                {
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 border rounded text-center bg-light">
+                                <div class="text-muted small">Visitas a pantallas</div>
+                                <div class="h3 fw-bold text-primary mb-0 mt-1">@totalVistas</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="p-3 border rounded text-center bg-light">
+                                <div class="text-muted small">Desde el celular</div>
+                                <div class="h3 fw-bold text-success mb-0 mt-1">@(totalVistas == 0 ? 0 : (int)Math.Round(100.0 * vistasMovil / totalVistas)) %</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <caption class="visually-hidden">Visitas por pantalla, dispositivo y rol</caption>
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Pantalla</th>
+                                    <th scope="col">Dispositivo</th>
+                                    <th scope="col">Rol</th>
+                                    <th scope="col" class="text-end">Visitas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in _reportePantallas)
+                                {
+                                    <tr @key="@($"{p.Pantalla}|{p.Dispositivo}|{p.Rol}")">
+                                        <td><code>@p.Pantalla</code></td>
+                                        <td>@p.Dispositivo</td>
+                                        <td>@(p.Rol == "anonimo" ? "Sin sesión" : p.Rol)</td>
+                                        <td class="text-end">@p.Vistas</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
     }
     </div>
 </div>
@@ -379,6 +517,8 @@
     private List<ReporteInasistenciasEventoDto> _reporteInasistencias = new();
     private List<ReporteHorasPicoDto> _reporteHorasPico = new();
     private ReporteUsoPlataformaDto? _reporteUso;
+    private List<ReporteResumenMensualDto> _reporteMensual = new();
+    private List<ReporteUsoPantallasDto> _reportePantallas = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -389,6 +529,32 @@
     private async Task CambiarPestana(string pestana)
     {
         _pestañaActiva = pestana;
+
+        // El resumen mensual admite hasta 24 meses; los demás reportes, 90 días. Se ajusta el rango para no mostrar un error inmediato.
+        var dias = (_fechaHastaLocal - _fechaDesdeLocal).TotalDays;
+        if (pestana == "Mensual" && dias < 60)
+        {
+            AjustarUltimos12Meses();
+        }
+        else if (pestana != "Mensual" && dias > 90)
+        {
+            _fechaDesdeLocal = DateTime.Today.AddDays(-14);
+            _fechaHastaLocal = DateTime.Today;
+        }
+
+        await CargarReporteActual();
+    }
+
+    private void AjustarUltimos12Meses()
+    {
+        var hoy = DateTime.Today;
+        _fechaDesdeLocal = new DateTime(hoy.Year, hoy.Month, 1).AddMonths(-11);
+        _fechaHastaLocal = hoy;
+    }
+
+    private async Task AtajoUltimos12Meses()
+    {
+        AjustarUltimos12Meses();
         await CargarReporteActual();
     }
 
@@ -428,6 +594,16 @@
                     var resPico = await ReportesService.ConsultarHorasPicoAsync(desdeUtc, hastaUtc);
                     if (resPico.EsExito) _reporteHorasPico = (resPico.Valor ?? new List<ReporteHorasPicoDto>()).ToList();
                     else _errorRangoFechas = resPico.MensajeError;
+                    break;
+                case "Mensual":
+                    var resMensual = await ReportesService.ConsultarResumenMensualAsync(desdeUtc, hastaUtc);
+                    if (resMensual.EsExito) _reporteMensual = (resMensual.Valor ?? new List<ReporteResumenMensualDto>()).ToList();
+                    else _errorRangoFechas = resMensual.MensajeError;
+                    break;
+                case "Pantallas":
+                    var resPantallas = await ReportesService.ConsultarUsoPantallasAsync(desdeUtc, hastaUtc);
+                    if (resPantallas.EsExito) _reportePantallas = (resPantallas.Valor ?? new List<ReporteUsoPantallasDto>()).ToList();
+                    else _errorRangoFechas = resPantallas.MensajeError;
                     break;
                 case "Uso":
                     var resUso = await ReportesService.ConsultarUsoPlataformaAsync(desdeUtc, hastaUtc);
@@ -521,6 +697,26 @@
         if (res.EsExito && res.Valor != null)
         {
             await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-uso-plataforma-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
+    }
+
+    private async Task ExportarCsvMensual()
+    {
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("mensual", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
+        {
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-resumen-mensual-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
+        }
+    }
+
+    private async Task ExportarCsvPantallas()
+    {
+        var (desdeUtc, hastaUtc) = ObtenerRangoFechasUtc();
+        var res = await ReportesService.DescargarCsvAsync("pantallas", desdeUtc, hastaUtc);
+        if (res.EsExito && res.Valor != null)
+        {
+            await JS.InvokeVoidAsync("itmDescarga.descargarTexto", $"reporte-uso-pantallas-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv;charset=utf-8", res.Valor);
         }
     }
 }

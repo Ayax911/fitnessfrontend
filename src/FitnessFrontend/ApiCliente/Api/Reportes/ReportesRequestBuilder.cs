@@ -4,6 +4,8 @@ using FitnessFrontend.ApiCliente.Api.Reportes.AsistenciaPorSesion;
 using FitnessFrontend.ApiCliente.Api.Reportes.HorasPico;
 using FitnessFrontend.ApiCliente.Api.Reportes.InasistenciasPorEvento;
 using FitnessFrontend.ApiCliente.Api.Reportes.Ocupacion;
+using FitnessFrontend.ApiCliente.Api.Reportes.ResumenMensual;
+using FitnessFrontend.ApiCliente.Api.Reportes.UsoPantallas;
 using FitnessFrontend.ApiCliente.Api.Reportes.UsoPlataforma;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
@@ -38,6 +40,16 @@ namespace FitnessFrontend.ApiCliente.Api.Reportes
         public global::FitnessFrontend.ApiCliente.Api.Reportes.Ocupacion.OcupacionRequestBuilder Ocupacion
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Reportes.Ocupacion.OcupacionRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The resumenMensual property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Reportes.ResumenMensual.ResumenMensualRequestBuilder ResumenMensual
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Reportes.ResumenMensual.ResumenMensualRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The usoPantallas property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Reportes.UsoPantallas.UsoPantallasRequestBuilder UsoPantallas
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Reportes.UsoPantallas.UsoPantallasRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The usoPlataforma property</summary>
         public global::FitnessFrontend.ApiCliente.Api.Reportes.UsoPlataforma.UsoPlataformaRequestBuilder UsoPlataforma

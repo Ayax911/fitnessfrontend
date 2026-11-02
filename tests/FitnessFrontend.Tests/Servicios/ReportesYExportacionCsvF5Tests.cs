@@ -74,6 +74,14 @@ public class ReportesYExportacionCsvF5Tests : BunitContext
             DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<ReporteUsoPlataformaDto>.Correcto(new ReporteUsoPlataformaDto(10, 50, 120, 5)));
 
+        public Task<EstadoDeCarga<IReadOnlyList<ReporteResumenMensualDto>>> ConsultarResumenMensualAsync(
+            DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<ReporteResumenMensualDto>>.Correcto(new List<ReporteResumenMensualDto>()));
+
+        public Task<EstadoDeCarga<IReadOnlyList<ReporteUsoPantallasDto>>> ConsultarUsoPantallasAsync(
+            DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
+            Task.FromResult(EstadoDeCarga<IReadOnlyList<ReporteUsoPantallasDto>>.Correcto(new List<ReporteUsoPantallasDto>()));
+
         public Task<EstadoDeCarga<string>> DescargarCsvAsync(
             string tipo, DateTimeOffset desde, DateTimeOffset hasta, CancellationToken ct = default) =>
             Task.FromResult(EstadoDeCarga<string>.Correcto("\uFEFFheader1;header2\r\nval1;val2"));

@@ -315,6 +315,92 @@ public class ReportesClienteService : IReportesClienteService
         }
     }
 
+    public async Task<EstadoDeCarga<IReadOnlyList<ReporteResumenMensualDto>>> ConsultarResumenMensualAsync(
+        DateTimeOffset desde,
+        DateTimeOffset hasta,
+        CancellationToken ct = default)
+    {
+        return await LeerListaAsync<ReporteResumenMensualBackend, ReporteResumenMensualDto>(
+            () => _apiClient.Api.Reportes.ResumenMensual.GetAsync(q =>
+            {
+                q.QueryParameters.Desde = desde;
+                q.QueryParameters.Hasta = hasta;
+            }, ct),
+            d => new ReporteResumenMensualDto(
+                d.Mes.ToDateTime(TimeOnly.MinValue),
+                d.SesionesProgramadas,
+                d.SesionesCanceladas,
+                d.ReservasCreadas,
+                d.Cancelaciones,
+                d.AsistenciasSesion,
+                d.IngresosGenerales,
+                d.UsuariosActivos,
+                d.RegistrosNuevos),
+            "el resumen mensual",
+            ct);
+    }
+
+    public async Task<EstadoDeCarga<IReadOnlyList<ReporteUsoPantallasDto>>> ConsultarUsoPantallasAsync(
+        DateTimeOffset desde,
+        DateTimeOffset hasta,
+        CancellationToken ct = default)
+    {
+        return await LeerListaAsync<ReporteUsoPantallasBackend, ReporteUsoPantallasDto>(
+            () => _apiClient.Api.Reportes.UsoPantallas.GetAsync(q =>
+            {
+                q.QueryParameters.Desde = desde;
+                q.QueryParameters.Hasta = hasta;
+            }, ct),
+            d => new ReporteUsoPantallasDto(d.Pantalla ?? string.Empty, d.Dispositivo ?? string.Empty, d.Rol ?? string.Empty, d.Vistas),
+            "el uso de pantallas",
+            ct);
+    }
+
+    // Lectura común de un reporte que el backend devuelve como lista JSON dentro de un Stream
+    private static async Task<EstadoDeCarga<IReadOnlyList<TDestino>>> LeerListaAsync<TOrigen, TDestino>(
+        Func<Task<Stream?>> consultar,
+        Func<TOrigen, TDestino> mapear,
+        string descripcion,
+        CancellationToken ct)
+    {
+        try
+        {
+            var stream = await consultar();
+            if (stream == null)
+            {
+                return EstadoDeCarga<IReadOnlyList<TDestino>>.Correcto(new List<TDestino>());
+            }
+
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            var json = await reader.ReadToEndAsync(ct);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return EstadoDeCarga<IReadOnlyList<TDestino>>.Correcto(new List<TDestino>());
+            }
+
+            var filas = JsonSerializer.Deserialize<List<TOrigen>>(json, _jsonOptions) ?? new();
+            return EstadoDeCarga<IReadOnlyList<TDestino>>.Correcto(filas.Select(mapear).ToList());
+        }
+        catch (ErrorDetalleDto errorEx)
+        {
+            return EstadoDeCarga<IReadOnlyList<TDestino>>.Fallo(
+                errorEx.Mensaje ?? $"No fue posible consultar {descripcion}.",
+                errorEx.CodigoError);
+        }
+        catch (ApiException apiEx)
+        {
+            return EstadoDeCarga<IReadOnlyList<TDestino>>.Fallo(
+                $"Error del servidor al consultar reporte ({apiEx.ResponseStatusCode}).",
+                apiEx.ResponseStatusCode.ToString());
+        }
+        catch (Exception ex)
+        {
+            return EstadoDeCarga<IReadOnlyList<TDestino>>.Fallo(
+                $"Error de conexión al consultar reporte: {ex.Message}",
+                "ErrorConexion");
+        }
+    }
+
     public async Task<EstadoDeCarga<string>> DescargarCsvAsync(
         string reporte,
         DateTimeOffset desde,
@@ -350,6 +436,18 @@ public class ReportesClienteService : IReportesClienteService
                     q.QueryParameters.Formato = "csv";
                 }, ct),
                 "uso" => await _apiClient.Api.Reportes.UsoPlataforma.GetAsync(q =>
+                {
+                    q.QueryParameters.Desde = desde;
+                    q.QueryParameters.Hasta = hasta;
+                    q.QueryParameters.Formato = "csv";
+                }, ct),
+                "mensual" => await _apiClient.Api.Reportes.ResumenMensual.GetAsync(q =>
+                {
+                    q.QueryParameters.Desde = desde;
+                    q.QueryParameters.Hasta = hasta;
+                    q.QueryParameters.Formato = "csv";
+                }, ct),
+                "pantallas" => await _apiClient.Api.Reportes.UsoPantallas.GetAsync(q =>
                 {
                     q.QueryParameters.Desde = desde;
                     q.QueryParameters.Hasta = hasta;
@@ -437,5 +535,26 @@ public class ReportesClienteService : IReportesClienteService
         public int UsuariosActivos { get; set; }
         public int ReservasCreadas { get; set; }
         public int Cancelaciones { get; set; }
+    }
+
+    private sealed class ReporteResumenMensualBackend
+    {
+        public DateOnly Mes { get; set; }
+        public int SesionesProgramadas { get; set; }
+        public int SesionesCanceladas { get; set; }
+        public int ReservasCreadas { get; set; }
+        public int Cancelaciones { get; set; }
+        public int AsistenciasSesion { get; set; }
+        public int IngresosGenerales { get; set; }
+        public int UsuariosActivos { get; set; }
+        public int RegistrosNuevos { get; set; }
+    }
+
+    private sealed class ReporteUsoPantallasBackend
+    {
+        public string? Pantalla { get; set; }
+        public string? Dispositivo { get; set; }
+        public string? Rol { get; set; }
+        public int Vistas { get; set; }
     }
 }

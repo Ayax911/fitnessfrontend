@@ -2,6 +2,12 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
+## Métricas e informes a futuro (rama `feat/metricas-informes`)
+- **Kiota regenerado** con `GET /api/reportes/resumen-mensual`, `GET /api/reportes/uso-pantallas` y `POST /api/telemetria/vistas`.
+- **Reportes → "Resumen mensual":** una fila por mes (sesiones, reservas, cancelaciones, asistencias, ingresos generales, usuarios activos y registros nuevos), hasta 24 meses, con atajo "Últimos 12 meses" y CSV. Al entrar a la pestaña el rango pasa a 12 meses; al volver a un reporte de 90 días, a 14 días (así no aparece un error de rango).
+- **Reportes → "Uso de pantallas":** visitas por pantalla, dispositivo y rol, con el total y el porcentaje desde el celular, y CSV. El rol "anonimo" se muestra como "Sin sesión".
+- Pruebas: `ReportesPestanasAsincronasTests` (pestañas nuevas y ajuste del rango).
+
 ## UX · Observaciones de la prueba manual (2026-11-02)
 - **Pantallas del estudiante con el diseño del artifact "Pantallas del estudiante"** (antes solo se había aplicado la ventana de resultado):
   - **Actividades:** tarjeta con hora grande y "hasta", título, entrenador y ubicación con icono, barra y "N de M cupos libres", botón "Reservar cupo" / "Reservas aún no disponibles" (deshabilitado) / "Ver en mis reservas", nota "Si no hay cupo, quedas en la lista de espera.", insignia de tu propia reserva y chips de día con subtítulo ("Hoy · lun 2").

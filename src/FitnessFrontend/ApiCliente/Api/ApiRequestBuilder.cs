@@ -10,6 +10,7 @@ using FitnessFrontend.ApiCliente.Api.Priorizacion;
 using FitnessFrontend.ApiCliente.Api.Reportes;
 using FitnessFrontend.ApiCliente.Api.Reservas;
 using FitnessFrontend.ApiCliente.Api.Retroalimentacion;
+using FitnessFrontend.ApiCliente.Api.Telemetria;
 using FitnessFrontend.ApiCliente.Api.Usuarios;
 using Microsoft.Kiota.Abstractions.Extensions;
 using Microsoft.Kiota.Abstractions;
@@ -74,6 +75,11 @@ namespace FitnessFrontend.ApiCliente.Api
         public global::FitnessFrontend.ApiCliente.Api.Retroalimentacion.RetroalimentacionRequestBuilder Retroalimentacion
         {
             get => new global::FitnessFrontend.ApiCliente.Api.Retroalimentacion.RetroalimentacionRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The telemetria property</summary>
+        public global::FitnessFrontend.ApiCliente.Api.Telemetria.TelemetriaRequestBuilder Telemetria
+        {
+            get => new global::FitnessFrontend.ApiCliente.Api.Telemetria.TelemetriaRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The usuarios property</summary>
         public global::FitnessFrontend.ApiCliente.Api.Usuarios.UsuariosRequestBuilder Usuarios

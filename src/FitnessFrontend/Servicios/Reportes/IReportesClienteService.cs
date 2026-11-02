@@ -55,6 +55,22 @@ public record ReporteUsoPlataformaDto(
     IReadOnlyList<UsoPlataformaDiarioDto>? Diario = null
 );
 
+/// <summary>Una fila por mes calendario. El backend cuenta los meses en UTC.</summary>
+public record ReporteResumenMensualDto(
+    DateTime Mes,
+    int SesionesProgramadas,
+    int SesionesCanceladas,
+    int ReservasCreadas,
+    int Cancelaciones,
+    int AsistenciasSesion,
+    int IngresosGenerales,
+    int UsuariosActivos,
+    int RegistrosNuevos
+);
+
+/// <summary>Vistas de una pantalla por dispositivo y rol. Anónimo: no identifica personas.</summary>
+public record ReporteUsoPantallasDto(string Pantalla, string Dispositivo, string Rol, int Vistas);
+
 public interface IReportesClienteService
 {
     Task<EstadoDeCarga<IReadOnlyList<ReporteAsistenciaSesionDto>>> ConsultarAsistenciaPorSesionAsync(
@@ -78,6 +94,17 @@ public interface IReportesClienteService
         CancellationToken ct = default);
 
     Task<EstadoDeCarga<ReporteUsoPlataformaDto>> ConsultarUsoPlataformaAsync(
+        DateTimeOffset desde,
+        DateTimeOffset hasta,
+        CancellationToken ct = default);
+
+    /// <summary>Resumen por mes: admite hasta 24 meses (los demás reportes, 90 días).</summary>
+    Task<EstadoDeCarga<IReadOnlyList<ReporteResumenMensualDto>>> ConsultarResumenMensualAsync(
+        DateTimeOffset desde,
+        DateTimeOffset hasta,
+        CancellationToken ct = default);
+
+    Task<EstadoDeCarga<IReadOnlyList<ReporteUsoPantallasDto>>> ConsultarUsoPantallasAsync(
         DateTimeOffset desde,
         DateTimeOffset hasta,
         CancellationToken ct = default);
