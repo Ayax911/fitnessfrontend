@@ -44,7 +44,7 @@ public class BloqueosClienteService : IBloqueosClienteService
                 b.Desde ?? DateTimeOffset.UtcNow,
                 b.Hasta ?? DateTimeOffset.UtcNow,
                 b.Motivo ?? string.Empty,
-                b.Tipo switch { 1 => "Festivo", 2 => "Institucional", _ => "Mantenimiento" }
+                ((TipoBloqueo)(b.Tipo ?? 0)).ToString()
             )).OrderBy(b => b.Desde).ToList();
 
             return EstadoDeCarga<IReadOnlyList<BloqueoCalendarioDto>>.Correcto(dtos);
@@ -73,8 +73,7 @@ public class BloqueosClienteService : IBloqueosClienteService
     {
         try
         {
-            var tipoInt = string.Equals(request.Tipo, "Festivo", StringComparison.OrdinalIgnoreCase) ? 1 :
-                          string.Equals(request.Tipo, "Institucional", StringComparison.OrdinalIgnoreCase) ? 2 : 0;
+            var tipoInt = Enum.TryParse<TipoBloqueo>(request.Tipo, true, out var parsed) ? (int)parsed : 0;
 
             var body = new ApiCliente.Models.CrearBloqueoRequest
             {

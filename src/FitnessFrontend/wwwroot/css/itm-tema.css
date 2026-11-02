@@ -365,3 +365,27 @@ textarea.form-control { padding: var(--space-3); min-height: 96px; }
   right: 0.75rem;
   top: 0.5rem;
 }
+
+/* Pantalla de carga inicial (index.html) */
+.itm-pantalla-carga-inicial {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background-color: var(--azul-itm);
+}
+
+.itm-pantalla-carga-inicial__logo {
+  height: 48px;
+  width: auto;
+}
+
+.itm-pantalla-carga-inicial__texto {
+  font-family: var(--fuente-ui, Montserrat, system-ui, sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--on-azul-itm, #FFFFFF);
+}

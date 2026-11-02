@@ -27,9 +27,21 @@ public class AdministracionSesionesClienteService : IAdministracionSesionesClien
     {
         try
         {
-            // Consultamos inscritos de la sesión
-            var inscritos = await _apiClient.Api.Reservas.Sesiones[sesionId].Inscritos.GetAsync(cancellationToken: ct)
-                            ?? new List<ReservaInscritoDto>();
+            // H-27: Consultamos inscritos de la sesión protegiendo contra 403 Forbidden para que
+            // un fallo en la lista secundaria no bloquee las acciones principales de administración.
+            List<ReservaInscritoDto> inscritos = new();
+            try
+            {
+                var inscritosResp = await _apiClient.Api.Reservas.Sesiones[sesionId].Inscritos.GetAsync(cancellationToken: ct);
+                if (inscritosResp != null)
+                {
+                    inscritos = inscritosResp.ToList();
+                }
+            }
+            catch (ApiException)
+            {
+                inscritos = new List<ReservaInscritoDto>();
+            }
 
             // Consultamos eventos para ubicar metadata de la sesión
             var eventosResp = await _apiClient.Api.Eventos.GetAsync(q =>

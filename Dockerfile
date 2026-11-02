@@ -12,11 +12,12 @@ RUN dotnet publish src/FitnessFrontend/FitnessFrontend.csproj -c Release -o /out
     && rm -f /out/wwwroot/appsettings.json.br /out/wwwroot/appsettings.json.gz
 
 FROM nginxinc/nginx-unprivileged:alpine
-# El directorio debe ser escribible por el usuario sin privilegios (101) para generar appsettings.json al arrancar
 USER root
-RUN chown 101:101 /usr/share/nginx/html
-USER 101
+RUN apk add --no-cache openssl && chown -R 101:101 /usr/share/nginx/html /etc/nginx/conf.d
 COPY --from=build --chown=101:101 /out/wwwroot /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/seguridad.conf /etc/nginx/conf.d/seguridad.conf
+RUN chown -R 101:101 /usr/share/nginx/html /etc/nginx/conf.d
+USER 101
 COPY --chmod=755 docker/40-url-api.sh /docker-entrypoint.d/40-url-api.sh
 EXPOSE 8080

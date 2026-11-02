@@ -7,6 +7,14 @@ using FitnessFrontend.Servicios.Infraestructura;
 
 namespace FitnessFrontend.Servicios.Bloqueos;
 
+// RF-031: Tipos de bloqueo de calendario (0=Festivo, 1=Mantenimiento, 2=Cierre)
+public enum TipoBloqueo
+{
+    Festivo = 0,
+    Mantenimiento = 1,
+    Cierre = 2
+}
+
 // RF-031: Fachada para consulta y administración de bloqueos de calendario
 public record BloqueoCalendarioDto(
     Guid Id,

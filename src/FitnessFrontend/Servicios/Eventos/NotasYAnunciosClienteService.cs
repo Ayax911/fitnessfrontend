@@ -164,8 +164,9 @@ public class NotasYAnunciosClienteService : INotasYAnunciosClienteService
                 return EstadoDeCarga<IReadOnlyList<AnuncioSesionDto>>.Correcto(new List<AnuncioSesionDto>());
             }
 
+            // H-30: Pedir anuncios únicamente para reservas Confirmada (Estado == 0) no canceladas
             var sesionIds = reservas
-                .Where(r => r.SesionEventoId.HasValue && r.SesionCancelada != true)
+                .Where(r => r.SesionEventoId.HasValue && r.SesionCancelada != true && r.Estado == 0)
                 .Select(r => r.SesionEventoId!.Value)
                 .Distinct()
                 .ToList();

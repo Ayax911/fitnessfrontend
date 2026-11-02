@@ -2,13 +2,27 @@
 
 Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 
-## Ronda 3 · Verificación de calidad ISO/IEC 25010 y cierre final (test(qa))
-- Informe final del cliente en [docs/pruebas-calidad/03-resultados-ronda-3.md](docs/pruebas-calidad/03-resultados-ronda-3.md) con veredicto **LISTO PARA PRODUCCIÓN**.
-- 18 de 18 checks de navegación browser aprobados (100% de cumplimiento funcional con datos reales del backend y 0 errores de consola).
-- Suite de pruebas bUnit en verde con 167 pruebas aprobadas (0 fallos).
-- Compresión gzip verificada en `tamano-descarga.sh` (4.813 KiB transferidos, ~29% de reducción).
-- Escaneo OWASP ZAP Baseline aprobado con 0 FAIL y cabeceras estrictas (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy).
-- Ajuste en `nginx.conf`: `script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'` para permitir importmaps de Blazor WebAssembly .NET 10 e inclusión de tipos MIME completos.
+## QA3-F1 · Correcciones de verificación independiente de calidad (H-13, H-27, H-28, H-30)
+- **H-28 (Integridad):** Alineación de tipos de bloqueo de calendario con el backend (0=Festivo, 1=Mantenimiento, 2=Cierre) mediante enum `TipoBloqueo` en `IBloqueosClienteService` y `BloqueosClienteService`, eliminando el mapeo manual invertido y la opción ficticia "Institucional". Pruebas de ida y vuelta añadidas en `CalidadRonda3QA3F1Tests.cs`.
+- **H-30 (Eficiencia/UX):** `NotasYAnunciosClienteService.ObtenerAnunciosMisReservasAsync` filtrado para solicitar anuncios únicamente de reservas activas en estado `Confirmada` (`Estado == 0`), evitando errores 403 de red en reservas en lista de espera o canceladas. Prueba unitaria agregada.
+- **H-27 (Adecuación funcional):** Manejo resiliente en `AdministracionSesionesClienteService.ObtenerDetalleSesionAdminAsync` ante respuestas 403 Forbidden en el endpoint secundario de inscritos, permitiendo que la pantalla `AdministrarSesion.razor` cargue la información de la sesión y mantenga operativos los botones de cancelar, reprogramar e inscribir terceros. Pruebas bUnit agregadas para el caso 403 y caso feliz.
+- **H-13 (Seguridad CSP y cabeceras):**
+  - Eliminado `'unsafe-inline'` y `'unsafe-eval'` de `script-src`, empleando el hash sha256 generado para el script inline del importmap.
+  - Eliminados estilos inline de `index.html` mediante clases de diseño en `itm-tema.css`.
+  - Reemplazo dinámico de `connect-src 'self' ${URL_BASE_API}` en `docker/40-url-api.sh` sin comodines de protocolo.
+  - Supresión de versión del servidor en respuesta HTTP (`server_tokens off;`).
+  - Incorporada cabecera `Permissions-Policy`.
+  - Herencia de cabeceras de seguridad resuelta mediante `include /etc/nginx/conf.d/seguridad.conf;` en cada bloque `location`.
+  - OWASP ZAP sin alertas críticas ni medias (0 FAIL).
+- Total de pruebas automatizadas: **177 en verde** (0 fallos).
+
+## QA2-F5 · Cierre de preparación para producción (H-32)
+- Verificación exhaustiva de la lista de entrega a TI (`docs/plan-despliegue/03-preparacion-despliegue-frontend.md`):
+  - `dotnet publish -c Release` limpio sin advertencias y contenedor ejecutando como usuario sin privilegios (`USER 101`).
+  - Recarga de rutas profundas comprobada (`try_files` devuelve `index.html` con 200 OK en `/admin/calendario`).
+  - Políticas de caché comprobadas (`no-store` en `appsettings.json` e `immutable` en `_framework/`).
+  - Repositorio libre de secretos y URLs privadas (`appsettings.json` con `REEMPLAZAR_EN_DESPLIEGUE`).
+  - Sección "Cambio a credenciales institucionales" documentada en `README.md`.
 
 ## QA2-F4 · Cabeceras CSP, seguridad y optimización de descarga nginx (H-13, H-14)
 - Configurada directiva estricta Content-Security-Policy en `nginx.conf` (`default-src 'self'`, `style-src-elem`, `font-src`, `img-src` con data: y `connect-src` completo).

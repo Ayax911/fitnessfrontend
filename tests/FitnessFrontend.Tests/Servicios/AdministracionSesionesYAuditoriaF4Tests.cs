@@ -262,4 +262,74 @@ public class AdministracionSesionesYAuditoriaF4Tests : BunitContext
         Assert.DoesNotContain("penalización", markup, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("nivel", markup, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Prueba6_H27_AdministrarSesion_ConInscritos403_NoFallaYRenderizaAccionesOperativas()
+    {
+        // H-27: Si la consulta secundaria de inscritos falla con 403, la pantalla debe ser resiliente:
+        // no quedarse vacía con error y permitir al Administrador operar la sesión (cancelar, reprogramar, inscribir).
+        var sesionId = Guid.NewGuid();
+        var adminService = new AdminSesionesServiceFalso
+        {
+            Detalle = new SesionAdminDetalleDto(
+                sesionId,
+                Guid.NewGuid(),
+                "Acondicionamiento Físico",
+                "Entrenador Andrés",
+                DateTimeOffset.UtcNow.AddDays(1),
+                DateTimeOffset.UtcNow.AddDays(1).AddHours(1),
+                25,
+                15,
+                false,
+                null,
+                new List<ReservaAdminDetalleDto>() // Lista vacía por 403 en inscritos
+            )
+        };
+
+        Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider("Administrador"));
+        Services.AddSingleton<IAdministracionSesionesClienteService>(adminService);
+        Services.AddSingleton<INotasYAnunciosClienteService>(new NotasYAnunciosServiceFalso());
+        Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+
+        var cut = Render<AdministrarSesion>(p => p.Add(x => x.IdSesion, sesionId));
+        var markup = cut.Markup;
+
+        // No debe mostrar banner rojo de error general de carga
+        Assert.DoesNotContain("Error al cargar la sesión", markup);
+        Assert.DoesNotContain("Error del servidor al consultar la sesión", markup);
+
+        // Debe renderizar la información de la sesión
+        Assert.Contains("Acondicionamiento Físico", markup);
+        Assert.Contains("Entrenador Andrés", markup);
+        Assert.Contains("25 inscritos", markup);
+
+        // Debe renderizar los tres botones de acción operativa disponibles para el Administrador
+        Assert.Contains("Cancelar sesión", markup);
+        Assert.Contains("Reprogramar fecha/hora", markup);
+        Assert.Contains("Inscribir tercero", markup);
+        Assert.Contains("Publicar aviso", markup);
+    }
+
+    [Fact]
+    public void Prueba7_H27_AdministrarSesion_CasoFeliz_MuestraInscritosYAcciones()
+    {
+        var sesionId = Guid.NewGuid();
+        var adminService = new AdminSesionesServiceFalso();
+
+        Services.AddSingleton<AuthenticationStateProvider>(new FakeAuthStateProvider("Administrador"));
+        Services.AddSingleton<IAdministracionSesionesClienteService>(adminService);
+        Services.AddSingleton<INotasYAnunciosClienteService>(new NotasYAnunciosServiceFalso());
+        Services.AddSingleton<IZonaHorariaService>(new ZonaHorariaService());
+
+        var cut = Render<AdministrarSesion>(p => p.Add(x => x.IdSesion, sesionId));
+        var markup = cut.Markup;
+
+        Assert.Contains("Entrenamiento Funcional", markup);
+        Assert.Contains("Ana Pérez", markup);
+        Assert.Contains("Luis Gómez", markup);
+        Assert.Contains("Cancelar sesión", markup);
+        Assert.Contains("Reprogramar fecha/hora", markup);
+        Assert.Contains("Inscribir tercero", markup);
+    }
 }
+
