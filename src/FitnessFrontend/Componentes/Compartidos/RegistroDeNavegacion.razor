@@ -1,0 +1,26 @@
+@* RF-033 (analítica de uso): informa cada pantalla visitada, de forma anónima. No pinta nada. *@
+@implements IDisposable
+@using FitnessFrontend.Servicios.Telemetria
+@inject NavigationManager Navegacion
+@inject ITelemetriaService Telemetria
+
+@code {
+    protected override void OnInitialized()
+    {
+        Navegacion.LocationChanged += AlNavegar;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeraVez)
+    {
+        // Primera pantalla de la visita. Va después del primer render porque usa JavaScript.
+        if (primeraVez)
+        {
+            await Telemetria.RegistrarVistaAsync(Navegacion.Uri);
+        }
+    }
+
+    private void AlNavegar(object? remitente, LocationChangedEventArgs e) =>
+        _ = Telemetria.RegistrarVistaAsync(e.Location);
+
+    public void Dispose() => Navegacion.LocationChanged -= AlNavegar;
+}

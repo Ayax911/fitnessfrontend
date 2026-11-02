@@ -7,6 +7,8 @@ Rama `feat/pendientes-1-11`. Cada entrada corresponde a un commit.
 - **Reportes → "Resumen mensual":** una fila por mes (sesiones, reservas, cancelaciones, asistencias, ingresos generales, usuarios activos y registros nuevos), hasta 24 meses, con atajo "Últimos 12 meses" y CSV. Al entrar a la pestaña el rango pasa a 12 meses; al volver a un reporte de 90 días, a 14 días (así no aparece un error de rango).
 - **Reportes → "Uso de pantallas":** visitas por pantalla, dispositivo y rol, con el total y el porcentaje desde el celular, y CSV. El rol "anonimo" se muestra como "Sin sesión".
 - Pruebas: `ReportesPestanasAsincronasTests` (pestañas nuevas y ajuste del rango).
+- **Telemetría anónima de pantallas** (RF-033): `RegistroDeNavegacion` (en `App.razor`) informa cada pantalla visitada con `ITelemetriaService`. Solo se envía la **ruta normalizada** (`NormalizadorDeRutas`: GUID, correos y valores → `{id}`; el token de `/checkin/` e `/ingreso/` nunca se conserva; sin parámetros ni fragmento) y el tipo de dispositivo (`js/telemetria.js`: móvil < 768 px, tableta < 1200 px, escritorio). El backend añade el rol; **nunca** usuario ni IP. Se respeta "No rastrear" del navegador, no se repite la misma pantalla seguida y un fallo (sin red, 429, etc.) se ignora sin afectar al usuario.
+- Pruebas: `Telemetria/TelemetriaTests` (normalizador, qué viaja en la petición, no repetir, "No rastrear", fallos silenciosos y suscripción a la navegación). Encontraron y corrigieron un defecto del normalizador en Linux (una ruta relativa con `?` se leía como ruta de archivo).
 
 ## UX · Observaciones de la prueba manual (2026-11-02)
 - **Pantallas del estudiante con el diseño del artifact "Pantallas del estudiante"** (antes solo se había aplicado la ventana de resultado):
